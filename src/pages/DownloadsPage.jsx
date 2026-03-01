@@ -34,7 +34,7 @@ export default function DownloadsPage() {
                 {dl.desc}
               </p>
             </div>
-            <a href={`/theapp-pitch/downloads/${dl.file}`} download style={{
+            <a href={`/TheAppPitch/downloads/${dl.file}`} download style={{
               flexShrink: 0, marginLeft: '32px',
               background: 'none', border: `1px solid ${t.border}`,
               color: t.textMuted, textDecoration: 'none',
