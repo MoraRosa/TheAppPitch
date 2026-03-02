@@ -20,10 +20,11 @@ export const THEMES = {
 };
 
 export const THEME_LIST = [
+  { id: 'canadian',   label: 'Canadian Print',          icon: '●' },
   { id: 'manuscript', label: 'Founder\'s Manuscript',  icon: '✦' },
   { id: 'brutalist',  label: 'Warm Brutalist',          icon: '▲' },
   { id: 'editorial',  label: 'Dark Editorial',          icon: '◆' },
-  { id: 'canadian',   label: 'Canadian Print',          icon: '●' },
+  
 ];
 
-export const DEFAULT_THEME = 'manuscript';
+export const DEFAULT_THEME = 'canadian';

@@ -255,46 +255,62 @@ function VisualMarket({ theme, size }) {
   );
 }
 
-// ── Model: MRR growth mini chart ──────────────────────────────────────────────
+// ── Model: MRR growth chart — fully responsive SVG ───────────────────────────
 function VisualModel({ theme, size }) {
   const t = theme.colors;
   const points = MERCHANT_GROWTH.filter((_, i) => i % 2 === 0);
   const maxMrr = Math.max(...points.map(p => p.mrr));
-  const W = 200 * size, H = 100 * size;
+  // Fixed viewBox coordinates — SVG scales to fill container width
+  const VW = 200, VH = 90;
   const pathD = points.map((p, i) => {
-    const x = (i / (points.length - 1)) * W;
-    const y = H - (p.mrr / maxMrr) * H * 0.9;
+    const x = (i / (points.length - 1)) * VW;
+    const y = VH - (p.mrr / maxMrr) * VH * 0.88;
     return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
   }).join(' ');
-  const areaD = pathD + ` L ${W} ${H} L 0 ${H} Z`;
+  const areaD = pathD + ` L ${VW} ${VH} L 0 ${VH} Z`;
 
   return (
     <div style={{ width: '100%' }}>
-      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', marginBottom: `${8 * size}px`, textTransform: 'uppercase' }}>
+      <div style={{
+        fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`,
+        color: t.accent, letterSpacing: '0.12em',
+        marginBottom: `${8 * size}px`, textTransform: 'uppercase',
+      }}>
         MRR Growth · 3 Years
       </div>
-      <svg width={W} height={H} style={{ overflow: 'visible' }}>
+
+      {/* width 100% + viewBox = fully responsive, fills available space */}
+      <svg
+        width="100%" height={`${110 * size}px`}
+        viewBox={`0 0 ${VW} ${VH}`}
+        preserveAspectRatio="none"
+        style={{ display: 'block' }}
+      >
         <defs>
-          <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={t.accent} stopOpacity="0.25" />
+          <linearGradient id="mrrGradV" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={t.accent} stopOpacity="0.3" />
             <stop offset="100%" stopColor={t.accent} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <path d={areaD} fill="url(#mrrGrad)" />
-        <path d={pathD} fill="none" stroke={t.accent} strokeWidth="1.5" />
+        <path d={areaD} fill="url(#mrrGradV)" />
+        <path d={pathD} fill="none" stroke={t.accent} strokeWidth="2" vectorEffect="non-scaling-stroke" />
         {points.map((p, i) => {
-          const x = (i / (points.length - 1)) * W;
-          const y = H - (p.mrr / maxMrr) * H * 0.9;
-          return <circle key={i} cx={x} cy={y} r="2.5" fill={t.accent} />;
+          const x = (i / (points.length - 1)) * VW;
+          const y = VH - (p.mrr / maxMrr) * VH * 0.88;
+          return <circle key={i} cx={x} cy={y} r="3" fill={t.accent} vectorEffect="non-scaling-stroke" />;
         })}
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: `${6 * size}px` }}>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: `${5 * size}px` }}>
         {['Y1', 'Y2', 'Y3'].map(y => (
           <span key={y} style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.1em' }}>{y}</span>
         ))}
       </div>
-      <div style={{ marginTop: `${12 * size}px`, fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${22 * size}px`, color: t.text }}>
-        $79K <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent }}>MRR · Y3</span>
+      <div style={{ marginTop: `${14 * size}px`, fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${22 * size}px`, color: t.text }}>
+        $79K{' '}
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent }}>
+          MRR · Y3
+        </span>
       </div>
     </div>
   );
@@ -388,7 +404,15 @@ function VisualCompetition({ theme, size }) {
     </span>
   );
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ width: '100%', marginTop: `-${20 * size}px` }}>
+      {/* Header label */}
+      <div style={{
+        fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`,
+        color: t.accent, letterSpacing: '0.15em',
+        textTransform: 'uppercase', marginBottom: `${12 * size}px`,
+      }}>
+        Platform Comparison
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto auto', gap: `${4 * size}px 8px`, alignItems: 'center' }}>
         {['', 'Store', 'CRM', 'Costing', 'Price'].map((h, i) => (
           <div key={i} style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: `1px solid ${t.border}`, paddingBottom: '4px' }}>{h}</div>
@@ -457,15 +481,29 @@ function VisualAsk({ theme, size }) {
 function SlideLeft({ slide, theme, isFullscreen, isMobile }) {
   const t = theme.colors;
 
+  // Desktop fullscreen is always two-column — use tighter sizes than full-page display
+  const headlineSize = isFullscreen
+    ? (isMobile ? 'clamp(18px, 4.5vw, 28px)' : 'clamp(22px, 2.8vw, 36px)')
+    : (isMobile ? 'clamp(12px, 3.2vw, 16px)' : 'clamp(16px, 2.4vw, 26px)');
+
+  const bodySize = isFullscreen
+    ? (isMobile ? '13px' : 'clamp(12px, 1.3vw, 15px)')
+    : 'clamp(10px, 1.2vw, 13px)';
+
   const pad = isFullscreen
-    ? (isMobile ? '28px 24px 20px' : 'clamp(48px, 7vh, 80px) clamp(48px, 5vw, 72px)')
+    ? (isMobile ? '28px 24px 20px' : 'clamp(32px, 5vh, 56px) clamp(36px, 4vw, 60px)')
     : (isMobile ? '18px 16px 14px' : '32px 36px');
+
+  const headlineMargin = isFullscreen ? (isMobile ? '12px' : '20px') : (isMobile ? '0' : '14px');
+  const eyebrowMargin  = isFullscreen ? (isMobile ? '12px' : '16px') : (isMobile ? '5px' : '14px');
+  const ruleMargin     = isFullscreen ? (isMobile ? '12px 0' : '18px 0') : '12px 0';
 
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      justifyContent: isFullscreen ? 'center' : 'space-between',
+      justifyContent: 'center',
       padding: pad, height: '100%',
+      overflow: 'hidden', // prevent any bleed
     }}>
       <div>
         <p style={{
@@ -473,20 +511,18 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile }) {
           fontSize: isFullscreen ? theme.type.monoSize : (isMobile ? '7px' : theme.type.monoSize),
           letterSpacing: theme.type.monoTracking, color: t.accent,
           textTransform: 'uppercase',
-          marginBottom: isFullscreen ? (isMobile ? '12px' : '24px') : (isMobile ? '5px' : '14px'),
+          marginBottom: eyebrowMargin,
         }}>
           {slide.eyebrow}
         </p>
 
         <h2 style={{
           fontFamily: theme.fonts.display,
-          fontSize: isFullscreen
-            ? (isMobile ? 'clamp(18px, 4.5vw, 28px)' : theme.type.displaySize)
-            : (isMobile ? 'clamp(12px, 3.2vw, 16px)' : 'clamp(16px, 2.4vw, 26px)'),
+          fontSize: headlineSize,
           fontWeight: theme.type.displayWeight, fontStyle: theme.type.displayStyle,
           color: t.text, lineHeight: 1.15,
-          marginBottom: isFullscreen ? (isMobile ? '12px' : '28px') : (isMobile ? '0' : '14px'),
-          maxWidth: '560px',
+          marginBottom: headlineMargin,
+          // No maxWidth — let it fill the column naturally
         }}>
           {slide.headline}
         </h2>
@@ -495,17 +531,14 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile }) {
         {(!isMobile || isFullscreen) && (
           <>
             <div style={{
-              width: isFullscreen ? '40px' : '28px', height: '1px',
+              width: isFullscreen ? '36px' : '28px', height: '1px',
               background: t.accent,
-              margin: isFullscreen ? (isMobile ? '12px 0' : '24px 0') : '12px 0',
+              margin: ruleMargin,
             }} />
             <p style={{
               fontFamily: theme.fonts.body,
-              fontSize: isFullscreen
-                ? (isMobile ? '13px' : theme.type.bodySize)
-                : 'clamp(10px, 1.2vw, 13px)',
+              fontSize: bodySize,
               fontWeight: theme.type.bodyWeight, color: t.textMuted, lineHeight: 1.75,
-              maxWidth: '480px',
             }}>
               {slide.body}
             </p>
@@ -516,7 +549,7 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile }) {
       {isFullscreen && (
         <div style={{
           fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
-          color: t.textFaint, letterSpacing: '0.12em', marginTop: '16px',
+          color: t.textFaint, letterSpacing: '0.12em', marginTop: '20px',
         }}>
           THEAPP · {new Date().getFullYear()}
         </div>
@@ -596,15 +629,18 @@ function TwoCol({ slide, theme, isFullscreen, leftBg, rightBg, accentBar, leftBo
     }}>
       {accentBar && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: accentBar, zIndex: 2 }} />}
 
-      <div style={{ borderRight: `1px solid ${t.border}`, position: 'relative' }}>
+      <div style={{ borderRight: `1px solid ${t.border}`, position: 'relative', overflow: 'hidden' }}>
         {leftBorder && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: t.accent }} />}
         <SlideLeft slide={slide} theme={theme} isFullscreen={isFullscreen} isMobile={false} />
       </div>
 
       <div style={{
         background: rightBg || t.bgAlt,
-        padding: isFullscreen ? 'clamp(40px, 6vh, 64px) clamp(32px, 4vw, 56px)' : '28px 24px',
-        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        padding: isFullscreen
+          ? 'clamp(32px, 5vh, 52px) clamp(28px, 3.5vw, 48px)'
+          : '28px 24px',
+        display: 'flex', flexDirection: 'column',
+        justifyContent: 'center',
         position: 'relative', overflow: 'hidden',
       }}>
         <div style={{
