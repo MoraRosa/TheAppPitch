@@ -1,19 +1,73 @@
 // ─── DOWNLOADS PAGE ───────────────────────────────────────────────────────────
-// All files generated client-side from live data. No uploads needed.
-// Updating content in /data/ automatically updates all downloads.
-
 import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { generateBusinessPlanPDF } from '../utils/generatePDF.js';
-import { generatePitchDeckPDF, generateFinancialsPDF } from '../utils/generatePDF.js';
+import { generateBusinessPlanPDF, generatePitchDeckPDF, generateFinancialsPDF } from '../utils/generatePDF.js';
 import { generatePitchDeckPPTX } from '../utils/generatePPTX.js';
 
+// ── Inline SVG icons — no emoji, no external lib ──────────────────────────────
+const IconDocument = ({ size = 20, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+    <line x1="16" y1="13" x2="8" y2="13"/>
+    <line x1="16" y1="17" x2="8" y2="17"/>
+    <polyline points="10 9 9 9 8 9"/>
+  </svg>
+);
+
+const IconPresentation = ({ size = 20, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="20" height="14" rx="2"/>
+    <line x1="8" y1="21" x2="16" y2="21"/>
+    <line x1="12" y1="17" x2="12" y2="21"/>
+  </svg>
+);
+
+const IconSlides = ({ size = 20, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="20" height="14" rx="2"/>
+    <path d="M10 8l4 3-4 3V8z" fill={color} stroke={color} strokeWidth="1"/>
+    <line x1="8" y1="21" x2="16" y2="21"/>
+    <line x1="12" y1="17" x2="12" y2="21"/>
+  </svg>
+);
+
+const IconChart = ({ size = 20, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/>
+    <line x1="12" y1="20" x2="12" y2="4"/>
+    <line x1="6" y1="20" x2="6" y2="14"/>
+    <line x1="2" y1="20" x2="22" y2="20"/>
+  </svg>
+);
+
+const IconDownload = ({ size = 14, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+);
+
+const IconCheck = ({ size = 14, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const IconSpinner = ({ size = 14, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
+    <path d="M12 2a10 10 0 0 1 10 10" style={{ animation: 'spin 0.8s linear infinite', transformOrigin: '12px 12px' }}/>
+  </svg>
+);
+
+// ── Download items ─────────────────────────────────────────────────────────────
 const DOWNLOADS = [
   {
     id: 'plan-pdf',
     title: 'Business Plan',
     format: 'PDF',
-    icon: '📄',
+    Icon: IconDocument,
     desc: 'Full 10-section business plan. Generated from live content.',
     action: (theme) => generateBusinessPlanPDF(theme),
   },
@@ -21,23 +75,23 @@ const DOWNLOADS = [
     id: 'pitch-pdf',
     title: 'Pitch Deck',
     format: 'PDF',
-    icon: '📊',
-    desc: '10-slide investor pitch deck. Landscape format. Generated from live slides.',
+    Icon: IconPresentation,
+    desc: '10-slide investor pitch deck. Landscape format.',
     action: (theme) => generatePitchDeckPDF(theme),
   },
   {
     id: 'pitch-pptx',
     title: 'Pitch Deck',
     format: 'PPTX',
-    icon: '🎯',
-    desc: 'Editable PowerPoint version for offline presenting. Uses active theme colours.',
+    Icon: IconSlides,
+    desc: 'Editable PowerPoint for offline presenting. Uses active theme colours.',
     action: (theme) => generatePitchDeckPPTX(theme),
   },
   {
     id: 'financials-pdf',
     title: 'Financial Projections',
     format: 'PDF',
-    icon: '📈',
+    Icon: IconChart,
     desc: 'Unit economics, 3-year milestones, funding breakdown.',
     action: (theme) => generateFinancialsPDF(theme),
   },
@@ -65,6 +119,8 @@ export default function DownloadsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, paddingTop: theme.space.navHeight }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
       {/* Header */}
       <div style={{
         padding: `48px ${theme.space.pagePadding} 32px`,
@@ -88,19 +144,19 @@ export default function DownloadsPage() {
           fontFamily: theme.fonts.body, fontSize: '13px',
           color: t.textMuted, lineHeight: 1.6, maxWidth: '520px',
         }}>
-          All files are generated instantly from the live content in this app.
-          No uploads needed — every download always reflects the current version.
+          All files are generated instantly from the live content in this app —
+          every download always reflects the current version.
         </p>
       </div>
 
-      {/* Download cards */}
+      {/* Cards */}
       <div style={{
         padding: `40px ${theme.space.pagePadding}`,
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
         gap: '1px',
         background: t.border,
-        maxWidth: '960px',
+        maxWidth: '1000px',
       }}>
         {DOWNLOADS.map(dl => {
           const isLoading = loading[dl.id];
@@ -108,65 +164,83 @@ export default function DownloadsPage() {
 
           return (
             <div key={dl.id} style={{
-              background: t.bg,
-              padding: '32px 36px',
-              display: 'flex', flexDirection: 'column',
-              justifyContent: 'space-between', gap: '20px',
+              background: t.bg, padding: '32px 32px 28px',
+              display: 'flex', flexDirection: 'column', gap: '20px',
             }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '20px' }}>{dl.icon}</span>
-                  <span style={{
-                    fontFamily: theme.fonts.mono, fontSize: '9px',
-                    color: t.accent, letterSpacing: '0.15em',
-                    border: `1px solid ${t.accent}`,
-                    padding: '2px 6px',
-                    borderRadius: theme.space.radius || '2px',
-                  }}>
-                    {dl.format}
-                  </span>
+              {/* Icon + format badge */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{
+                  width: 40, height: 40,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: t.bgAlt,
+                  border: `1px solid ${t.border}`,
+                  borderRadius: theme.space.radiusLg || '6px',
+                }}>
+                  <dl.Icon size={18} color={t.accent} />
                 </div>
+                <span style={{
+                  fontFamily: theme.fonts.mono, fontSize: '8px',
+                  color: t.accent, letterSpacing: '0.18em',
+                  border: `1px solid ${t.accent}`,
+                  padding: '3px 7px',
+                  borderRadius: theme.space.radius || '2px',
+                  opacity: 0.8,
+                }}>
+                  {dl.format}
+                </span>
+              </div>
+
+              {/* Text */}
+              <div style={{ flex: 1 }}>
                 <h3 style={{
-                  fontFamily: theme.fonts.display, fontSize: '20px',
+                  fontFamily: theme.fonts.display, fontSize: '19px',
                   fontWeight: theme.type.headWeight, fontStyle: theme.type.headStyle,
-                  color: t.text, marginBottom: '6px',
+                  color: t.text, marginBottom: '6px', lineHeight: 1.2,
                 }}>
                   {dl.title}
                 </h3>
                 <p style={{
                   fontFamily: theme.fonts.body, fontSize: '13px',
-                  color: t.textMuted, lineHeight: 1.6,
+                  color: t.textMuted, lineHeight: 1.65,
                 }}>
                   {dl.desc}
                 </p>
               </div>
 
+              {/* Button */}
               <button
                 onClick={() => handleDownload(dl)}
                 disabled={isLoading}
                 style={{
-                  background: isDone ? t.positive : 'none',
-                  border: `1px solid ${isDone ? t.positive : isLoading ? t.textFaint : t.accent}`,
-                  color: isDone ? '#fff' : isLoading ? t.textFaint : t.accent,
-                  padding: '10px 20px',
+                  background: isDone ? t.positive || t.accent : 'none',
+                  border: `1px solid ${isDone ? (t.positive || t.accent) : isLoading ? t.textFaint : t.accent}`,
+                  color: isDone ? (theme.isLight ? '#fff' : t.bg) : isLoading ? t.textFaint : t.accent,
+                  padding: '10px 16px',
                   borderRadius: theme.space.radius || '4px',
                   cursor: isLoading ? 'wait' : 'pointer',
                   fontFamily: theme.fonts.mono, fontSize: '10px',
                   letterSpacing: '0.12em',
-                  transition: 'all 0.2s',
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  display: 'flex', alignItems: 'center',
+                  gap: '8px', justifyContent: 'center',
+                  width: '100%',
                 }}
               >
                 {isLoading ? (
                   <>
-                    <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>◌</span>
+                    <IconSpinner size={13} color={t.textFaint} />
                     GENERATING...
                   </>
                 ) : isDone ? (
-                  '✓ DOWNLOADED'
+                  <>
+                    <IconCheck size={13} color={theme.isLight ? '#fff' : t.bg} />
+                    DOWNLOADED
+                  </>
                 ) : (
-                  `↓ DOWNLOAD ${dl.format}`
+                  <>
+                    <IconDownload size={13} color={t.accent} />
+                    DOWNLOAD {dl.format}
+                  </>
                 )}
               </button>
             </div>
@@ -174,17 +248,15 @@ export default function DownloadsPage() {
         })}
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-
-      {/* Note */}
+      {/* Footer note */}
       <div style={{
-        padding: `24px ${theme.space.pagePadding} 48px`,
-        fontFamily: theme.fonts.mono, fontSize: '9px',
-        color: t.textFaint, letterSpacing: '0.1em', lineHeight: 1.8,
+        padding: `20px ${theme.space.pagePadding} 48px`,
+        fontFamily: theme.fonts.mono, fontSize: '8px',
+        color: t.textFaint, letterSpacing: '0.12em', lineHeight: 2,
         maxWidth: '600px',
       }}>
-        FILES ARE GENERATED FROM LIVE APP DATA · NO SERVER · NO STALE CONTENT<br />
-        PPTX USES ACTIVE THEME COLOURS · PDF ALWAYS REFLECTS CURRENT VERSION
+        GENERATED CLIENT-SIDE · NO SERVER · NO STALE FILES<br />
+        CONTENT UPDATES IN /DATA/ ARE REFLECTED INSTANTLY IN ALL DOWNLOADS
       </div>
     </div>
   );
