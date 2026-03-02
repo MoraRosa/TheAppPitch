@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useIsMobile } from '../hooks/useIsMobile.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { generateBusinessPlanPDF, generatePitchDeckPDF, generateFinancialsPDF } from '../utils/generatePDF.js';
 import { generatePitchDeckPPTX } from '../utils/generatePPTX.js';
@@ -84,6 +85,8 @@ const DOWNLOADS = [
 
 export default function DownloadsPage() {
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
+  const pad = isMobile ? '16px' : theme.space.pagePadding;
   const t = theme.colors;
   const [loading, setLoading] = useState({});
   const [done, setDone] = useState({});
@@ -107,7 +110,7 @@ export default function DownloadsPage() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* Header */}
-      <div style={{ padding: `48px ${theme.space.pagePadding} 32px`, borderBottom: `1px solid ${t.border}` }}>
+      <div style={{ padding: `48px ${pad} 32px`, borderBottom: `1px solid ${t.border}` }}>
         <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: theme.type.monoTracking, textTransform: 'uppercase', marginBottom: '8px' }}>
           Downloads
         </p>
@@ -120,7 +123,7 @@ export default function DownloadsPage() {
       </div>
 
       {/* Cards — no background trick, just borders */}
-      <div style={{ padding: `40px ${theme.space.pagePadding}` }}>
+      <div style={{ padding: `40px ${pad}` }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
@@ -203,7 +206,7 @@ export default function DownloadsPage() {
       </div>
 
       {/* Footer note */}
-      <div style={{ padding: `0 ${theme.space.pagePadding} 48px`, fontFamily: theme.fonts.mono, fontSize: '8px', color: t.textFaint, letterSpacing: '0.12em', lineHeight: 2 }}>
+      <div style={{ padding: `0 ${pad} 48px`, fontFamily: theme.fonts.mono, fontSize: '8px', color: t.textFaint, letterSpacing: '0.12em', lineHeight: 2 }}>
         GENERATED CLIENT-SIDE · NO SERVER · NO STALE FILES<br />
         CONTENT UPDATES IN /DATA/ ARE REFLECTED INSTANTLY IN ALL DOWNLOADS
       </div>

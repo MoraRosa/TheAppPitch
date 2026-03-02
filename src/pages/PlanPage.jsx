@@ -1,30 +1,29 @@
-// ─── BUSINESS PLAN PAGE ───────────────────────────────────────────────────────
-import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext.jsx';
+import { useIsMobile } from '../hooks/useIsMobile.js';
 import { PLAN_SECTIONS } from '../data/plan.js';
 import { useScrollReveal } from '../hooks/useScrollReveal.js';
 
-function PlanSection({ section }) {
-  const { theme } = useTheme();
+function PlanSection({ section, theme, isMobile }) {
   const t = theme.colors;
   const [ref, visible] = useScrollReveal();
+  const pad = isMobile ? '16px' : theme.space.pagePadding;
 
   return (
     <div ref={ref} style={{
       opacity: visible ? 1 : 0,
       transform: visible ? 'none' : 'translateY(24px)',
       transition: `opacity ${theme.motion.enter}, transform ${theme.motion.enter}`,
-      padding: `48px ${theme.space.pagePadding}`,
+      padding: isMobile ? `32px ${pad}` : `48px ${pad}`,
       borderBottom: `1px solid ${t.border}`,
-      display: 'grid',
+      display: isMobile ? 'block' : 'grid',
       gridTemplateColumns: '200px 1fr',
       gap: '48px',
     }}>
-      <div>
+      <div style={{ marginBottom: isMobile ? '16px' : '0' }}>
         <div style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: theme.type.monoTracking, marginBottom: '8px' }}>
           {section.number}
         </div>
-        <h2 style={{ fontFamily: theme.fonts.display, fontSize: '20px', fontWeight: theme.type.headWeight, fontStyle: theme.type.headStyle, color: t.text, lineHeight: 1.3 }}>
+        <h2 style={{ fontFamily: theme.fonts.display, fontSize: isMobile ? '18px' : '20px', fontWeight: theme.type.headWeight, fontStyle: theme.type.headStyle, color: t.text, lineHeight: 1.3 }}>
           {section.title}
         </h2>
       </div>
@@ -42,10 +41,12 @@ function PlanSection({ section }) {
 export default function PlanPage() {
   const { theme } = useTheme();
   const t = theme.colors;
+  const isMobile = useIsMobile();
+  const pad = isMobile ? '16px' : theme.space.pagePadding;
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, paddingTop: theme.space.navHeight }}>
-      <div style={{ padding: `48px ${theme.space.pagePadding} 32px`, borderBottom: `1px solid ${t.border}` }}>
+      <div style={{ padding: isMobile ? `40px ${pad} 24px` : `48px ${pad} 32px`, borderBottom: `1px solid ${t.border}` }}>
         <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: theme.type.monoTracking, textTransform: 'uppercase', marginBottom: '8px' }}>
           Business Plan · Full Document
         </p>
@@ -53,7 +54,9 @@ export default function PlanPage() {
           TheApp — Complete Business Plan
         </h1>
       </div>
-      {PLAN_SECTIONS.map(section => <PlanSection key={section.id} section={section} />)}
+      {PLAN_SECTIONS.map(section => (
+        <PlanSection key={section.id} section={section} theme={theme} isMobile={isMobile} />
+      ))}
     </div>
   );
 }

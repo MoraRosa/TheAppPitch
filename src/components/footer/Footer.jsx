@@ -1,13 +1,37 @@
 // ─── FOOTER ───────────────────────────────────────────────────────────────────
-// Thin, typographic, stays out of the way.
-
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext.jsx';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { FOUNDER } from '../../data/founder.js';
 
 export default function Footer() {
   const { theme } = useTheme();
   const t = theme.colors;
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    // Compact single-line footer on mobile
+    return (
+      <footer style={{
+        borderTop: `1px solid ${t.border}`,
+        background: t.bg,
+        padding: '16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <span style={{ fontFamily: theme.fonts.display, fontSize: '14px', fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, color: t.text }}>
+          TheApp
+        </span>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: '8px', color: t.textFaint, letterSpacing: '0.1em' }}>
+          © {new Date().getFullYear()} {FOUNDER.name}
+        </span>
+        <a href="https://github.com/MoraRosa" target="_blank" rel="noreferrer" style={{ fontFamily: theme.fonts.mono, fontSize: '8px', color: t.accent, textDecoration: 'none', letterSpacing: '0.08em' }}>
+          GitHub →
+        </a>
+      </footer>
+    );
+  }
 
   return (
     <footer style={{
@@ -19,44 +43,28 @@ export default function Footer() {
       alignItems: 'center',
       gap: '24px',
     }}>
-      {/* Left — wordmark + tagline */}
+      {/* Left */}
       <div>
-        <span style={{
-          fontFamily: theme.fonts.display,
-          fontSize: '16px',
-          fontStyle: theme.type.displayStyle,
-          fontWeight: theme.type.displayWeight,
-          color: t.text,
-          marginRight: '12px',
-        }}>
+        <span style={{ fontFamily: theme.fonts.display, fontSize: '16px', fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, color: t.text, marginRight: '12px' }}>
           TheApp
         </span>
-        <span style={{
-          fontFamily: theme.fonts.mono,
-          fontSize: '8px',
-          color: t.textFaint,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-        }}>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: '8px', color: t.textFaint, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
           Investor Pitch · {new Date().getFullYear()}
         </span>
       </div>
 
-      {/* Center — nav links */}
+      {/* Center links */}
       <div style={{ display: 'flex', gap: '24px' }}>
         {[
-          { to: '/pitch',      label: 'Pitch' },
-          { to: '/plan',       label: 'Plan' },
-          { to: '/financials', label: 'Financials' },
-          { to: '/downloads',  label: 'Downloads' },
+          { to: '/pitch',      label: 'Pitch'       },
+          { to: '/plan',       label: 'Plan'         },
+          { to: '/financials', label: 'Financials'   },
+          { to: '/downloads',  label: 'Downloads'    },
         ].map(({ to, label }) => (
           <Link key={to} to={to} style={{
-            fontFamily: theme.fonts.mono,
-            fontSize: '9px',
-            color: t.textFaint,
-            textDecoration: 'none',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
+            fontFamily: theme.fonts.mono, fontSize: '9px',
+            color: t.textFaint, textDecoration: 'none',
+            letterSpacing: '0.1em', textTransform: 'uppercase',
             transition: 'color 0.15s',
           }}
             onMouseEnter={e => e.target.style.color = t.accent}
@@ -67,28 +75,12 @@ export default function Footer() {
         ))}
       </div>
 
-      {/* Right — founder + contact */}
+      {/* Right */}
       <div style={{ textAlign: 'right' }}>
-        <span style={{
-          fontFamily: theme.fonts.mono,
-          fontSize: '9px',
-          color: t.textFaint,
-          letterSpacing: '0.08em',
-        }}>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.textFaint, letterSpacing: '0.08em' }}>
           Built by {FOUNDER.name} ·{' '}
         </span>
-        <a
-          href="https://github.com/MoraRosa"
-          target="_blank"
-          rel="noreferrer"
-          style={{
-            fontFamily: theme.fonts.mono,
-            fontSize: '9px',
-            color: t.accent,
-            textDecoration: 'none',
-            letterSpacing: '0.08em',
-          }}
-        >
+        <a href="https://github.com/MoraRosa" target="_blank" rel="noreferrer" style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.accent, textDecoration: 'none', letterSpacing: '0.08em' }}>
           GitHub →
         </a>
       </div>
