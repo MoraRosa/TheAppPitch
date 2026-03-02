@@ -94,8 +94,8 @@ export default function AboutPage() {
       {/* Skills */}
       <Section label="Core Skills" theme={theme} isMobile={isMobile}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {FOUNDER.skills.map(skill => (
-            <span key={skill} style={{ fontFamily: theme.fonts.mono, fontSize: '10px', color: t.textMuted, letterSpacing: '0.08em', padding: '6px 12px', border: `1px solid ${t.border}`, borderRadius: theme.space.radius || '4px' }}>
+          {FOUNDER.skills.map((skill, i) => (
+            <span key={i} style={{ fontFamily: theme.fonts.mono, fontSize: '10px', color: t.textMuted, letterSpacing: '0.08em', padding: '6px 12px', border: `1px solid ${t.border}`, borderRadius: theme.space.radius || '4px' }}>
               {skill}
             </span>
           ))}

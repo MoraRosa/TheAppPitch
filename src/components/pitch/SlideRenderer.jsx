@@ -3,6 +3,7 @@
 // Each slide has a unique right-side visual per theme.
 // Right-side slot is video-ready — swap <SlideVisual> for <video> at MVP.
 
+import React from 'react';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL } from '../../data/financials.js';
@@ -192,8 +193,8 @@ function VisualDifferentiator({ theme, size }) {
           textTransform: 'uppercase',
         }}>TheApp</div>
         {rows.map((row, i) => (
-          <>
-            <div key={`a${i}`} style={{
+          <React.Fragment key={row}>
+            <div style={{
               padding: `${6 * size}px ${8 * size}px`,
               background: t.bgAlt,
               border: `1px solid ${t.border}`,
@@ -203,7 +204,7 @@ function VisualDifferentiator({ theme, size }) {
               textDecoration: 'line-through',
               animation: `fadeSlideIn 0.3s ease ${i * 0.07}s both`,
             }}>{row} → Sheet</div>
-            <div key={`b${i}`} style={{
+            <div style={{
               padding: `${6 * size}px ${8 * size}px`,
               background: t.bgAlt,
               border: `1px solid ${t.accent}40`,
@@ -212,7 +213,7 @@ function VisualDifferentiator({ theme, size }) {
               fontSize: `${9 * size}px`, color: t.text,
               animation: `fadeSlideIn 0.3s ease ${i * 0.07 + 0.05}s both`,
             }}>{row} ✓ Built-in</div>
-          </>
+          </React.Fragment>
         ))}
       </div>
     </div>
@@ -418,24 +419,24 @@ function VisualCompetition({ theme, size }) {
           <div key={i} style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: `1px solid ${t.border}`, paddingBottom: '4px' }}>{h}</div>
         ))}
         {rows.map((row, i) => (
-          <>
-            <div key={`n${i}`} style={{
+          <React.Fragment key={row.co}>
+            <div style={{
               fontFamily: theme.fonts.body, fontSize: `${9 * size}px`,
               color: row.co === 'TheApp' ? t.accent : t.textMuted,
               fontWeight: row.co === 'TheApp' ? 500 : 400,
               padding: `${3 * size}px 0`,
               borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none',
             }}>{row.co}</div>
-            <div key={`s${i}`} style={{ textAlign: 'center', borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none', padding: `${3 * size}px 0` }}><Check v={row.storefront} /></div>
-            <div key={`c${i}`} style={{ textAlign: 'center', borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none', padding: `${3 * size}px 0` }}><Check v={row.crm} /></div>
-            <div key={`p${i}`} style={{ textAlign: 'center', borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none', padding: `${3 * size}px 0` }}><Check v={row.costing} /></div>
-            <div key={`pr${i}`} style={{
+            <div style={{ textAlign: 'center', borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none', padding: `${3 * size}px 0` }}><Check v={row.storefront} /></div>
+            <div style={{ textAlign: 'center', borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none', padding: `${3 * size}px 0` }}><Check v={row.crm} /></div>
+            <div style={{ textAlign: 'center', borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none', padding: `${3 * size}px 0` }}><Check v={row.costing} /></div>
+            <div style={{
               fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`,
               color: row.co === 'TheApp' ? t.accent : t.textFaint,
               borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none',
               padding: `${3 * size}px 0`,
             }}>{row.price}</div>
-          </>
+          </React.Fragment>
         ))}
       </div>
     </div>
