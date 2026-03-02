@@ -1,11 +1,8 @@
-// ─── APP ROOT ─────────────────────────────────────────────────────────────────
-// Route config lives here. Add/remove pages by editing this file only.
-
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import Nav from './components/nav/Nav.jsx';
+import Footer from './components/footer/Footer.jsx';
 
-// Pages — add/remove freely
 import HomePage       from './pages/HomePage.jsx';
 import AboutPage      from './pages/AboutPage.jsx';
 import PitchPage      from './pages/PitchPage.jsx';
@@ -13,19 +10,32 @@ import PlanPage       from './pages/PlanPage.jsx';
 import FinancialsPage from './pages/FinancialsPage.jsx';
 import DownloadsPage  from './pages/DownloadsPage.jsx';
 
+function AppShell() {
+  const { pathname } = useLocation();
+  // Don't show footer on pitch page (presenter mode would conflict)
+  const showFooter = pathname !== '/pitch';
+
+  return (
+    <>
+      <Nav />
+      <Routes>
+        <Route path="/"           element={<HomePage />} />
+        <Route path="/about"      element={<AboutPage />} />
+        <Route path="/pitch"      element={<PitchPage />} />
+        <Route path="/plan"       element={<PlanPage />} />
+        <Route path="/financials" element={<FinancialsPage />} />
+        <Route path="/downloads"  element={<DownloadsPage />} />
+      </Routes>
+      {showFooter && <Footer />}
+    </>
+  );
+}
+
 export default function App() {
   return (
     <ThemeProvider>
       <HashRouter>
-        <Nav />
-        <Routes>
-          <Route path="/"           element={<HomePage />} />
-          <Route path="/about"      element={<AboutPage />} />
-          <Route path="/pitch"      element={<PitchPage />} />
-          <Route path="/plan"       element={<PlanPage />} />
-          <Route path="/financials" element={<FinancialsPage />} />
-          <Route path="/downloads"  element={<DownloadsPage />} />
-        </Routes>
+        <AppShell />
       </HashRouter>
     </ThemeProvider>
   );

@@ -1,311 +1,548 @@
 // ─── CLIENT-SIDE PDF GENERATOR ────────────────────────────────────────────────
-// Generates PDF from live app data — always reflects current content.
-// No server. No upload. No stale files.
+// Two-column slide layout matching the app's SlideRenderer design.
 
 import jsPDF from 'jspdf';
 import { PLAN_SECTIONS } from '../data/plan.js';
 import { SLIDES } from '../data/slides.js';
-import { MILESTONES, UNIT_ECONOMICS } from '../data/financials.js';
+import { MILESTONES, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL, COMPETITOR_COST_STACK, MERCHANT_GROWTH } from '../data/financials.js';
 import { FOUNDER } from '../data/founder.js';
 
-// ── Shared helpers ─────────────────────────────────────────────────────────────
-function addPageHeader(doc, title, theme) {
-  doc.setFillColor(...hexToRgb(theme.colors.bgAlt || '#F7F2E8'));
-  doc.rect(0, 0, 210, 18, 'F');
-  doc.setFontSize(7);
-  doc.setTextColor(...hexToRgb(theme.colors.textFaint || '#A89880'));
-  doc.setFont('helvetica', 'normal');
-  doc.text('THEAPP — INVESTOR MATERIALS', 14, 7);
-  doc.text(title.toUpperCase(), 196, 7, { align: 'right' });
-  doc.setDrawColor(...hexToRgb(theme.colors.border || '#D4C9B0'));
-  doc.line(14, 10, 196, 10);
-}
-
-function addPageFooter(doc, pageNum, totalPages, theme) {
-  const y = 285;
-  doc.setDrawColor(...hexToRgb(theme.colors.border || '#D4C9B0'));
-  doc.line(14, y, 196, y);
-  doc.setFontSize(7);
-  doc.setTextColor(...hexToRgb(theme.colors.textFaint || '#A89880'));
-  doc.text(`TheApp · ${new Date().getFullYear()}`, 14, y + 5);
-  doc.text(`${pageNum} / ${totalPages}`, 196, y + 5, { align: 'right' });
-}
-
-function wrapAndWrite(doc, text, x, y, maxWidth, lineHeight) {
-  const lines = doc.splitTextToSize(text, maxWidth);
-  lines.forEach((line, i) => doc.text(line, x, y + i * lineHeight));
-  return y + lines.length * lineHeight;
-}
-
 function hexToRgb(hex) {
-  const clean = hex.replace('#', '');
-  const r = parseInt(clean.substring(0, 2), 16);
-  const g = parseInt(clean.substring(2, 4), 16);
-  const b = parseInt(clean.substring(4, 6), 16);
-  return [r, g, b];
+  const c = (hex || '#888888').replace('#', '');
+  return [parseInt(c.slice(0,2),16), parseInt(c.slice(2,4),16), parseInt(c.slice(4,6),16)];
 }
 
-function accentLine(doc, x, y, theme) {
+function accentRule(doc, x, y, theme) {
   doc.setDrawColor(...hexToRgb(theme.colors.accent));
-  doc.setLineWidth(0.8);
-  doc.line(x, y, x + 32, y);
+  doc.setLineWidth(0.7);
+  doc.line(x, y, x + 28, y);
   doc.setLineWidth(0.2);
 }
 
-// ── BUSINESS PLAN PDF ─────────────────────────────────────────────────────────
-export async function generateBusinessPlanPDF(theme) {
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  const totalPages = PLAN_SECTIONS.length + 1;
-  const accent = hexToRgb(theme.colors.accent);
-  const textColor = hexToRgb(theme.colors.text);
-  const mutedColor = hexToRgb(theme.colors.textMuted);
-
-  // ── Cover page
-  doc.setFillColor(...hexToRgb(theme.colors.bg));
-  doc.rect(0, 0, 210, 297, 'F');
-
-  // Accent top strip
-  doc.setFillColor(...accent);
-  doc.rect(0, 0, 210, 4, 'F');
-
-  doc.setFontSize(9);
-  doc.setTextColor(...hexToRgb(theme.colors.accent));
+function pageFooter(doc, num, total, theme) {
+  const y = 195;
+  doc.setDrawColor(...hexToRgb(theme.colors.border));
+  doc.line(8, y, 289, y);
+  doc.setFontSize(6.5);
   doc.setFont('helvetica', 'normal');
-  doc.text('THEAPP — BUSINESS PLAN', 14, 24);
+  doc.setTextColor(...hexToRgb(theme.colors.textFaint));
+  doc.text('THEAPP — INVESTOR PITCH', 10, y + 4);
+  doc.text(`${num} / ${total}`, 287, y + 4, { align: 'right' });
+}
 
-  doc.setFontSize(32);
-  doc.setTextColor(...textColor);
+// ── Right-side visual renderers for PDF ───────────────────────────────────────
+
+function drawRightProblem(doc, x, y, w, h, theme) {
+  const t = theme.colors;
+  const tools = COMPETITOR_COST_STACK.slice(0, 5);
+  const maxCost = 300;
+  doc.setFontSize(6.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('MONTHLY TOOL SPEND', x, y + 6);
+  let cy = y + 12;
+  tools.forEach((tool, i) => {
+    const label = tool.tool.split('/')[0].trim();
+    const barW = (tool.max / maxCost) * (w - 4);
+    doc.setFontSize(7);
+    doc.setTextColor(...hexToRgb(t.textMuted));
+    doc.text(label, x, cy);
+    doc.setFontSize(7);
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text(`$${tool.min}–${tool.max}`, x + w - 2, cy, { align: 'right' });
+    cy += 3;
+    doc.setFillColor(...hexToRgb(t.bgAlt || t.bgDeep));
+    doc.rect(x, cy, w - 4, 3, 'F');
+    doc.setFillColor(...hexToRgb(t.accent));
+    doc.rect(x, cy, barW, 3, 'F');
+    cy += 7;
+  });
+}
+
+function drawRightSolution(doc, x, y, w, h, theme) {
+  const t = theme.colors;
+  const modules = ['Storefront', 'Pulse', 'Constellation CRM', 'Compass', 'Orders', 'Email'];
+  const cols = 2, cellW = (w - 4) / cols, cellH = 14;
+  modules.forEach((mod, i) => {
+    const col = i % cols, row = Math.floor(i / cols);
+    const cx = x + col * (cellW + 2), cy = y + 6 + row * (cellH + 2);
+    doc.setDrawColor(...hexToRgb(t.border));
+    doc.rect(cx, cy, cellW, cellH);
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.text));
+    doc.text(mod, cx + 3, cy + 6);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text('✓ Built-in', cx + 3, cy + 10);
+  });
+}
+
+function drawRightDiff(doc, x, y, w, h, theme) {
+  const t = theme.colors;
+  const rows = ['Ingredients', 'Suppliers', 'Batch Costing', 'Packaging', 'QuickBooks'];
+  const colW = (w - 4) / 2;
+  doc.setFontSize(6.5);
+  doc.setTextColor(...hexToRgb(t.textFaint));
+  doc.text('SHOPIFY', x + colW / 2, y + 5, { align: 'center' });
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('THEAPP', x + colW + 2 + colW / 2, y + 5, { align: 'center' });
+  let cy = y + 10;
+  rows.forEach(row => {
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setFillColor(...hexToRgb(t.bgAlt || '#EDE7D9'));
+    doc.rect(x, cy, colW, 7, 'F');
+    doc.setTextColor(...hexToRgb(t.textFaint));
+    doc.text(`${row} → Sheet`, x + 2, cy + 5);
+    doc.setFillColor(...hexToRgb(t.bgAlt || '#EDE7D9'));
+    doc.rect(x + colW + 2, cy, colW, 7, 'F');
+    doc.setDrawColor(...hexToRgb(t.accent));
+    doc.rect(x + colW + 2, cy, colW, 7);
+    doc.setTextColor(...hexToRgb(t.text));
+    doc.text(`${row} ✓`, x + colW + 4, cy + 5);
+    cy += 9;
+  });
+}
+
+function drawRightModel(doc, x, y, w, h, theme) {
+  const t = theme.colors;
+  const pts = MERCHANT_GROWTH.filter((_, i) => i % 2 === 0);
+  const maxMrr = Math.max(...pts.map(p => p.mrr));
+  const chartH = 50, chartW = w - 4;
+  doc.setFontSize(6.5);
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('MRR GROWTH · 3 YEARS', x, y + 5);
+  // Draw area
+  const svgPts = pts.map((p, i) => ({
+    px: x + (i / (pts.length - 1)) * chartW,
+    py: y + 10 + chartH - (p.mrr / maxMrr) * chartH * 0.9,
+  }));
+  // Fill area
+  doc.setFillColor(...hexToRgb(t.accent));
+  for (let i = 0; i < svgPts.length - 1; i++) {
+    doc.triangle(
+      svgPts[i].px, svgPts[i].py,
+      svgPts[i+1].px, svgPts[i+1].py,
+      svgPts[i].px, y + 10 + chartH,
+      'F'
+    );
+  }
+  // Line
+  doc.setDrawColor(...hexToRgb(t.accent));
+  doc.setLineWidth(0.8);
+  svgPts.forEach((pt, i) => {
+    if (i === 0) return;
+    doc.line(svgPts[i-1].px, svgPts[i-1].py, pt.px, pt.py);
+  });
+  doc.setLineWidth(0.2);
+  // Year labels
+  ['Y1','Y2','Y3'].forEach((lbl, i) => {
+    doc.setFontSize(6);
+    doc.setTextColor(...hexToRgb(t.textFaint));
+    doc.text(lbl, x + (i / 2) * chartW, y + 10 + chartH + 5);
+  });
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('TheApp', 14, 52);
-
-  doc.setFontSize(18);
+  doc.setTextColor(...hexToRgb(t.text));
+  doc.text('$79K', x, y + 10 + chartH + 18);
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...mutedColor);
-  doc.text('Complete Business Plan', 14, 64);
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('MRR · Year 3', x + 22, y + 10 + chartH + 18);
+}
 
-  accentLine(doc, 14, 74, theme);
-
-  doc.setFontSize(11);
-  doc.setTextColor(...mutedColor);
-  doc.text('One platform. One login. Operational in under an hour.', 14, 84);
-
-  // Stats
-  const stats = [
-    ['5', 'Beta Merchants'],
-    ['$948K', 'ARR · Year 3'],
-    ['$14B+', 'TAM'],
+function drawRightTraction(doc, x, y, w, h, theme) {
+  const t = theme.colors;
+  const items = [
+    { label: 'Multi-tenant DB', pct: 100 },
+    { label: 'Dual Auth', pct: 100 },
+    { label: 'REST API 23+ endpoints', pct: 100 },
+    { label: 'Pulse (Production)', pct: 100 },
+    { label: 'Stripe Connect', pct: 35 },
+    { label: 'Beta Launch', pct: 20 },
   ];
-  let sx = 14;
-  stats.forEach(([val, label]) => {
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...textColor);
-    doc.text(val, sx, 120);
-    doc.setFontSize(8);
+  doc.setFontSize(6.5);
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('BUILD PROGRESS', x, y + 5);
+  let cy = y + 11;
+  items.forEach(item => {
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...hexToRgb(theme.colors.accent));
-    doc.text(label.toUpperCase(), sx, 127);
-    sx += 60;
+    doc.setTextColor(...hexToRgb(item.pct === 100 ? t.text : t.textMuted));
+    doc.text(item.label, x, cy);
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text(`${item.pct}%`, x + w - 2, cy, { align: 'right' });
+    cy += 3;
+    doc.setFillColor(...hexToRgb(t.bgAlt || '#EDE7D9'));
+    doc.rect(x, cy, w - 4, 2.5, 'F');
+    doc.setFillColor(...hexToRgb(t.accent));
+    doc.rect(x, cy, ((w - 4) * item.pct) / 100, 2.5, 'F');
+    cy += 6;
   });
+}
 
-  accentLine(doc, 14, 136, theme);
-
-  doc.setFontSize(9);
-  doc.setTextColor(...mutedColor);
-  doc.text(`${FOUNDER.name} · ${FOUNDER.title}`, 14, 146);
-  doc.text(`Generated ${new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}`, 14, 153);
-  doc.text('Confidential — For investor review only', 14, 160);
-
-  addPageFooter(doc, 1, totalPages, theme);
-
-  // ── Section pages
-  PLAN_SECTIONS.forEach((section, idx) => {
-    doc.addPage();
-    const pageNum = idx + 2;
-
-    doc.setFillColor(...hexToRgb(theme.colors.bg));
-    doc.rect(0, 0, 210, 297, 'F');
-
-    addPageHeader(doc, section.title, theme);
-
-    // Section number
-    doc.setFontSize(9);
+function drawRightCompetition(doc, x, y, w, h, theme) {
+  const t = theme.colors;
+  const rows = [
+    { co: 'Shopify', storefront: '✓', crm: '×', costing: '×', price: '$30–300' },
+    { co: 'Squarespace', storefront: '✓', crm: '×', costing: '×', price: '$16–65' },
+    { co: 'Kajabi', storefront: '~', crm: '×', costing: '×', price: '$150–400' },
+    { co: 'TheApp', storefront: '✓', crm: '✓', costing: '✓', price: '$29–129' },
+  ];
+  const headers = ['', 'Store', 'CRM', 'Cost', 'Price'];
+  const colWidths = [22, 12, 12, 12, 20];
+  let cx = x;
+  headers.forEach((h, i) => {
+    doc.setFontSize(6);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...hexToRgb(theme.colors.accent));
-    doc.text(section.number, 14, 26);
-
-    // Title
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...textColor);
-    doc.text(section.title, 14, 36);
-
-    accentLine(doc, 14, 42, theme);
-
-    // Body
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...mutedColor);
-
-    let y = 52;
-    const paragraphs = section.content.split('\n\n');
-    paragraphs.forEach(para => {
-      if (y > 272) { doc.addPage(); y = 24; }
-      y = wrapAndWrite(doc, para.trim(), 14, y, 182, 5.5);
-      y += 5;
+    doc.setTextColor(...hexToRgb(t.textFaint));
+    doc.text(h, cx, y + 6);
+    cx += colWidths[i];
+  });
+  doc.setDrawColor(...hexToRgb(t.border));
+  doc.line(x, y + 8, x + w - 2, y + 8);
+  let ry = y + 14;
+  rows.forEach(row => {
+    const isTheApp = row.co === 'TheApp';
+    const cols2 = [row.co, row.storefront, row.crm, row.costing, row.price];
+    cx = x;
+    cols2.forEach((val, i) => {
+      doc.setFontSize(i === 0 ? 7.5 : 8);
+      doc.setFont('helvetica', isTheApp ? 'bold' : 'normal');
+      doc.setTextColor(...hexToRgb(
+        isTheApp ? t.accent :
+        (val === '✓' ? t.text : val === '×' ? t.textFaint : t.textMuted)
+      ));
+      doc.text(String(val), cx, ry);
+      cx += colWidths[i];
     });
-
-    addPageFooter(doc, pageNum, totalPages, theme);
+    ry += 8;
+    doc.setDrawColor(...hexToRgb(t.border));
+    doc.line(x, ry - 3, x + w - 2, ry - 3);
   });
+}
 
-  doc.save('theapp-business-plan.pdf');
+function drawRightAsk(doc, x, y, w, h, theme) {
+  const t = theme.colors;
+  const items = FUNDING_BREAKDOWN_SMALL;
+  const total = items.reduce((s, i) => s + i.amount, 0);
+  doc.setFontSize(6.5);
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('$10K GRANT BREAKDOWN', x, y + 5);
+  let cy = y + 12;
+  items.forEach(item => {
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.textMuted));
+    doc.text(item.label, x, cy);
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text(`$${item.amount.toLocaleString()}`, x + w - 2, cy, { align: 'right' });
+    cy += 3;
+    doc.setFillColor(...hexToRgb(t.bgAlt || '#EDE7D9'));
+    doc.rect(x, cy, w - 4, 3, 'F');
+    doc.setFillColor(...hexToRgb(t.accent));
+    doc.rect(x, cy, ((w - 4) * item.amount) / total, 3, 'F');
+    cy += 7;
+  });
+  doc.setDrawColor(...hexToRgb(t.border));
+  doc.line(x, cy, x + w - 4, cy);
+  cy += 5;
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('$10,000', x, cy);
+}
+
+function drawSlideRight(doc, slide, x, y, w, h, theme) {
+  switch (slide.slug) {
+    case 'problem':      return drawRightProblem(doc, x, y, w, h, theme);
+    case 'solution':     return drawRightSolution(doc, x, y, w, h, theme);
+    case 'differentiator': return drawRightDiff(doc, x, y, w, h, theme);
+    case 'model':        return drawRightModel(doc, x, y, w, h, theme);
+    case 'traction':     return drawRightTraction(doc, x, y, w, h, theme);
+    case 'competition':  return drawRightCompetition(doc, x, y, w, h, theme);
+    case 'ask':          return drawRightAsk(doc, x, y, w, h, theme);
+    default: {
+      // Hook, market, roadmap — show key stat
+      const stat = slide.stat;
+      if (stat) {
+        doc.setFontSize(28);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...hexToRgb(theme.colors.accent));
+        doc.text(stat.value, x, y + 30);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...hexToRgb(theme.colors.textMuted));
+        doc.text(stat.label.toUpperCase(), x, y + 38);
+      }
+    }
+  }
 }
 
 // ── PITCH DECK PDF ────────────────────────────────────────────────────────────
 export async function generatePitchDeckPDF(theme) {
-  // Landscape A4 for slide format
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
   const W = 297, H = 210;
-  const accent = hexToRgb(theme.colors.accent);
-  const textColor = hexToRgb(theme.colors.text);
-  const mutedColor = hexToRgb(theme.colors.textMuted);
-  const bg = hexToRgb(theme.colors.bg);
+  const t = theme.colors;
+  const total = SLIDES.length;
+
+  // Layout constants
+  const LEFT_W = W * 0.56;   // 55% for content
+  const RIGHT_X = LEFT_W + 1;
+  const RIGHT_W = W - RIGHT_X - 8;
+  const PAD_X = 12, PAD_Y = 20;
+  const CONTENT_H = H - 20;
 
   SLIDES.forEach((slide, idx) => {
     if (idx > 0) doc.addPage();
 
     // Background
-    doc.setFillColor(...bg);
+    doc.setFillColor(...hexToRgb(t.bg));
     doc.rect(0, 0, W, H, 'F');
 
+    // Right panel bg
+    doc.setFillColor(...hexToRgb(t.bgAlt || t.bg));
+    doc.rect(RIGHT_X, 0, W - RIGHT_X, H, 'F');
+
     // Accent top bar
-    doc.setFillColor(...accent);
-    doc.rect(0, 0, W, 3, 'F');
+    doc.setFillColor(...hexToRgb(t.accent));
+    doc.rect(0, 0, W, 2.5, 'F');
 
-    // Slide number — large ghost
-    doc.setFontSize(72);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(
-      ...hexToRgb(theme.isLight ? '#E8E0D0' : (theme.colors.surface || '#1C1814'))
-    );
-    doc.text(slide.tag, W - 20, H - 16, { align: 'right' });
+    // Divider between columns
+    doc.setDrawColor(...hexToRgb(t.border));
+    doc.line(LEFT_W, 2.5, LEFT_W, H - 15);
 
+    // ── LEFT COLUMN ──────────────────────────────────────────────────────────
     // Eyebrow
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...accent);
-    doc.text(slide.eyebrow.toUpperCase(), 20, 22);
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text(slide.eyebrow.toUpperCase(), PAD_X, PAD_Y);
 
     // Headline
-    doc.setFontSize(22);
+    doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...textColor);
-    const headLines = doc.splitTextToSize(slide.headline, 200);
-    headLines.forEach((line, i) => doc.text(line, 20, 40 + i * 10));
-
-    const bodyY = 40 + headLines.length * 10 + 8;
+    doc.setTextColor(...hexToRgb(t.text));
+    const headLines = doc.splitTextToSize(slide.headline, LEFT_W - PAD_X * 2);
+    headLines.forEach((line, i) => doc.text(line, PAD_X, PAD_Y + 10 + i * 8));
+    const afterHead = PAD_Y + 10 + headLines.length * 8;
 
     // Accent rule
-    doc.setDrawColor(...accent);
-    doc.setLineWidth(0.6);
-    doc.line(20, bodyY, 52, bodyY);
+    accentRule(doc, PAD_X, afterHead + 3, theme);
 
     // Body
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...mutedColor);
-    const bodyLines = doc.splitTextToSize(slide.body, 200);
-    bodyLines.forEach((line, i) => doc.text(line, 20, bodyY + 8 + i * 5.5));
+    doc.setTextColor(...hexToRgb(t.textMuted));
+    const bodyLines = doc.splitTextToSize(slide.body, LEFT_W - PAD_X * 2);
+    bodyLines.forEach((line, i) => doc.text(line, PAD_X, afterHead + 10 + i * 5));
 
-    // Footer
-    doc.setFontSize(7);
-    doc.setTextColor(...hexToRgb(theme.colors.textFaint || '#A89880'));
-    doc.text('THEAPP — INVESTOR PITCH', 20, H - 8);
-    doc.text(`${idx + 1} / ${SLIDES.length}`, W - 20, H - 8, { align: 'right' });
-    doc.setDrawColor(...hexToRgb(theme.colors.border || '#D4C9B0'));
-    doc.line(20, H - 13, W - 20, H - 13);
+    // Ghost slide tag
+    doc.setFontSize(52);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(theme.isLight ? '#E8E0D0' : (t.surface || '#1C1814').replace('#', '').padStart(6, '0')));
+    doc.text(slide.tag, LEFT_W - PAD_X, H - 20, { align: 'right' });
+
+    // ── RIGHT COLUMN ─────────────────────────────────────────────────────────
+    drawSlideRight(doc, slide, RIGHT_X + 8, 14, RIGHT_W, CONTENT_H, theme);
+
+    pageFooter(doc, idx + 1, total, theme);
   });
 
   doc.save('theapp-pitch-deck.pdf');
 }
 
+// ── BUSINESS PLAN PDF ─────────────────────────────────────────────────────────
+export async function generateBusinessPlanPDF(theme) {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const t = theme.colors;
+  const total = PLAN_SECTIONS.length + 1;
+
+  // Cover
+  doc.setFillColor(...hexToRgb(t.bg));
+  doc.rect(0, 0, 210, 297, 'F');
+  doc.setFillColor(...hexToRgb(t.accent));
+  doc.rect(0, 0, 210, 3, 'F');
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('THEAPP — BUSINESS PLAN', 14, 20);
+
+  doc.setFontSize(30);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...hexToRgb(t.text));
+  doc.text('TheApp', 14, 48);
+
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb(t.textMuted));
+  doc.text('Complete Business Plan', 14, 58);
+
+  accentRule(doc, 14, 66, theme);
+
+  doc.setFontSize(10);
+  doc.setTextColor(...hexToRgb(t.textMuted));
+  doc.text('One platform. One login. Operational in under an hour.', 14, 76);
+
+  [['5', 'Beta Merchants'], ['$948K', 'ARR · Year 3'], ['$14B+', 'TAM']].forEach(([val, label], i) => {
+    const sx = 14 + i * 60;
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.text));
+    doc.text(val, sx, 108);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text(label.toUpperCase(), sx, 114);
+  });
+
+  accentRule(doc, 14, 122, theme);
+
+  doc.setFontSize(8);
+  doc.setTextColor(...hexToRgb(t.textMuted));
+  doc.text(`${FOUNDER.name} · ${FOUNDER.title}`, 14, 132);
+  doc.text(`Generated ${new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}`, 14, 139);
+  doc.text('Confidential — For investor review only', 14, 146);
+
+  // Page footer on cover
+  doc.setDrawColor(...hexToRgb(t.border));
+  doc.line(14, 284, 196, 284);
+  doc.setFontSize(6.5);
+  doc.setTextColor(...hexToRgb(t.textFaint));
+  doc.text('THEAPP · BUSINESS PLAN', 14, 289);
+  doc.text(`1 / ${total}`, 196, 289, { align: 'right' });
+
+  // Sections
+  PLAN_SECTIONS.forEach((section, idx) => {
+    doc.addPage();
+    doc.setFillColor(...hexToRgb(t.bg));
+    doc.rect(0, 0, 210, 297, 'F');
+    doc.setFillColor(...hexToRgb(t.accent));
+    doc.rect(0, 0, 210, 2, 'F');
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text(section.number, 14, 18);
+
+    doc.setFontSize(17);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.text));
+    doc.text(section.title, 14, 28);
+
+    accentRule(doc, 14, 34, theme);
+
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.textMuted));
+
+    let y = 44;
+    section.content.split('\n\n').forEach(para => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      const lines = doc.splitTextToSize(para.trim(), 182);
+      lines.forEach(line => {
+        doc.text(line, 14, y);
+        y += 5.2;
+      });
+      y += 4;
+    });
+
+    // Footer
+    doc.setDrawColor(...hexToRgb(t.border));
+    doc.line(14, 284, 196, 284);
+    doc.setFontSize(6.5);
+    doc.setTextColor(...hexToRgb(t.textFaint));
+    doc.text('THEAPP · BUSINESS PLAN', 14, 289);
+    doc.text(`${idx + 2} / ${total}`, 196, 289, { align: 'right' });
+  });
+
+  doc.save('theapp-business-plan.pdf');
+}
+
 // ── FINANCIALS PDF ────────────────────────────────────────────────────────────
 export async function generateFinancialsPDF(theme) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  const accent = hexToRgb(theme.colors.accent);
-  const textColor = hexToRgb(theme.colors.text);
-  const mutedColor = hexToRgb(theme.colors.textMuted);
+  const t = theme.colors;
 
-  doc.setFillColor(...hexToRgb(theme.colors.bg));
+  doc.setFillColor(...hexToRgb(t.bg));
   doc.rect(0, 0, 210, 297, 'F');
-  doc.setFillColor(...accent);
-  doc.rect(0, 0, 210, 4, 'F');
+  doc.setFillColor(...hexToRgb(t.accent));
+  doc.rect(0, 0, 210, 3, 'F');
 
-  doc.setFontSize(9);
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...accent);
-  doc.text('THEAPP — FINANCIAL PROJECTIONS', 14, 22);
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('THEAPP — FINANCIAL PROJECTIONS', 14, 18);
 
-  doc.setFontSize(24);
+  doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...textColor);
-  doc.text('Financial Summary', 14, 40);
+  doc.setTextColor(...hexToRgb(t.text));
+  doc.text('Financial Summary', 14, 34);
 
-  accentLine(doc, 14, 47, theme);
+  accentRule(doc, 14, 40, theme);
 
-  // Unit economics table
-  doc.setFontSize(10);
-  doc.setTextColor(...accent);
-  doc.text('UNIT ECONOMICS', 14, 60);
+  // Unit economics
+  doc.setFontSize(8);
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('UNIT ECONOMICS', 14, 52);
 
   const ueRows = [
     ['ARPU / month', `$${UNIT_ECONOMICS.arpu}`],
     ['Monthly Churn', `${UNIT_ECONOMICS.monthlyChurn * 100}%`],
-    ['Lifetime Value (LTV)', `$${UNIT_ECONOMICS.ltv.toLocaleString()}`],
-    ['Customer Acquisition Cost (CAC)', `$${UNIT_ECONOMICS.cac}`],
-    ['LTV : CAC Ratio', `${UNIT_ECONOMICS.ltvCacRatio}×`],
+    ['Lifetime Value', `$${UNIT_ECONOMICS.ltv.toLocaleString()}`],
+    ['Customer Acquisition Cost', `$${UNIT_ECONOMICS.cac}`],
+    ['LTV : CAC', `${UNIT_ECONOMICS.ltvCacRatio}×`],
     ['Payback Period', `${UNIT_ECONOMICS.paybackMonths} months`],
   ];
 
-  let y = 68;
+  let y = 60;
   ueRows.forEach(([label, val]) => {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...mutedColor);
+    doc.setTextColor(...hexToRgb(t.textMuted));
     doc.text(label, 14, y);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...textColor);
+    doc.setTextColor(...hexToRgb(t.text));
     doc.text(val, 130, y);
-    doc.setDrawColor(...hexToRgb(theme.colors.border || '#D4C9B0'));
+    doc.setDrawColor(...hexToRgb(t.border));
     doc.line(14, y + 2, 196, y + 2);
     y += 9;
   });
 
   // Milestones
   y += 8;
-  doc.setFontSize(10);
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...accent);
+  doc.setTextColor(...hexToRgb(t.accent));
   doc.text('3-YEAR MILESTONES', 14, y);
-  y += 10;
+  y += 8;
 
   MILESTONES.forEach(m => {
-    doc.setFillColor(...hexToRgb(theme.colors.bgAlt || '#EDE7D9'));
-    doc.rect(14, y - 5, 182, 18, 'F');
-    doc.setFontSize(14);
+    doc.setFillColor(...hexToRgb(t.bgAlt || '#EDE7D9'));
+    doc.rect(14, y - 4, 182, 18, 'F');
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...textColor);
-    doc.text(m.label, 20, y + 3);
-    doc.setFontSize(10);
-    doc.setTextColor(...accent);
-    doc.text(`${m.merchants} merchants · $${m.arr.toLocaleString()} ARR`, 20, y + 10);
-    doc.setFontSize(8);
+    doc.setTextColor(...hexToRgb(t.text));
+    doc.text(m.label, 20, y + 2);
+    doc.setFontSize(9);
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text(`${m.merchants} merchants · $${m.arr.toLocaleString()} ARR`, 20, y + 8);
+    doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...mutedColor);
-    doc.text(m.note, 130, y + 6);
+    doc.setTextColor(...hexToRgb(t.textMuted));
+    doc.text(m.note, 130, y + 5);
     y += 24;
   });
 
-  addPageFooter(doc, 1, 1, theme);
+  doc.setDrawColor(...hexToRgb(t.border));
+  doc.line(14, 284, 196, 284);
+  doc.setFontSize(6.5);
+  doc.setTextColor(...hexToRgb(t.textFaint));
+  doc.text('THEAPP · FINANCIAL PROJECTIONS', 14, 289);
+  doc.text('1 / 1', 196, 289, { align: 'right' });
+
   doc.save('theapp-financials.pdf');
 }

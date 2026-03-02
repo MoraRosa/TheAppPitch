@@ -1,156 +1,598 @@
 // ─── SLIDE RENDERER ───────────────────────────────────────────────────────────
-// Renders a single slide using the active theme's design language.
-// Each theme gets a completely unique visual treatment.
+// Two-column layout: content left, visual right.
+// Each slide has a unique right-side visual per theme.
+// Right-side slot is video-ready — swap <SlideVisual> for <video> at MVP.
 
 import { useTheme } from '../../context/ThemeContext.jsx';
+import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL } from '../../data/financials.js';
 
 export default function SlideRenderer({ slide, isFullscreen = false }) {
   const { theme } = useTheme();
-  const t = theme.colors;
-  const tp = theme.type;
   const id = theme.id;
-
-  if (id === 'manuscript')  return <ManuscriptSlide slide={slide} theme={theme} isFullscreen={isFullscreen} />;
-  if (id === 'brutalist')   return <BrutalistSlide  slide={slide} theme={theme} isFullscreen={isFullscreen} />;
-  if (id === 'editorial')   return <EditorialSlide  slide={slide} theme={theme} isFullscreen={isFullscreen} />;
-  if (id === 'canadian')    return <CanadianSlide   slide={slide} theme={theme} isFullscreen={isFullscreen} />;
+  if (id === 'manuscript') return <ManuscriptSlide slide={slide} theme={theme} isFullscreen={isFullscreen} />;
+  if (id === 'brutalist')  return <BrutalistSlide  slide={slide} theme={theme} isFullscreen={isFullscreen} />;
+  if (id === 'editorial')  return <EditorialSlide  slide={slide} theme={theme} isFullscreen={isFullscreen} />;
+  if (id === 'canadian')   return <CanadianSlide   slide={slide} theme={theme} isFullscreen={isFullscreen} />;
   return null;
 }
 
-// ── A: MANUSCRIPT ─────────────────────────────────────────────────────────────
-function ManuscriptSlide({ slide, theme, isFullscreen }) {
+// ─── RIGHT-SIDE VISUALS (theme-agnostic data, theme-specific colours) ─────────
+
+function SlideVisual({ slideSlug, theme, isFullscreen }) {
   const t = theme.colors;
+  const size = isFullscreen ? 1 : 0.6;
+
+  switch (slideSlug) {
+    case 'hook':
+      return <VisualHook theme={theme} size={size} />;
+    case 'problem':
+      return <VisualProblem theme={theme} size={size} />;
+    case 'solution':
+      return <VisualSolution theme={theme} size={size} />;
+    case 'differentiator':
+      return <VisualDifferentiator theme={theme} size={size} />;
+    case 'market':
+      return <VisualMarket theme={theme} size={size} />;
+    case 'model':
+      return <VisualModel theme={theme} size={size} />;
+    case 'traction':
+      return <VisualTraction theme={theme} size={size} />;
+    case 'roadmap':
+      return <VisualRoadmap theme={theme} size={size} />;
+    case 'competition':
+      return <VisualCompetition theme={theme} size={size} />;
+    case 'ask':
+      return <VisualAsk theme={theme} size={size} />;
+    default:
+      return null;
+  }
+}
+
+// ── Hook: animated big numbers ────────────────────────────────────────────────
+function VisualHook({ theme, size }) {
+  const t = theme.colors;
+  const items = [
+    { val: '10', label: 'tools replaced' },
+    { val: '$850', label: 'saved / month' },
+    { val: '1', label: 'platform' },
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+      {items.map((item, i) => (
+        <div key={i} style={{
+          padding: `${12 * size}px ${16 * size}px`,
+          border: `1px solid ${t.border}`,
+          borderLeft: `3px solid ${t.accent}`,
+          borderRadius: theme.space.radius || '2px',
+          display: 'flex', alignItems: 'baseline', gap: '12px',
+          animation: `fadeSlideIn 0.4s ease ${i * 0.1}s both`,
+        }}>
+          <span style={{
+            fontFamily: theme.fonts.display,
+            fontStyle: theme.type.displayStyle,
+            fontWeight: theme.type.displayWeight,
+            fontSize: `${32 * size}px`,
+            color: t.accent, lineHeight: 1,
+          }}>{item.val}</span>
+          <span style={{
+            fontFamily: theme.fonts.mono,
+            fontSize: `${9 * size}px`,
+            color: t.textMuted,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+          }}>{item.label}</span>
+        </div>
+      ))}
+      <style>{`@keyframes fadeSlideIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:translateX(0); } }`}</style>
+    </div>
+  );
+}
+
+// ── Problem: cost stack bars ──────────────────────────────────────────────────
+function VisualProblem({ theme, size }) {
+  const t = theme.colors;
+  const maxCost = 300;
+  const tools = COMPETITOR_COST_STACK.slice(0, 5);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: `${6 * size}px`, width: '100%' }}>
+      <div style={{
+        fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`,
+        color: t.accent, letterSpacing: '0.15em', marginBottom: `${4 * size}px`,
+        textTransform: 'uppercase',
+      }}>Monthly tool spend</div>
+      {tools.map((tool, i) => (
+        <div key={i}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+            <span style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: t.textMuted }}>
+              {tool.tool.split('/')[0].trim()}
+            </span>
+            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent }}>
+              ${tool.min}–${tool.max}
+            </span>
+          </div>
+          <div style={{ height: `${5 * size}px`, background: t.bgAlt, borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${(tool.max / maxCost) * 100}%`,
+              background: t.accent, opacity: 0.7,
+              animation: `barGrow 0.6s ease ${i * 0.08}s both`,
+            }} />
+          </div>
+        </div>
+      ))}
+      <style>{`@keyframes barGrow { from { width: 0 } }`}</style>
+    </div>
+  );
+}
+
+// ── Solution: module grid ─────────────────────────────────────────────────────
+function VisualSolution({ theme, size }) {
+  const t = theme.colors;
+  const modules = [
+    { icon: '◈', name: 'Storefront', desc: '5 themes' },
+    { icon: '◎', name: 'Pulse', desc: 'Production' },
+    { icon: '◐', name: 'Constellation', desc: 'CRM' },
+    { icon: '◑', name: 'Compass', desc: 'Tasks' },
+    { icon: '◒', name: 'Orders', desc: 'Commerce' },
+    { icon: '◓', name: 'Email', desc: 'Marketing' },
+  ];
   return (
     <div style={{
-      height: '100%', background: t.bg,
-      display: 'flex', flexDirection: 'column',
-      justifyContent: 'space-between',
-      padding: isFullscreen ? 'clamp(48px, 8vh, 96px) clamp(48px, 8vw, 120px)' : '40px 48px',
-      position: 'relative', overflow: 'hidden',
+      display: 'grid', gridTemplateColumns: '1fr 1fr',
+      gap: `${6 * size}px`, width: '100%',
     }}>
-      {/* Top accent rule */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: theme.slide.accentBar }} />
-      {/* Subtle paper texture via box-shadow layers */}
-      <div style={{ position: 'absolute', inset: 0, opacity: 0.4,
-        background: 'radial-gradient(ellipse at 80% 20%, #E8D4A820 0%, transparent 60%)',
-        pointerEvents: 'none' }} />
+      {modules.map((mod, i) => (
+        <div key={i} style={{
+          padding: `${10 * size}px ${12 * size}px`,
+          border: `1px solid ${t.border}`,
+          borderRadius: theme.space.radius || '2px',
+          animation: `fadeSlideIn 0.35s ease ${i * 0.06}s both`,
+        }}>
+          <div style={{
+            fontFamily: theme.fonts.mono,
+            fontSize: `${16 * size}px`,
+            color: t.accent, lineHeight: 1, marginBottom: '4px',
+          }}>{mod.icon}</div>
+          <div style={{
+            fontFamily: theme.fonts.body, fontWeight: 500,
+            fontSize: `${10 * size}px`, color: t.text,
+          }}>{mod.name}</div>
+          <div style={{
+            fontFamily: theme.fonts.mono,
+            fontSize: `${8 * size}px`, color: t.textFaint,
+            letterSpacing: '0.1em',
+          }}>{mod.desc}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
+// ── Differentiator: before/after ──────────────────────────────────────────────
+function VisualDifferentiator({ theme, size }) {
+  const t = theme.colors;
+  const rows = ['Ingredients', 'Suppliers', 'Batch Cost', 'Packaging', 'QuickBooks'];
+  return (
+    <div style={{ width: '100%' }}>
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        gap: `${4 * size}px`,
+      }}>
+        <div style={{
+          fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`,
+          color: t.negative || t.textFaint, letterSpacing: '0.12em',
+          textAlign: 'center', marginBottom: `${6 * size}px`,
+          textTransform: 'uppercase',
+        }}>Shopify</div>
+        <div style={{
+          fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`,
+          color: t.positive || t.accent, letterSpacing: '0.12em',
+          textAlign: 'center', marginBottom: `${6 * size}px`,
+          textTransform: 'uppercase',
+        }}>TheApp</div>
+        {rows.map((row, i) => (
+          <>
+            <div key={`a${i}`} style={{
+              padding: `${6 * size}px ${8 * size}px`,
+              background: t.bgAlt,
+              border: `1px solid ${t.border}`,
+              borderRadius: theme.space.radius || '2px',
+              fontFamily: theme.fonts.body,
+              fontSize: `${9 * size}px`, color: t.textFaint,
+              textDecoration: 'line-through',
+              animation: `fadeSlideIn 0.3s ease ${i * 0.07}s both`,
+            }}>{row} → Sheet</div>
+            <div key={`b${i}`} style={{
+              padding: `${6 * size}px ${8 * size}px`,
+              background: t.bgAlt,
+              border: `1px solid ${t.accent}40`,
+              borderRadius: theme.space.radius || '2px',
+              fontFamily: theme.fonts.body,
+              fontSize: `${9 * size}px`, color: t.text,
+              animation: `fadeSlideIn 0.3s ease ${i * 0.07 + 0.05}s both`,
+            }}>{row} ✓ Built-in</div>
+          </>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Market: TAM/SAM/SOM rings ─────────────────────────────────────────────────
+function VisualMarket({ theme, size }) {
+  const t = theme.colors;
+  const rings = [
+    { label: 'TAM', sub: '$14B+ Global SaaS', r: 80 * size, opacity: 0.15 },
+    { label: 'SAM', sub: '3.8M CA Businesses', r: 56 * size, opacity: 0.3 },
+    { label: 'SOM', sub: '100K Target Year 5', r: 32 * size, opacity: 0.7 },
+  ];
+  const svgSize = 180 * size;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${12 * size}px`, width: '100%' }}>
+      <svg width={svgSize} height={svgSize} viewBox={`0 0 180 180`}>
+        {rings.map((ring, i) => (
+          <circle key={i}
+            cx="90" cy="90" r={ring.r}
+            fill={t.accent}
+            fillOpacity={ring.opacity}
+            stroke={t.accent}
+            strokeWidth="1"
+            strokeOpacity="0.4"
+          />
+        ))}
+      </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: `${4 * size}px`, width: '100%' }}>
+        {rings.map((ring, i) => (
+          <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div style={{ width: `${10 * size}px`, height: `${10 * size}px`, background: t.accent, opacity: ring.opacity, borderRadius: '50%', flexShrink: 0 }} />
+            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.1em', width: '32px' }}>{ring.label}</span>
+            <span style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: t.textMuted }}>{ring.sub}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Model: MRR growth mini chart ──────────────────────────────────────────────
+function VisualModel({ theme, size }) {
+  const t = theme.colors;
+  const points = MERCHANT_GROWTH.filter((_, i) => i % 2 === 0);
+  const maxMrr = Math.max(...points.map(p => p.mrr));
+  const W = 200 * size, H = 100 * size;
+  const pathD = points.map((p, i) => {
+    const x = (i / (points.length - 1)) * W;
+    const y = H - (p.mrr / maxMrr) * H * 0.9;
+    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+  }).join(' ');
+  const areaD = pathD + ` L ${W} ${H} L 0 ${H} Z`;
+
+  return (
+    <div style={{ width: '100%' }}>
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', marginBottom: `${8 * size}px`, textTransform: 'uppercase' }}>
+        MRR Growth · 3 Years
+      </div>
+      <svg width={W} height={H} style={{ overflow: 'visible' }}>
+        <defs>
+          <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={t.accent} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={t.accent} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaD} fill="url(#mrrGrad)" />
+        <path d={pathD} fill="none" stroke={t.accent} strokeWidth="1.5" />
+        {points.map((p, i) => {
+          const x = (i / (points.length - 1)) * W;
+          const y = H - (p.mrr / maxMrr) * H * 0.9;
+          return <circle key={i} cx={x} cy={y} r="2.5" fill={t.accent} />;
+        })}
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: `${6 * size}px` }}>
+        {['Y1', 'Y2', 'Y3'].map(y => (
+          <span key={y} style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.1em' }}>{y}</span>
+        ))}
+      </div>
+      <div style={{ marginTop: `${12 * size}px`, fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${22 * size}px`, color: t.text }}>
+        $79K <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent }}>MRR · Y3</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Traction: build progress ──────────────────────────────────────────────────
+function VisualTraction({ theme, size }) {
+  const t = theme.colors;
+  const items = [
+    { label: 'Multi-tenant DB', pct: 100 },
+    { label: 'Dual Auth', pct: 100 },
+    { label: 'REST API (23+ endpoints)', pct: 100 },
+    { label: 'Pulse (Production)', pct: 100 },
+    { label: 'Constellation CRM', pct: 100 },
+    { label: 'Stripe Connect', pct: 35 },
+    { label: 'Beta Launch', pct: 20 },
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: `${7 * size}px`, width: '100%' }}>
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', marginBottom: `${2 * size}px`, textTransform: 'uppercase' }}>Build progress</div>
+      {items.map((item, i) => (
+        <div key={i}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+            <span style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: item.pct === 100 ? t.text : t.textMuted }}>{item.label}</span>
+            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: item.pct === 100 ? t.accent : t.textFaint }}>{item.pct}%</span>
+          </div>
+          <div style={{ height: `${4 * size}px`, background: t.bgAlt, borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: `${item.pct}%`,
+              background: item.pct === 100 ? t.accent : `${t.accent}60`,
+              animation: `barGrow 0.5s ease ${i * 0.06}s both`,
+            }} />
+          </div>
+        </div>
+      ))}
+      <style>{`@keyframes barGrow { from { width: 0 } }`}</style>
+    </div>
+  );
+}
+
+// ── Roadmap: horizontal timeline ──────────────────────────────────────────────
+function VisualRoadmap({ theme, size }) {
+  const t = theme.colors;
+  const phases = [
+    { label: 'Now', items: ['Cart + Payments', 'BARE Theme', 'Beta Launch'] },
+    { label: '6 mo', items: ['Scheduling', '100+ merchants', 'First Hire'] },
+    { label: '18 mo', items: ['AI Agent API', 'US Entry', '500+ merchants'] },
+  ];
+  return (
+    <div style={{ width: '100%' }}>
+      {phases.map((phase, i) => (
+        <div key={i} style={{
+          display: 'grid', gridTemplateColumns: `${40 * size}px 1fr`,
+          gap: `${10 * size}px`, marginBottom: `${14 * size}px`,
+          animation: `fadeSlideIn 0.4s ease ${i * 0.12}s both`,
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+            <div style={{
+              width: `${10 * size}px`, height: `${10 * size}px`,
+              borderRadius: '50%', background: i === 0 ? t.accent : t.border,
+              border: `2px solid ${t.accent}`, flexShrink: 0,
+            }} />
+            {i < phases.length - 1 && (
+              <div style={{ width: '1px', flex: 1, background: t.border, minHeight: `${20 * size}px` }} />
+            )}
+          </div>
+          <div>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.1em', marginBottom: '4px' }}>{phase.label}</div>
+            {phase.items.map((item, j) => (
+              <div key={j} style={{ fontFamily: theme.fonts.body, fontSize: `${10 * size}px`, color: t.textMuted, lineHeight: 1.6 }}>— {item}</div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Competition: comparison table ─────────────────────────────────────────────
+function VisualCompetition({ theme, size }) {
+  const t = theme.colors;
+  const rows = [
+    { co: 'Shopify',     storefront: true,  crm: false, costing: false, price: '$30–300' },
+    { co: 'Squarespace', storefront: true,  crm: false, costing: false, price: '$16–65' },
+    { co: 'Kajabi',      storefront: false, crm: false, costing: false, price: '$150–400' },
+    { co: 'TheApp',      storefront: true,  crm: true,  costing: true,  price: '$29–129' },
+  ];
+  const Check = ({ v }) => (
+    <span style={{ color: v ? t.accent : t.textFaint, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px` }}>
+      {v ? '✓' : '×'}
+    </span>
+  );
+  return (
+    <div style={{ width: '100%' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto auto', gap: `${4 * size}px 8px`, alignItems: 'center' }}>
+        {['', 'Store', 'CRM', 'Costing', 'Price'].map((h, i) => (
+          <div key={i} style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: `1px solid ${t.border}`, paddingBottom: '4px' }}>{h}</div>
+        ))}
+        {rows.map((row, i) => (
+          <>
+            <div key={`n${i}`} style={{
+              fontFamily: theme.fonts.body, fontSize: `${9 * size}px`,
+              color: row.co === 'TheApp' ? t.accent : t.textMuted,
+              fontWeight: row.co === 'TheApp' ? 500 : 400,
+              padding: `${3 * size}px 0`,
+              borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none',
+            }}>{row.co}</div>
+            <div key={`s${i}`} style={{ textAlign: 'center', borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none', padding: `${3 * size}px 0` }}><Check v={row.storefront} /></div>
+            <div key={`c${i}`} style={{ textAlign: 'center', borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none', padding: `${3 * size}px 0` }}><Check v={row.crm} /></div>
+            <div key={`p${i}`} style={{ textAlign: 'center', borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none', padding: `${3 * size}px 0` }}><Check v={row.costing} /></div>
+            <div key={`pr${i}`} style={{
+              fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`,
+              color: row.co === 'TheApp' ? t.accent : t.textFaint,
+              borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none',
+              padding: `${3 * size}px 0`,
+            }}>{row.price}</div>
+          </>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Ask: funding breakdown ────────────────────────────────────────────────────
+function VisualAsk({ theme, size }) {
+  const t = theme.colors;
+  const items = FUNDING_BREAKDOWN_SMALL;
+  const total = items.reduce((s, i) => s + i.amount, 0);
+  return (
+    <div style={{ width: '100%' }}>
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', marginBottom: `${10 * size}px`, textTransform: 'uppercase' }}>
+        $10K Grant Breakdown
+      </div>
+      {items.map((item, i) => (
+        <div key={i} style={{ marginBottom: `${8 * size}px`, animation: `fadeSlideIn 0.4s ease ${i * 0.08}s both` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+            <span style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: t.textMuted }}>{item.label}</span>
+            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent }}>${item.amount.toLocaleString()}</span>
+          </div>
+          <div style={{ height: `${5 * size}px`, background: t.bgAlt, borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: `${(item.amount / total) * 100}%`,
+              background: t.accent, opacity: 0.8,
+            }} />
+          </div>
+        </div>
+      ))}
+      <div style={{ marginTop: `${12 * size}px`, paddingTop: `${8 * size}px`, borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.1em' }}>TOTAL</span>
+        <span style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${20 * size}px`, color: t.accent }}>$10,000</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── THEME SLIDE SHELLS ───────────────────────────────────────────────────────
+
+function SlideLeft({ slide, theme, isFullscreen }) {
+  const t = theme.colors;
+  const pad = isFullscreen ? 'clamp(48px, 7vh, 80px) clamp(48px, 5vw, 72px)' : '32px 36px';
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+      padding: pad, height: '100%',
+    }}>
       <div>
-        {/* Eyebrow */}
         <p style={{
           fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
           letterSpacing: theme.type.monoTracking, color: t.accent,
-          textTransform: 'uppercase', marginBottom: '28px',
+          textTransform: 'uppercase', marginBottom: isFullscreen ? '24px' : '14px',
         }}>
           {slide.eyebrow}
         </p>
-        {/* Headline */}
         <h2 style={{
           fontFamily: theme.fonts.display,
-          fontSize: isFullscreen ? theme.type.displaySize : 'clamp(24px, 3.5vw, 44px)',
+          fontSize: isFullscreen ? theme.type.displaySize : 'clamp(16px, 2.4vw, 26px)',
           fontWeight: theme.type.displayWeight, fontStyle: theme.type.displayStyle,
           color: t.text, lineHeight: 1.15,
-          maxWidth: '800px', marginBottom: '32px',
+          marginBottom: isFullscreen ? '28px' : '14px',
+          maxWidth: '560px',
         }}>
           {slide.headline}
         </h2>
-        {/* Thin rule */}
-        <div style={{ width: '48px', height: '1px', background: t.accent, marginBottom: '28px' }} />
-        {/* Body */}
+        <div style={{ width: isFullscreen ? '40px' : '28px', height: '1px', background: t.accent, marginBottom: isFullscreen ? '24px' : '12px' }} />
         <p style={{
           fontFamily: theme.fonts.body,
-          fontSize: theme.type.bodySize, fontWeight: theme.type.bodyWeight,
-          color: t.textMuted, lineHeight: 1.8, maxWidth: '620px',
+          fontSize: isFullscreen ? theme.type.bodySize : 'clamp(10px, 1.2vw, 13px)',
+          fontWeight: theme.type.bodyWeight, color: t.textMuted, lineHeight: 1.75,
+          maxWidth: '480px',
         }}>
           {slide.body}
         </p>
       </div>
-
-      {/* Footer row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <div style={{
-          fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
-          color: t.accentLight, letterSpacing: theme.type.monoTracking,
-        }}>
-          THEAPP — {new Date().getFullYear()}
-        </div>
-        <div style={{
-          fontFamily: theme.fonts.display, fontStyle: 'italic', fontWeight: 300,
-          fontSize: isFullscreen ? '48px' : '32px', color: t.bgDeep, lineHeight: 1,
-        }}>
-          {slide.tag}
-        </div>
+      <div style={{
+        fontFamily: theme.fonts.mono,
+        fontSize: isFullscreen ? theme.type.monoSize : '8px',
+        color: t.textFaint, letterSpacing: '0.12em',
+      }}>
+        THEAPP · {new Date().getFullYear()}
       </div>
     </div>
   );
+}
+
+function TwoCol({ slide, theme, isFullscreen, leftBg, rightBg, accentBar, leftBorder }) {
+  const t = theme.colors;
+  const tagSize = isFullscreen ? '80px' : '48px';
+
+  return (
+    <div style={{
+      height: '100%', display: 'grid', gridTemplateColumns: '55% 45%',
+      background: leftBg || t.bg, position: 'relative', overflow: 'hidden',
+    }}>
+      {accentBar && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: accentBar, zIndex: 2 }} />}
+      {leftBorder && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: t.accent }} />}
+
+      {/* LEFT */}
+      <div style={{ borderRight: `1px solid ${t.border}`, position: 'relative' }}>
+        {leftBorder && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: t.accent }} />}
+        <SlideLeft slide={slide} theme={theme} isFullscreen={isFullscreen} />
+      </div>
+
+      {/* RIGHT */}
+      <div style={{
+        background: rightBg || t.bgAlt,
+        padding: isFullscreen ? 'clamp(40px, 6vh, 64px) clamp(32px, 4vw, 56px)' : '28px 24px',
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Ghost slide number */}
+        <div style={{
+          position: 'absolute', bottom: isFullscreen ? '20px' : '10px',
+          right: isFullscreen ? '28px' : '14px',
+          fontFamily: theme.fonts.display, fontStyle: 'italic', fontWeight: 300,
+          fontSize: tagSize, color: t.border, lineHeight: 1, userSelect: 'none',
+          pointerEvents: 'none',
+        }}>
+          {slide.tag}
+        </div>
+        <SlideVisual slideSlug={slide.slug} theme={theme} isFullscreen={isFullscreen} />
+      </div>
+    </div>
+  );
+}
+
+// ── A: MANUSCRIPT ─────────────────────────────────────────────────────────────
+function ManuscriptSlide({ slide, theme, isFullscreen }) {
+  return <TwoCol slide={slide} theme={theme} isFullscreen={isFullscreen}
+    accentBar={`linear-gradient(90deg, ${theme.colors.accent}, transparent)`}
+    rightBg={theme.colors.bgAlt}
+  />;
 }
 
 // ── C: BRUTALIST ──────────────────────────────────────────────────────────────
 function BrutalistSlide({ slide, theme, isFullscreen }) {
   const t = theme.colors;
   return (
-    <div style={{
-      height: '100%', background: t.bg,
-      display: 'grid',
-      gridTemplateRows: 'auto 1fr auto',
-      borderTop: theme.slide.borderTop,
-      position: 'relative', overflow: 'hidden',
-    }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', borderTop: '3px solid #1A1210' }}>
       {/* Header strip */}
       <div style={{
         borderBottom: `2px solid ${t.border}`,
-        padding: isFullscreen ? '24px 64px' : '16px 40px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: isFullscreen ? '16px 56px' : '10px 32px',
+        display: 'flex', justifyContent: 'space-between',
+        background: t.bgDeep, flexShrink: 0,
       }}>
-        <span style={{
-          fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
-          color: t.accent, letterSpacing: '0.05em', textTransform: 'uppercase',
-        }}>
-          {slide.eyebrow}
-        </span>
-        <span style={{
-          fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
-          color: t.textFaint,
-        }}>
-          {slide.tag} / 10
-        </span>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.bg, letterSpacing: '0.1em', textTransform: 'uppercase' }}>THEAPP</span>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.bg, letterSpacing: '0.1em' }}>{slide.tag} / 10</span>
       </div>
-
-      {/* Main content */}
-      <div style={{ padding: isFullscreen ? '48px 64px' : '32px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <h2 style={{
-          fontFamily: theme.fonts.display,
-          fontSize: isFullscreen ? theme.type.displaySize : 'clamp(28px, 4vw, 52px)',
-          fontWeight: theme.type.displayWeight, fontStyle: theme.type.displayStyle,
-          color: t.text, lineHeight: 1.05,
-          maxWidth: '780px', marginBottom: '32px',
-        }}>
-          {slide.headline}
-        </h2>
-        <p style={{
-          fontFamily: theme.fonts.body, fontSize: theme.type.bodySize,
-          fontWeight: theme.type.bodyWeight, color: t.textMuted,
-          lineHeight: 1.7, maxWidth: '560px',
-          borderLeft: `3px solid ${t.accent}`,
-          paddingLeft: '20px',
-        }}>
-          {slide.body}
-        </p>
-      </div>
-
-      {/* Footer */}
-      <div style={{
-        borderTop: `2px solid ${t.border}`,
-        padding: isFullscreen ? '16px 64px' : '12px 40px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        background: t.bgDeep,
-      }}>
-        <span style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.bg, letterSpacing: '0.1em' }}>
-          THEAPP
-        </span>
-        <span style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.bg, letterSpacing: '0.1em' }}>
-          CANADA · {new Date().getFullYear()}
-        </span>
+      {/* Body */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '55% 45%', minHeight: 0 }}>
+        <div style={{ borderRight: `2px solid ${t.border}`, paddingLeft: isFullscreen ? '8px' : '0' }}>
+          <div style={{
+            padding: isFullscreen ? '40px 56px' : '24px 32px',
+            height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center',
+          }}>
+            <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: isFullscreen ? '20px' : '10px' }}>
+              {slide.eyebrow}
+            </p>
+            <h2 style={{
+              fontFamily: theme.fonts.display,
+              fontSize: isFullscreen ? theme.type.displaySize : 'clamp(16px, 2.4vw, 28px)',
+              fontWeight: theme.type.displayWeight, color: t.text,
+              lineHeight: 1.05, marginBottom: isFullscreen ? '24px' : '12px', maxWidth: '480px',
+            }}>
+              {slide.headline}
+            </h2>
+            <p style={{
+              fontFamily: theme.fonts.body, fontSize: isFullscreen ? theme.type.bodySize : 'clamp(10px, 1.1vw, 13px)',
+              color: t.textMuted, lineHeight: 1.7, maxWidth: '440px',
+              borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px',
+            }}>
+              {slide.body}
+            </p>
+          </div>
+        </div>
+        <div style={{ padding: isFullscreen ? '40px 48px' : '24px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', bottom: '12px', right: '16px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: isFullscreen ? '72px' : '44px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
+          <SlideVisual slideSlug={slide.slug} theme={theme} isFullscreen={isFullscreen} />
+        </div>
       </div>
     </div>
   );
@@ -160,129 +602,21 @@ function BrutalistSlide({ slide, theme, isFullscreen }) {
 function EditorialSlide({ slide, theme, isFullscreen }) {
   const t = theme.colors;
   return (
-    <div style={{
-      height: '100%', background: t.bg,
-      display: 'flex', flexDirection: 'column',
-      justifyContent: 'space-between',
-      padding: isFullscreen ? 'clamp(56px, 9vh, 112px) clamp(56px, 9vw, 140px)' : '48px 56px',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      {/* Accent gradient bar */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: theme.slide.accentBar }} />
+    <div style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
-      <div style={{
-        position: 'absolute', top: '-20%', right: '-10%',
-        width: '50%', height: '60%',
-        background: `radial-gradient(ellipse, ${t.accent}08 0%, transparent 70%)`,
-        pointerEvents: 'none',
-      }} />
-
-      <div>
-        <p style={{
-          fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
-          letterSpacing: theme.type.monoTracking, color: t.accent,
-          textTransform: 'uppercase', marginBottom: '32px',
-        }}>
-          {slide.eyebrow}
-        </p>
-        <h2 style={{
-          fontFamily: theme.fonts.display,
-          fontSize: isFullscreen ? theme.type.displaySize : 'clamp(26px, 4vw, 52px)',
-          fontWeight: theme.type.displayWeight, fontStyle: theme.type.displayStyle,
-          color: t.text, lineHeight: 1.12,
-          maxWidth: '820px', marginBottom: '40px',
-        }}>
-          {slide.headline}
-        </h2>
-        <p style={{
-          fontFamily: theme.fonts.body, fontSize: theme.type.bodySize,
-          fontWeight: theme.type.bodyWeight, color: t.textMuted,
-          lineHeight: 1.85, maxWidth: '600px',
-        }}>
-          {slide.body}
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <div style={{
-          fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
-          color: t.textFaint, letterSpacing: theme.type.monoTracking,
-        }}>
-          THEAPP · INVESTOR PRESENTATION
-        </div>
-        <div style={{
-          fontFamily: theme.fonts.display, fontStyle: 'italic', fontWeight: 300,
-          fontSize: isFullscreen ? '72px' : '48px',
-          color: t.surface, lineHeight: 1,
-        }}>
-          {slide.tag}
-        </div>
-      </div>
+      <div style={{ position: 'absolute', top: '-20%', right: '-5%', width: '45%', height: '70%', background: `radial-gradient(ellipse, ${t.accent}06 0%, transparent 70%)`, pointerEvents: 'none' }} />
+      <TwoCol slide={slide} theme={theme} isFullscreen={isFullscreen}
+        leftBg={t.bg} rightBg={t.bgAlt}
+        accentBar={`linear-gradient(90deg, ${t.accent}, transparent)`}
+      />
     </div>
   );
 }
 
 // ── E: CANADIAN ───────────────────────────────────────────────────────────────
 function CanadianSlide({ slide, theme, isFullscreen }) {
-  const t = theme.colors;
-  return (
-    <div style={{
-      height: '100%', background: t.bg,
-      display: 'grid',
-      gridTemplateColumns: '4px 1fr',
-    }}>
-      {/* Red left border stripe */}
-      <div style={{ background: t.accent }} />
-
-      <div style={{
-        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        padding: isFullscreen ? 'clamp(48px, 8vh, 96px) clamp(48px, 7vw, 96px)' : '40px 48px',
-      }}>
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-            <p style={{
-              fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
-              letterSpacing: theme.type.monoTracking, color: t.accent,
-              textTransform: 'uppercase',
-            }}>
-              {slide.eyebrow}
-            </p>
-            <p style={{
-              fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
-              color: t.textFaint, letterSpacing: '0.05em',
-            }}>
-              {slide.tag} — 10
-            </p>
-          </div>
-
-          <div style={{ width: '48px', height: '3px', background: t.accent, marginBottom: '24px' }} />
-
-          <h2 style={{
-            fontFamily: theme.fonts.display,
-            fontSize: isFullscreen ? theme.type.displaySize : 'clamp(22px, 3.2vw, 40px)',
-            fontWeight: theme.type.displayWeight, fontStyle: theme.type.displayStyle,
-            color: t.text, lineHeight: 1.2,
-            maxWidth: '760px', marginBottom: '28px',
-          }}>
-            {slide.headline}
-          </h2>
-
-          <p style={{
-            fontFamily: theme.fonts.body, fontSize: theme.type.bodySize,
-            fontWeight: theme.type.bodyWeight, color: t.textMuted,
-            lineHeight: 1.75, maxWidth: '580px',
-          }}>
-            {slide.body}
-          </p>
-        </div>
-
-        <div style={{
-          fontFamily: theme.fonts.body, fontSize: '11px',
-          color: t.textFaint, letterSpacing: '0.05em',
-        }}>
-          TheApp · Canada · {new Date().getFullYear()}
-        </div>
-      </div>
-    </div>
-  );
+  return <TwoCol slide={slide} theme={theme} isFullscreen={isFullscreen}
+    leftBg={theme.colors.bg} rightBg={theme.colors.bgAlt}
+    leftBorder={true}
+  />;
 }

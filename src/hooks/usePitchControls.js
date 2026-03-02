@@ -1,16 +1,27 @@
 // ─── PITCH CONTROLS HOOK ──────────────────────────────────────────────────────
-// Manages slide index, fullscreen mode, auto-present mode.
-// Used by PitchPage and PresentMode — single source of truth.
+// Manages slide index, fullscreen, auto-play, and ElevenLabs audio sync.
+// Audio is opt-in — set AUDIO_ENABLED = true in src/data/audio.js when ready.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SLIDE_COUNT } from '../data/slides.js';
+import { AUDIO_ENABLED, getAudioFile, getAudioDuration } from '../data/audio.js';
 
-export function usePitchControls(autoSlideMs = 5000) {
-  const [current, setCurrent]       = useState(0);
-  const [isFullscreen, setFullscreen] = useState(false);
-  const [isAutoPlay, setAutoPlay]   = useState(false);
-  const [direction, setDirection]   = useState(1); // 1 = forward, -1 = backward
-  const autoTimer = useRef(null);
+export function usePitchControls(defaultAutoSlideMs = 5000) {
+  const [current, setCurrent]     = useState(0);
+  const [isFullscreen, setFS]     = useState(false);
+  const [isAutoPlay, setAutoPlay] = useState(false);
+  const [direction, setDirection] = useState(1);
+  const autoTimer  = useRef(null);
+  const audioRef   = useRef(null);
+
+  const cleanupAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+    clearTimeout(autoTimer.current);
+  }, []);
 
   const goTo = useCallback((index) => {
     setDirection(index >= current ? 1 : -1);
@@ -18,45 +29,32 @@ export function usePitchControls(autoSlideMs = 5000) {
   }, [current]);
 
   const next = useCallback(() => {
-    if (current < SLIDE_COUNT - 1) {
+    setCurrent(c => {
+      const n = c < SLIDE_COUNT - 1 ? c + 1 : 0; // loop in auto
       setDirection(1);
-      setCurrent(c => c + 1);
-    } else if (isAutoPlay) {
-      // Loop back to start in auto mode
-      setDirection(1);
-      setCurrent(0);
-    }
-  }, [current, isAutoPlay]);
+      return n;
+    });
+  }, []);
 
   const prev = useCallback(() => {
-    if (current > 0) {
-      setDirection(-1);
-      setCurrent(c => c - 1);
-    }
+    if (current > 0) { setDirection(-1); setCurrent(c => c - 1); }
   }, [current]);
 
-  const enterFullscreen = useCallback(() => setFullscreen(true),  []);
+  const enterFullscreen = useCallback(() => setFS(true), []);
   const exitFullscreen  = useCallback(() => {
-    setFullscreen(false);
+    setFS(false);
     setAutoPlay(false);
-  }, []);
+    cleanupAudio();
+  }, [cleanupAudio]);
 
-  const toggleAutoPlay = useCallback(() => {
-    setAutoPlay(a => !a);
-  }, []);
+  const toggleAutoPlay = useCallback(() => setAutoPlay(a => !a), []);
 
-  // Keyboard navigation — active when fullscreen
+  // Keyboard nav
   useEffect(() => {
     if (!isFullscreen) return;
     const handler = (e) => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
-        e.preventDefault();
-        next();
-      }
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        prev();
-      }
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); prev(); }
       if (e.key === 'Escape') exitFullscreen();
       if (e.key === 'a' || e.key === 'A') toggleAutoPlay();
     };
@@ -64,29 +62,36 @@ export function usePitchControls(autoSlideMs = 5000) {
     return () => window.removeEventListener('keydown', handler);
   }, [isFullscreen, next, prev, exitFullscreen, toggleAutoPlay]);
 
-  // Auto-play timer
+  // Auto-play: audio-synced if AUDIO_ENABLED, timer-based otherwise
   useEffect(() => {
-    if (!isAutoPlay || !isFullscreen) {
-      clearInterval(autoTimer.current);
-      return;
+    if (!isAutoPlay || !isFullscreen) { cleanupAudio(); return; }
+
+    if (AUDIO_ENABLED) {
+      // Audio-driven: advance when audio ends
+      const file = getAudioFile(current);
+      if (file) {
+        const audio = new Audio(file);
+        audioRef.current = audio;
+        audio.play().catch(() => {});
+        audio.onended = () => next();
+      } else {
+        // File not yet available, fall back to timer
+        autoTimer.current = setTimeout(next, getAudioDuration(current, defaultAutoSlideMs));
+      }
+    } else {
+      // Pure timer mode — use per-slide duration or default
+      autoTimer.current = setTimeout(next, getAudioDuration(current, defaultAutoSlideMs));
     }
-    autoTimer.current = setInterval(next, autoSlideMs);
-    return () => clearInterval(autoTimer.current);
-  }, [isAutoPlay, isFullscreen, next, autoSlideMs]);
+
+    return cleanupAudio;
+  }, [isAutoPlay, isFullscreen, current, next, cleanupAudio, defaultAutoSlideMs]);
 
   return {
-    current,
-    direction,
-    isFullscreen,
-    isAutoPlay,
-    goTo,
-    next,
-    prev,
-    enterFullscreen,
-    exitFullscreen,
-    toggleAutoPlay,
-    isFirst: current === 0,
-    isLast:  current === SLIDE_COUNT - 1,
+    current, direction, isFullscreen, isAutoPlay,
+    goTo, next, prev, enterFullscreen, exitFullscreen, toggleAutoPlay,
+    isFirst:  current === 0,
+    isLast:   current === SLIDE_COUNT - 1,
     progress: ((current + 1) / SLIDE_COUNT) * 100,
+    audioEnabled: AUDIO_ENABLED,
   };
 }

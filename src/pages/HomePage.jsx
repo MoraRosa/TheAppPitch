@@ -8,10 +8,10 @@ export default function HomePage() {
   const t = theme.colors;
 
   const stats = [
-    { value: '5',    label: 'Beta merchants waiting' },
+    { value: '5',     label: 'Beta merchants waiting' },
     { value: '$948K', label: 'ARR projection · Year 3' },
-    { value: '23+',  label: 'API endpoints built' },
-    { value: '1',    label: 'Developer. No team yet.' },
+    { value: '23+',   label: 'API endpoints built' },
+    { value: '1',     label: 'Developer. No team yet.' },
   ];
 
   return (
@@ -24,7 +24,6 @@ export default function HomePage() {
         borderBottom: `1px solid ${t.border}`,
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* Background atmosphere */}
         {!theme.isLight && (
           <div style={{
             position: 'absolute', top: '10%', right: '5%',
@@ -45,8 +44,7 @@ export default function HomePage() {
         </motion.div>
 
         <motion.h1
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1 }}
           style={{
             fontFamily: theme.fonts.display,
@@ -61,8 +59,7 @@ export default function HomePage() {
         </motion.h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           style={{
             fontFamily: theme.fonts.body, fontSize: '17px',
@@ -74,14 +71,12 @@ export default function HomePage() {
         </motion.p>
 
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
           style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}
         >
           <Link to="/pitch" style={{
-            background: t.accent,
-            color: theme.isLight ? '#fff' : t.bg,
+            background: t.accent, color: theme.isLight ? '#fff' : t.bg,
             textDecoration: 'none', padding: '14px 32px',
             borderRadius: theme.space.radius || '6px',
             fontFamily: theme.fonts.body, fontSize: '14px', fontWeight: 500,
@@ -89,31 +84,26 @@ export default function HomePage() {
             View Pitch Deck →
           </Link>
           <Link to="/plan" style={{
-            background: 'none', color: t.text,
-            textDecoration: 'none', padding: '14px 32px',
-            border: `1px solid ${t.border}`,
+            background: 'none', color: t.text, textDecoration: 'none',
+            padding: '14px 32px', border: `1px solid ${t.border}`,
             borderRadius: theme.space.radius || '6px',
             fontFamily: theme.fonts.body, fontSize: '14px',
           }}>
             Read Business Plan
           </Link>
           <Link to="/downloads" style={{
-            background: 'none', color: t.textMuted,
-            textDecoration: 'none', padding: '14px 32px',
-            fontFamily: theme.fonts.body, fontSize: '14px',
+            background: 'none', color: t.textMuted, textDecoration: 'none',
+            padding: '14px 32px', fontFamily: theme.fonts.body, fontSize: '14px',
           }}>
             ↓ Download PDF
           </Link>
         </motion.div>
       </section>
 
-      {/* Stats strip */}
+      {/* Stats strip — clean borders, no grid background trick */}
       <section style={{
-        padding: `48px ${theme.space.pagePadding}`,
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '1px',
-        background: t.border,
         borderBottom: `1px solid ${t.border}`,
       }}>
         {stats.map((stat, i) => (
@@ -121,7 +111,10 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 + i * 0.08 }}
-            style={{ background: t.bg, padding: '32px 40px' }}
+            style={{
+              padding: '40px 40px',
+              borderRight: i < stats.length - 1 ? `1px solid ${t.border}` : 'none',
+            }}
           >
             <div style={{
               fontFamily: theme.fonts.display,
