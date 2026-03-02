@@ -4,6 +4,7 @@
 // Right-side slot is video-ready — swap <SlideVisual> for <video> at MVP.
 
 import { useTheme } from '../../context/ThemeContext.jsx';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL } from '../../data/financials.js';
 
 export default function SlideRenderer({ slide, isFullscreen = false }) {
@@ -451,85 +452,167 @@ function VisualAsk({ theme, size }) {
 
 // ─── THEME SLIDE SHELLS ───────────────────────────────────────────────────────
 
-function SlideLeft({ slide, theme, isFullscreen }) {
+
+// ─── SHARED CONTENT COLUMN ────────────────────────────────────────────────────
+function SlideLeft({ slide, theme, isFullscreen, isMobile }) {
   const t = theme.colors;
-  const pad = isFullscreen ? 'clamp(48px, 7vh, 80px) clamp(48px, 5vw, 72px)' : '32px 36px';
+
+  const pad = isFullscreen
+    ? (isMobile ? '28px 24px 20px' : 'clamp(48px, 7vh, 80px) clamp(48px, 5vw, 72px)')
+    : (isMobile ? '18px 16px 14px' : '32px 36px');
+
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+      display: 'flex', flexDirection: 'column',
+      justifyContent: isFullscreen ? 'center' : 'space-between',
       padding: pad, height: '100%',
     }}>
       <div>
         <p style={{
-          fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
+          fontFamily: theme.fonts.mono,
+          fontSize: isFullscreen ? theme.type.monoSize : (isMobile ? '7px' : theme.type.monoSize),
           letterSpacing: theme.type.monoTracking, color: t.accent,
-          textTransform: 'uppercase', marginBottom: isFullscreen ? '24px' : '14px',
+          textTransform: 'uppercase',
+          marginBottom: isFullscreen ? (isMobile ? '12px' : '24px') : (isMobile ? '5px' : '14px'),
         }}>
           {slide.eyebrow}
         </p>
+
         <h2 style={{
           fontFamily: theme.fonts.display,
-          fontSize: isFullscreen ? theme.type.displaySize : 'clamp(16px, 2.4vw, 26px)',
+          fontSize: isFullscreen
+            ? (isMobile ? 'clamp(18px, 4.5vw, 28px)' : theme.type.displaySize)
+            : (isMobile ? 'clamp(12px, 3.2vw, 16px)' : 'clamp(16px, 2.4vw, 26px)'),
           fontWeight: theme.type.displayWeight, fontStyle: theme.type.displayStyle,
           color: t.text, lineHeight: 1.15,
-          marginBottom: isFullscreen ? '28px' : '14px',
+          marginBottom: isFullscreen ? (isMobile ? '12px' : '28px') : (isMobile ? '0' : '14px'),
           maxWidth: '560px',
         }}>
           {slide.headline}
         </h2>
-        <div style={{ width: isFullscreen ? '40px' : '28px', height: '1px', background: t.accent, marginBottom: isFullscreen ? '24px' : '12px' }} />
-        <p style={{
-          fontFamily: theme.fonts.body,
-          fontSize: isFullscreen ? theme.type.bodySize : 'clamp(10px, 1.2vw, 13px)',
-          fontWeight: theme.type.bodyWeight, color: t.textMuted, lineHeight: 1.75,
-          maxWidth: '480px',
+
+        {/* Body + rule — hidden in card preview on mobile, shown fullscreen */}
+        {(!isMobile || isFullscreen) && (
+          <>
+            <div style={{
+              width: isFullscreen ? '40px' : '28px', height: '1px',
+              background: t.accent,
+              margin: isFullscreen ? (isMobile ? '12px 0' : '24px 0') : '12px 0',
+            }} />
+            <p style={{
+              fontFamily: theme.fonts.body,
+              fontSize: isFullscreen
+                ? (isMobile ? '13px' : theme.type.bodySize)
+                : 'clamp(10px, 1.2vw, 13px)',
+              fontWeight: theme.type.bodyWeight, color: t.textMuted, lineHeight: 1.75,
+              maxWidth: '480px',
+            }}>
+              {slide.body}
+            </p>
+          </>
+        )}
+      </div>
+
+      {isFullscreen && (
+        <div style={{
+          fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize,
+          color: t.textFaint, letterSpacing: '0.12em', marginTop: '16px',
         }}>
-          {slide.body}
-        </p>
-      </div>
-      <div style={{
-        fontFamily: theme.fonts.mono,
-        fontSize: isFullscreen ? theme.type.monoSize : '8px',
-        color: t.textFaint, letterSpacing: '0.12em',
-      }}>
-        THEAPP · {new Date().getFullYear()}
-      </div>
+          THEAPP · {new Date().getFullYear()}
+        </div>
+      )}
     </div>
   );
 }
 
+// ─── SHARED TWO-COLUMN / STACKED LAYOUT ───────────────────────────────────────
 function TwoCol({ slide, theme, isFullscreen, leftBg, rightBg, accentBar, leftBorder }) {
   const t = theme.colors;
-  const tagSize = isFullscreen ? '80px' : '48px';
+  const isMobile = useIsMobile();
 
+  // mobile card preview → single column, content only, ghost tag
+  if (isMobile && !isFullscreen) {
+    return (
+      <div style={{
+        height: '100%', background: leftBg || t.bg,
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {accentBar && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: accentBar, zIndex: 2 }} />}
+        {leftBorder && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: t.accent }} />}
+        <SlideLeft slide={slide} theme={theme} isFullscreen={false} isMobile={true} />
+        <div style={{
+          position: 'absolute', bottom: '8px', right: '12px',
+          fontFamily: theme.fonts.display, fontStyle: 'italic', fontWeight: 300,
+          fontSize: '32px', color: t.border, lineHeight: 1,
+          userSelect: 'none', pointerEvents: 'none',
+        }}>
+          {slide.tag}
+        </div>
+      </div>
+    );
+  }
+
+  // mobile fullscreen → stacked: content top, visual bottom
+  if (isMobile && isFullscreen) {
+    return (
+      <div style={{
+        height: '100%', display: 'flex', flexDirection: 'column',
+        background: leftBg || t.bg, position: 'relative', overflow: 'hidden',
+      }}>
+        {accentBar && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: accentBar, zIndex: 2 }} />}
+        {leftBorder && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: t.accent }} />}
+
+        {/* Content — top 58% */}
+        <div style={{ flex: '0 0 58%', borderBottom: `1px solid ${t.border}`, overflow: 'hidden' }}>
+          <SlideLeft slide={slide} theme={theme} isFullscreen={true} isMobile={true} />
+        </div>
+
+        {/* Visual — bottom 42% */}
+        <div style={{
+          flex: '1 1 42%', background: rightBg || t.bgAlt,
+          padding: '14px 18px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          position: 'relative', overflow: 'hidden',
+        }}>
+          <div style={{
+            position: 'absolute', bottom: '6px', right: '10px',
+            fontFamily: theme.fonts.display, fontStyle: 'italic', fontWeight: 300,
+            fontSize: '40px', color: t.border, lineHeight: 1,
+            userSelect: 'none', pointerEvents: 'none',
+          }}>
+            {slide.tag}
+          </div>
+          <SlideVisual slideSlug={slide.slug} theme={theme} isFullscreen={false} />
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop — original side-by-side
   return (
     <div style={{
       height: '100%', display: 'grid', gridTemplateColumns: '55% 45%',
       background: leftBg || t.bg, position: 'relative', overflow: 'hidden',
     }}>
       {accentBar && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: accentBar, zIndex: 2 }} />}
-      {leftBorder && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: t.accent }} />}
 
-      {/* LEFT */}
       <div style={{ borderRight: `1px solid ${t.border}`, position: 'relative' }}>
         {leftBorder && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: t.accent }} />}
-        <SlideLeft slide={slide} theme={theme} isFullscreen={isFullscreen} />
+        <SlideLeft slide={slide} theme={theme} isFullscreen={isFullscreen} isMobile={false} />
       </div>
 
-      {/* RIGHT */}
       <div style={{
         background: rightBg || t.bgAlt,
         padding: isFullscreen ? 'clamp(40px, 6vh, 64px) clamp(32px, 4vw, 56px)' : '28px 24px',
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* Ghost slide number */}
         <div style={{
           position: 'absolute', bottom: isFullscreen ? '20px' : '10px',
           right: isFullscreen ? '28px' : '14px',
           fontFamily: theme.fonts.display, fontStyle: 'italic', fontWeight: 300,
-          fontSize: tagSize, color: t.border, lineHeight: 1, userSelect: 'none',
-          pointerEvents: 'none',
+          fontSize: isFullscreen ? '80px' : '48px', color: t.border, lineHeight: 1,
+          userSelect: 'none', pointerEvents: 'none',
         }}>
           {slide.tag}
         </div>
@@ -550,43 +633,61 @@ function ManuscriptSlide({ slide, theme, isFullscreen }) {
 // ── C: BRUTALIST ──────────────────────────────────────────────────────────────
 function BrutalistSlide({ slide, theme, isFullscreen }) {
   const t = theme.colors;
+  const isMobile = useIsMobile();
+
+  // Mobile card — compact single column with header strip
+  if (isMobile && !isFullscreen) {
+    return (
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', borderTop: `3px solid ${t.bgDeep}` }}>
+        <div style={{ borderBottom: `1px solid ${t.border}`, padding: '6px 16px', display: 'flex', justifyContent: 'space-between', background: t.bgDeep, flexShrink: 0 }}>
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: '7px', color: t.bg, letterSpacing: '0.1em' }}>THEAPP</span>
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: '7px', color: t.bg, letterSpacing: '0.1em' }}>{slide.tag} / 10</span>
+        </div>
+        <div style={{ flex: 1, padding: '14px 16px', position: 'relative', overflow: 'hidden' }}>
+          <p style={{ fontFamily: theme.fonts.mono, fontSize: '7px', color: t.accent, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '5px' }}>{slide.eyebrow}</p>
+          <h2 style={{ fontFamily: theme.fonts.display, fontSize: 'clamp(12px, 3.2vw, 16px)', fontWeight: theme.type.displayWeight, color: t.text, lineHeight: 1.1 }}>{slide.headline}</h2>
+          <div style={{ position: 'absolute', bottom: '8px', right: '12px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: '32px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile fullscreen — stacked
+  if (isMobile && isFullscreen) {
+    return (
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', borderTop: `3px solid ${t.bgDeep}` }}>
+        <div style={{ borderBottom: `2px solid ${t.border}`, padding: '10px 24px', display: 'flex', justifyContent: 'space-between', background: t.bgDeep, flexShrink: 0 }}>
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.bg, letterSpacing: '0.1em', textTransform: 'uppercase' }}>THEAPP</span>
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.bg, letterSpacing: '0.1em' }}>{slide.tag} / 10</span>
+        </div>
+        <div style={{ flex: '0 0 58%', borderBottom: `2px solid ${t.border}`, overflow: 'hidden' }}>
+          <div style={{ padding: '20px 24px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '12px' }}>{slide.eyebrow}</p>
+            <h2 style={{ fontFamily: theme.fonts.display, fontSize: 'clamp(18px, 4.5vw, 26px)', fontWeight: theme.type.displayWeight, color: t.text, lineHeight: 1.05, marginBottom: '12px', maxWidth: '480px' }}>{slide.headline}</h2>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: '13px', color: t.textMuted, lineHeight: 1.7, maxWidth: '440px', borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px' }}>{slide.body}</p>
+          </div>
+        </div>
+        <div style={{ flex: '1 1 42%', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', bottom: '8px', right: '12px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: '40px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
+          <SlideVisual slideSlug={slide.slug} theme={theme} isFullscreen={false} />
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop — original
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', borderTop: '3px solid #1A1210' }}>
-      {/* Header strip */}
-      <div style={{
-        borderBottom: `2px solid ${t.border}`,
-        padding: isFullscreen ? '16px 56px' : '10px 32px',
-        display: 'flex', justifyContent: 'space-between',
-        background: t.bgDeep, flexShrink: 0,
-      }}>
+      <div style={{ borderBottom: `2px solid ${t.border}`, padding: isFullscreen ? '16px 56px' : '10px 32px', display: 'flex', justifyContent: 'space-between', background: t.bgDeep, flexShrink: 0 }}>
         <span style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.bg, letterSpacing: '0.1em', textTransform: 'uppercase' }}>THEAPP</span>
         <span style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.bg, letterSpacing: '0.1em' }}>{slide.tag} / 10</span>
       </div>
-      {/* Body */}
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '55% 45%', minHeight: 0 }}>
-        <div style={{ borderRight: `2px solid ${t.border}`, paddingLeft: isFullscreen ? '8px' : '0' }}>
-          <div style={{
-            padding: isFullscreen ? '40px 56px' : '24px 32px',
-            height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          }}>
-            <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: isFullscreen ? '20px' : '10px' }}>
-              {slide.eyebrow}
-            </p>
-            <h2 style={{
-              fontFamily: theme.fonts.display,
-              fontSize: isFullscreen ? theme.type.displaySize : 'clamp(16px, 2.4vw, 28px)',
-              fontWeight: theme.type.displayWeight, color: t.text,
-              lineHeight: 1.05, marginBottom: isFullscreen ? '24px' : '12px', maxWidth: '480px',
-            }}>
-              {slide.headline}
-            </h2>
-            <p style={{
-              fontFamily: theme.fonts.body, fontSize: isFullscreen ? theme.type.bodySize : 'clamp(10px, 1.1vw, 13px)',
-              color: t.textMuted, lineHeight: 1.7, maxWidth: '440px',
-              borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px',
-            }}>
-              {slide.body}
-            </p>
+        <div style={{ borderRight: `2px solid ${t.border}` }}>
+          <div style={{ padding: isFullscreen ? '40px 56px' : '24px 32px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: isFullscreen ? '20px' : '10px' }}>{slide.eyebrow}</p>
+            <h2 style={{ fontFamily: theme.fonts.display, fontSize: isFullscreen ? theme.type.displaySize : 'clamp(16px, 2.4vw, 28px)', fontWeight: theme.type.displayWeight, color: t.text, lineHeight: 1.05, marginBottom: isFullscreen ? '24px' : '12px', maxWidth: '480px' }}>{slide.headline}</h2>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: isFullscreen ? theme.type.bodySize : 'clamp(10px, 1.1vw, 13px)', color: t.textMuted, lineHeight: 1.7, maxWidth: '440px', borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px' }}>{slide.body}</p>
           </div>
         </div>
         <div style={{ padding: isFullscreen ? '40px 48px' : '24px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -603,7 +704,6 @@ function EditorialSlide({ slide, theme, isFullscreen }) {
   const t = theme.colors;
   return (
     <div style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
-      {/* Ambient glow */}
       <div style={{ position: 'absolute', top: '-20%', right: '-5%', width: '45%', height: '70%', background: `radial-gradient(ellipse, ${t.accent}06 0%, transparent 70%)`, pointerEvents: 'none' }} />
       <TwoCol slide={slide} theme={theme} isFullscreen={isFullscreen}
         leftBg={t.bg} rightBg={t.bgAlt}
