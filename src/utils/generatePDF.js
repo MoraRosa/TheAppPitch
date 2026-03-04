@@ -6,6 +6,7 @@ import { PLAN_SECTIONS } from '../data/plan.js';
 import { SLIDES } from '../data/slides.js';
 import { MILESTONES, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL, COMPETITOR_COST_STACK, MERCHANT_GROWTH } from '../data/financials.js';
 import { FOUNDER } from '../data/founder.js';
+import { COMPANY, COMPETITORS, FOUNDER_INFO, FUNDING } from '../data/config.js';
 
 function hexToRgb(hex) {
   const c = (hex || '#888888').replace('#', '');
@@ -185,12 +186,13 @@ function drawRightTraction(doc, x, y, w, h, theme) {
 
 function drawRightCompetition(doc, x, y, w, h, theme) {
   const t = theme.colors;
-  const rows = [
-    { co: 'Shopify', storefront: '✓', crm: '×', costing: '×', price: '$30–300' },
-    { co: 'Squarespace', storefront: '✓', crm: '×', costing: '×', price: '$16–65' },
-    { co: 'Kajabi', storefront: '~', crm: '×', costing: '×', price: '$150–400' },
-    { co: 'TheApp', storefront: '✓', crm: '✓', costing: '✓', price: '$29–129' },
-  ];
+  const rows = COMPETITORS.map(c => ({
+    co:       c.co,
+    storefront: c.storefront ? '✓' : '×',
+    crm:      c.crm     ? '✓' : '×',
+    costing:  c.costing ? '✓' : (c.co === COMPANY.name ? '✓' : '~'),
+    price:    c.price,
+  }));
   const headers = ['', 'Store', 'CRM', 'Cost', 'Price'];
   const colWidths = [22, 12, 12, 12, 20];
   let cx = x;
@@ -205,14 +207,14 @@ function drawRightCompetition(doc, x, y, w, h, theme) {
   doc.line(x, y + 8, x + w - 2, y + 8);
   let ry = y + 14;
   rows.forEach(row => {
-    const isTheApp = row.co === 'TheApp';
+    const isOurs = row.co === COMPANY.name;
     const cols2 = [row.co, row.storefront, row.crm, row.costing, row.price];
     cx = x;
     cols2.forEach((val, i) => {
       doc.setFontSize(i === 0 ? 7.5 : 8);
-      doc.setFont('helvetica', isTheApp ? 'bold' : 'normal');
+      doc.setFont('helvetica', isOurs ? 'bold' : 'normal');
       doc.setTextColor(...hexToRgb(
-        isTheApp ? t.accent :
+        isOurs ? t.accent :
         (val === '✓' ? t.text : val === '×' ? t.textFaint : t.textMuted)
       ));
       doc.text(String(val), cx, ry);
@@ -230,7 +232,7 @@ function drawRightAsk(doc, x, y, w, h, theme) {
   const total = items.reduce((s, i) => s + i.amount, 0);
   doc.setFontSize(6.5);
   doc.setTextColor(...hexToRgb(t.accent));
-  doc.text('$10K GRANT BREAKDOWN', x, y + 5);
+  doc.text(`$${(FUNDING.currentGrant.amount / 1000).toFixed(0)}K GRANT BREAKDOWN`, x, y + 5);
   let cy = y + 12;
   items.forEach(item => {
     doc.setFontSize(7);
@@ -252,7 +254,7 @@ function drawRightAsk(doc, x, y, w, h, theme) {
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...hexToRgb(t.accent));
-  doc.text('$10,000', x, cy);
+  doc.text(`$${FUNDING.currentGrant.amount.toLocaleString()}`, x, cy);
 }
 
 function drawSlideRight(doc, slide, x, y, w, h, theme) {
@@ -369,12 +371,12 @@ export async function generateBusinessPlanPDF(theme) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...hexToRgb(t.accent));
-  doc.text('THEAPP — BUSINESS PLAN', 14, 20);
+  doc.text(`${COMPANY.name.toUpperCase()} — BUSINESS PLAN`, 14, 20);
 
   doc.setFontSize(30);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...hexToRgb(t.text));
-  doc.text('TheApp', 14, 48);
+  doc.text(COMPANY.name, 14, 48);
 
   doc.setFontSize(16);
   doc.setFont('helvetica', 'normal');
@@ -435,31 +437,107 @@ export async function generateBusinessPlanPDF(theme) {
 
     accentRule(doc, 14, 34, theme);
 
-    doc.setFontSize(9.5);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...hexToRgb(t.textMuted));
-
     let y = 44;
-    section.content.split('\n\n').forEach(para => {
-      if (y > 270) { doc.addPage(); y = 20; }
-      const lines = doc.splitTextToSize(para.trim(), 182);
+
+    const addPageIfNeeded = () => {
+      if (y > 270) {
+        doc.addPage();
+        doc.setFillColor(...hexToRgb(t.bg));
+        doc.rect(0, 0, 210, 297, 'F');
+        y = 20;
+      }
+    };
+
+    const writePara = (text, fontSize = 9.5, color = t.textMuted, bold = false) => {
+      addPageIfNeeded();
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.setTextColor(...hexToRgb(color));
+      const lines = doc.splitTextToSize((text || '').trim(), 182);
       lines.forEach(line => {
+        addPageIfNeeded();
         doc.text(line, 14, y);
-        y += 5.2;
+        y += fontSize * 0.55;
       });
-      y += 4;
-    });
+      y += 3;
+    };
+
+    if (section.blocks) {
+      section.blocks.forEach(block => {
+        if (block.type === 'text') {
+          writePara(block.text);
+        } else if (block.type === 'label') {
+          y += 2;
+          writePara(block.text.toUpperCase(), 7, t.accent, false);
+          y += 1;
+        } else if (block.type === 'callout') {
+          y += 2;
+          doc.setDrawColor(...hexToRgb(t.accent));
+          doc.setLineWidth(0.5);
+          doc.line(14, y - 2, 14, y + 14);
+          writePara(block.text, 9.5, t.text, false);
+          y += 2;
+        } else if (block.type === 'bullets') {
+          block.items.forEach(item => {
+            addPageIfNeeded();
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(...hexToRgb(t.accent));
+            doc.text('—', 14, y);
+            doc.setTextColor(...hexToRgb(t.textMuted));
+            const lines = doc.splitTextToSize(item, 170);
+            lines.forEach((line, li) => {
+              doc.text(line, 22, y + li * 5);
+            });
+            y += lines.length * 5 + 2;
+          });
+        } else if (block.type === 'weakness') {
+          y += 2;
+          writePara(block.title, 10, t.text, true);
+          writePara('Challenge: ' + block.challenge, 8.5, t.textMuted);
+          writePara('Mitigation: ' + block.mitigation, 8.5, t.textMuted);
+          y += 2;
+        } else if (block.type === 'swot') {
+          const quads = [
+            { label: 'Strengths',     items: block.strengths },
+            { label: 'Weaknesses',    items: block.weaknesses },
+            { label: 'Opportunities', items: block.opportunities },
+            { label: 'Threats',       items: block.threats },
+          ];
+          quads.forEach(q => {
+            y += 2;
+            writePara(q.label.toUpperCase(), 7, t.accent);
+            q.items.forEach(item => writePara('— ' + item, 8.5, t.textMuted));
+          });
+        } else if (block.type === 'placeholder') {
+          y += 2;
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...hexToRgb(t.textFaint));
+          const lines = doc.splitTextToSize('⏳ ' + block.text, 182);
+          lines.forEach(line => { doc.text(line, 14, y); y += 4.5; });
+          y += 2;
+        }
+      });
+    } else if (section.content) {
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...hexToRgb(t.textMuted));
+      section.content.split('\n\n').forEach(para => {
+        writePara(para);
+      });
+    }
 
     // Footer
     doc.setDrawColor(...hexToRgb(t.border));
     doc.line(14, 284, 196, 284);
     doc.setFontSize(6.5);
     doc.setTextColor(...hexToRgb(t.textFaint));
-    doc.text('THEAPP · BUSINESS PLAN', 14, 289);
+    doc.text(`${COMPANY.name.toUpperCase()} · BUSINESS PLAN`, 14, 289);
     doc.text(`${idx + 2} / ${total}`, 196, 289, { align: 'right' });
   });
 
-  doc.save('theapp-business-plan.pdf');
+  doc.save(`${COMPANY.name.toLowerCase().replace(/\s+/g, '-')}-business-plan.pdf`);
 }
 
 // ── FINANCIALS PDF ────────────────────────────────────────────────────────────

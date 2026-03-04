@@ -5,11 +5,12 @@
 import PptxGenJS from 'pptxgenjs';
 import { SLIDES } from '../data/slides.js';
 import { COMPETITOR_COST_STACK, FUNDING_BREAKDOWN_SMALL, MERCHANT_GROWTH } from '../data/financials.js';
+import { COMPANY, COMPETITORS, FUNDING } from '../data/config.js';
 
 export async function generatePitchDeckPPTX(theme) {
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
-  pptx.title = 'TheApp — Investor Pitch Deck';
+  pptx.title = `${COMPANY.name} — Investor Pitch Deck`;
 
   const isLight = theme.isLight;
   const c = (hex) => (hex || '#888888').replace('#', '');
@@ -245,12 +246,13 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
     }
 
     case 'competition': {
-      const rows = [
-        { co: 'Shopify',     s: '✓', c: '×', p: '×', price: '$30–300' },
-        { co: 'Squarespace', s: '✓', c: '×', p: '×', price: '$16–65' },
-        { co: 'Kajabi',      s: '~', c: '×', p: '×', price: '$150–400' },
-        { co: 'TheApp',      s: '✓', c: '✓', p: '✓', price: '$29–129' },
-      ];
+      const rows = COMPETITORS.map(c => ({
+        co:    c.co,
+        s:     c.storefront ? '✓' : '×',
+        c:     c.crm        ? '✓' : '×',
+        p:     c.costing    ? '✓' : '×',
+        price: c.price,
+      }));
       const headers = ['', 'Store', 'CRM', 'Costing', 'Price'];
       const cw = [1.5, 0.75, 0.75, 0.85, 0.9];
       let cx = pad;
@@ -261,21 +263,21 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
       s.addShape(pptx.ShapeType.line, { x: pad, y: contentY + 0.32, w: rw - 0.3, h: 0, line: { color: border, width: 0.5 } });
       rows.forEach((row, i) => {
         const y = contentY + 0.45 + i * 1.42;
-        const isTA = row.co === 'TheApp';
-        if (isTA) s.addShape(pptx.ShapeType.rect, { x: pad - 0.1, y: y - 0.08, w: rw - 0.1, h: 1.3, fill: { color: bgAlt }, line: { color: accent, width: 0.75 } });
+        const isOurs = row.co === COMPANY.name;
+        if (isOurs) s.addShape(pptx.ShapeType.rect, { x: pad - 0.1, y: y - 0.08, w: rw - 0.1, h: 1.3, fill: { color: bgAlt }, line: { color: accent, width: 0.75 } });
         const vals = [row.co, row.s, row.c, row.p, row.price];
         cx = pad;
         vals.forEach((val, j) => {
           s.addText(val, {
             x: cx, y: y + 0.2, w: cw[j], h: 0.8,
             fontSize: j === 0 ? 9 : 10,
-            bold: isTA,
-            color: isTA ? accent : (val === '✓' ? textMain : val === '×' ? textFaint : textMute),
+            bold: isOurs,
+            color: isOurs ? accent : (val === '✓' ? textMain : val === '×' ? textFaint : textMute),
             fontFace: 'Arial', valign: 'middle', align: j === 0 ? 'left' : 'center',
           });
           cx += cw[j];
         });
-        if (!isTA) s.addShape(pptx.ShapeType.line, { x: pad, y: y + 1.3, w: rw - 0.3, h: 0, line: { color: border, width: 0.3 } });
+        if (!isOurs) s.addShape(pptx.ShapeType.line, { x: pad, y: y + 1.3, w: rw - 0.3, h: 0, line: { color: border, width: 0.3 } });
       });
       break;
     }
@@ -283,7 +285,7 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
     case 'ask': {
       const items = FUNDING_BREAKDOWN_SMALL;
       const total = items.reduce((s, i) => s + i.amount, 0);
-      s.addText('$10K GRANT BREAKDOWN', { x: pad, y: contentY, w: rw - 0.3, h: 0.3, fontSize: 7, color: accent, fontFace: 'Arial', charSpacing: 2 });
+      s.addText(`$${(FUNDING.currentGrant.amount / 1000).toFixed(0)}K GRANT BREAKDOWN`, { x: pad, y: contentY, w: rw - 0.3, h: 0.3, fontSize: 7, color: accent, fontFace: 'Arial', charSpacing: 2 });
       items.forEach((item, i) => {
         const y = contentY + 0.45 + i * 1.3;
         s.addText(item.label, { x: pad, y, w: rw * 0.7, h: 0.35, fontSize: 8.5, color: textMute, fontFace: 'Arial' });
@@ -292,7 +294,7 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
         s.addShape(pptx.ShapeType.rect, { x: pad, y: y + 0.38, w: ((rw - 0.3) * item.amount) / total, h: 0.2, fill: { color: accent }, line: { color: accent } });
       });
       s.addShape(pptx.ShapeType.line, { x: pad, y: contentY + 0.45 + items.length * 1.3, w: rw - 0.3, h: 0, line: { color: border, width: 0.5 } });
-      s.addText('$10,000', { x: pad, y: contentY + 0.55 + items.length * 1.3, w: rw - 0.3, h: 0.7, fontSize: 22, bold: true, color: accent, fontFace: 'Arial' });
+      s.addText(`$${FUNDING.currentGrant.amount.toLocaleString()}`, { x: pad, y: contentY + 0.55 + items.length * 1.3, w: rw - 0.3, h: 0.7, fontSize: 22, bold: true, color: accent, fontFace: 'Arial' });
       break;
     }
   }

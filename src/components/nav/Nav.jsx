@@ -7,6 +7,7 @@ import { NavLink } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 import SettingsDropdown from '../settings/SettingsDropdown.jsx';
+import { COMPANY } from '../../data/config.js';
 
 const DESKTOP_LINKS = [
   { to: '/',            label: 'Home'          },
@@ -51,7 +52,7 @@ export default function Nav() {
           fontWeight: theme.type.displayWeight,
           color: t.text,
         }}>
-          TheApp
+          {COMPANY.name}
         </span>
       </NavLink>
 

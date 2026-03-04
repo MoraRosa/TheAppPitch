@@ -7,6 +7,7 @@ import React from 'react';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL } from '../../data/financials.js';
+import { COMPANY, COMPETITORS, PRICING } from '../../data/config.js';
 
 export default function SlideRenderer({ slide, isFullscreen = false }) {
   const { theme } = useTheme();
@@ -191,7 +192,7 @@ function VisualDifferentiator({ theme, size }) {
           color: t.positive || t.accent, letterSpacing: '0.12em',
           textAlign: 'center', marginBottom: `${6 * size}px`,
           textTransform: 'uppercase',
-        }}>TheApp</div>
+        }}>{ COMPANY.name }</div>
         {rows.map((row, i) => (
           <React.Fragment key={row}>
             <div style={{
@@ -393,12 +394,13 @@ function VisualRoadmap({ theme, size }) {
 // ── Competition: comparison table ─────────────────────────────────────────────
 function VisualCompetition({ theme, size }) {
   const t = theme.colors;
-  const rows = [
-    { co: 'Shopify',     storefront: true,  crm: false, costing: false, price: '$30–300' },
-    { co: 'Squarespace', storefront: true,  crm: false, costing: false, price: '$16–65' },
-    { co: 'Kajabi',      storefront: false, crm: false, costing: false, price: '$150–400' },
-    { co: 'TheApp',      storefront: true,  crm: true,  costing: true,  price: '$29–129' },
-  ];
+  const rows = COMPETITORS.map(c => ({
+    co:         c.co,
+    storefront: c.storefront,
+    crm:        c.crm,
+    costing:    c.costing,
+    price:      c.price,
+  }));
   const Check = ({ v }) => (
     <span style={{ color: v ? t.accent : t.textFaint, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px` }}>
       {v ? '✓' : '×'}
@@ -422,8 +424,8 @@ function VisualCompetition({ theme, size }) {
           <React.Fragment key={row.co}>
             <div style={{
               fontFamily: theme.fonts.body, fontSize: `${9 * size}px`,
-              color: row.co === 'TheApp' ? t.accent : t.textMuted,
-              fontWeight: row.co === 'TheApp' ? 500 : 400,
+              color: row.co === COMPANY.name ? t.accent : t.textMuted,
+              fontWeight: row.co === COMPANY.name ? 500 : 400,
               padding: `${3 * size}px 0`,
               borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none',
             }}>{row.co}</div>
@@ -432,7 +434,7 @@ function VisualCompetition({ theme, size }) {
             <div style={{ textAlign: 'center', borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none', padding: `${3 * size}px 0` }}><Check v={row.costing} /></div>
             <div style={{
               fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`,
-              color: row.co === 'TheApp' ? t.accent : t.textFaint,
+              color: row.co === COMPANY.name ? t.accent : t.textFaint,
               borderBottom: i < rows.length - 1 ? `1px solid ${t.border}` : 'none',
               padding: `${3 * size}px 0`,
             }}>{row.price}</div>

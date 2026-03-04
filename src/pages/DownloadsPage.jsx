@@ -122,23 +122,28 @@ export default function DownloadsPage() {
         </p>
       </div>
 
-      {/* Cards — no background trick, just borders */}
+      {/* Cards */}
       <div style={{ padding: `40px ${pad}` }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          maxWidth: '1000px',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          maxWidth: '900px',
+          border: `1px solid ${t.border}`,
+          borderRadius: '4px',
+          overflow: 'hidden',
         }}>
           {DOWNLOADS.map((dl, i) => {
             const isLoading = loading[dl.id];
             const isDone = done[dl.id];
-            const isLast = i === DOWNLOADS.length - 1;
-            const isLastRow = i >= DOWNLOADS.length - (DOWNLOADS.length % 2 || 2);
+            const col = i % 2;
+            const row = Math.floor(i / 2);
+            const totalRows = Math.ceil(DOWNLOADS.length / 2);
+            const isLastRow = row === totalRows - 1;
 
             return (
               <div key={dl.id} style={{
                 padding: '32px 32px 28px',
-                borderRight: (i % 2 === 0) ? `1px solid ${t.border}` : 'none',
+                borderRight: (!isMobile && col === 0) ? `1px solid ${t.border}` : 'none',
                 borderBottom: !isLastRow ? `1px solid ${t.border}` : 'none',
                 display: 'flex', flexDirection: 'column', gap: '20px',
               }}>
