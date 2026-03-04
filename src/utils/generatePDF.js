@@ -6,7 +6,7 @@ import { PLAN_SECTIONS } from '../data/plan.js';
 import { SLIDES } from '../data/slides.js';
 import { MILESTONES, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL, COMPETITOR_COST_STACK, MERCHANT_GROWTH } from '../data/financials.js';
 import { FOUNDER } from '../data/founder.js';
-import { COMPANY, COMPETITORS, FOUNDER_INFO, FUNDING } from '../data/config.js';
+import { COMPANY, COMPETITORS, FOUNDER_INFO, FUNDING, TRACTION, MILESTONES as CFG_MILESTONES } from '../data/config.js';
 
 function hexToRgb(hex) {
   const c = (hex || '#888888').replace('#', '');
@@ -353,69 +353,421 @@ export async function generatePitchDeckPDF(theme) {
     pageFooter(doc, idx + 1, total, theme);
   });
 
-  doc.save('theapp-pitch-deck.pdf');
+  const { file: dateStr } = coverMeta();
+  doc.save(`${COMPANY.name.toLowerCase().replace(/\s+/g, '-')}-pitch-deck-${dateStr}.pdf`);
 }
 
 // ── BUSINESS PLAN PDF ─────────────────────────────────────────────────────────
+// ── Cover page helpers ────────────────────────────────────────────────────────
+
+function coverMeta() {
+  const now = new Date();
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return {
+    long:  `Generated ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`,
+    short: `${months[now.getMonth()].toUpperCase()} ${now.getFullYear()}`,
+    file:  `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`,
+  };
+}
+
+// Manuscript + Brutalist + Canadian — BOLD & STRIKING
+function drawCoverBold(doc, theme, meta) {
+  const t = theme.colors;
+  const tid = theme.id;
+  const W = 210, H = 297;
+
+  // Full page background
+  doc.setFillColor(...hexToRgb(t.bg));
+  doc.rect(0, 0, W, H, 'F');
+
+  if (tid === 'manuscript' || tid === 'editorial') {
+    // Top color block — 55% of page height
+    const blockH = H * 0.55;
+    doc.setFillColor(...hexToRgb(t.accent));
+    doc.rect(0, 0, W, blockH, 'F');
+
+    // Subtle diagonal texture lines on block
+    doc.setDrawColor(...hexToRgb(t.bg));
+    doc.setLineWidth(0.15);
+    doc.setGState(doc.GState({ opacity: 0.06 }));
+    for (let x = -H; x < W + H; x += 18) {
+      doc.line(x, 0, x + blockH, blockH);
+    }
+    doc.setGState(doc.GState({ opacity: 1 }));
+
+    // Ghost large name watermark on block
+    doc.setFontSize(110);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.bg));
+    doc.setGState(doc.GState({ opacity: 0.08 }));
+    doc.text(COMPANY.name, 10, blockH - 12);
+    doc.setGState(doc.GState({ opacity: 1 }));
+
+    // Divider bar
+    doc.setFillColor(...hexToRgb(t.accentDark || t.accent));
+    doc.rect(0, blockH, W, 3, 'F');
+
+    // Top block content
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.bg));
+    doc.setGState(doc.GState({ opacity: 0.65 }));
+    doc.text('CONFIDENTIAL  ·  BUSINESS PLAN', 14, 18);
+    doc.setGState(doc.GState({ opacity: 1 }));
+
+    doc.setFontSize(52);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.bg));
+    doc.text(COMPANY.name, 14, blockH - 42);
+
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'normal');
+    doc.setGState(doc.GState({ opacity: 0.75 }));
+    doc.text('Complete Business Plan', 14, blockH - 28);
+    doc.setGState(doc.GState({ opacity: 1 }));
+
+    // Bottom block content
+    const by = blockH + 22;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text('FOUNDER', 14, by);
+    doc.setFontSize(7);
+    doc.setTextColor(...hexToRgb(t.textMuted));
+    doc.text(`${FOUNDER_INFO.name}  ·  ${FOUNDER_INFO.title}`, 14, by + 7);
+    doc.text(`${COMPANY.location}`, 14, by + 14);
+    doc.text(`Founded ${COMPANY.founded}  ·  ${COMPANY.url}`, 14, by + 21);
+
+    // Stats row
+    const sy = by + 40;
+    doc.setDrawColor(...hexToRgb(t.border));
+    doc.setLineWidth(0.3);
+    doc.line(14, sy - 6, 196, sy - 6);
+    [
+      [`${TRACTION.betaMerchants}`, 'BETA MERCHANTS'],
+      [`$${(CFG_MILESTONES.y3.arr / 1000).toFixed(0)}K`, 'ARR · YEAR 3'],
+      ['$14B+', 'GLOBAL TAM'],
+    ].forEach(([val, label], i) => {
+      const sx = 14 + i * 62;
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...hexToRgb(t.text));
+      doc.text(val, sx, sy + 10);
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...hexToRgb(t.accent));
+      doc.text(label, sx, sy + 17);
+    });
+    doc.line(14, sy + 23, 196, sy + 23);
+
+  } else if (tid === 'brutalist') {
+    // Left color block — 45% of page width
+    const blockW = W * 0.45;
+    doc.setFillColor(...hexToRgb(t.accent));
+    doc.rect(0, 0, blockW, H, 'F');
+
+    // Dot pattern on block
+    doc.setFillColor(...hexToRgb(t.bg));
+    doc.setGState(doc.GState({ opacity: 0.07 }));
+    for (let row = 12; row < H; row += 16) {
+      for (let col = 12; col < blockW; col += 16) {
+        doc.circle(col, row, 0.8, 'F');
+      }
+    }
+    doc.setGState(doc.GState({ opacity: 1 }));
+
+    // Vertical divider
+    doc.setFillColor(...hexToRgb(t.text));
+    doc.rect(blockW, 0, 4, H, 'F');
+
+    // Top bar
+    doc.setFillColor(...hexToRgb(t.text));
+    doc.rect(0, 0, blockW, 8, 'F');
+
+    // Bottom bar
+    doc.rect(0, H - 6, blockW, 6, 'F');
+
+    // Left block — company name
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.bg));
+    doc.setGState(doc.GState({ opacity: 0.6 }));
+    doc.text('BUSINESS PLAN', 10, 22);
+    doc.setGState(doc.GState({ opacity: 1 }));
+
+    doc.setFontSize(54);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.bg));
+    // Split "TheApp" across two lines
+    doc.text('The', 10, H * 0.42);
+    doc.text('App', 10, H * 0.42 + 46);
+
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.bg));
+    doc.setGState(doc.GState({ opacity: 0.55 }));
+    doc.text(`${FOUNDER_INFO.name.toUpperCase()}`, 10, H - 22);
+    doc.text(`CALGARY  ·  AB  ·  ${COMPANY.founded}`, 10, H - 15);
+    doc.setGState(doc.GState({ opacity: 1 }));
+
+    // Right block content
+    const rx = blockW + 14;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text('COMPLETE', rx, 28);
+    doc.text('BUSINESS', rx, 36);
+    doc.text('PLAN', rx, 44);
+
+    doc.setDrawColor(...hexToRgb(t.border));
+    doc.setLineWidth(0.3);
+    doc.line(rx, 50, 196, 50);
+
+    doc.setFontSize(7);
+    doc.setTextColor(...hexToRgb(t.textMuted));
+    doc.text('FOUNDER', rx, 62);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.text));
+    doc.text(FOUNDER_INFO.name, rx, 70);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.textMuted));
+    doc.text(COMPANY.location, rx, 77);
+    doc.text(`${COMPANY.url}  ·  Founded ${COMPANY.founded}`, rx, 84);
+
+    doc.line(rx, 92, 196, 92);
+
+    [
+      [`${TRACTION.betaMerchants}`, 'BETA MERCHANTS'],
+      [`$${(CFG_MILESTONES.y3.arr / 1000).toFixed(0)}K`, 'ARR YEAR 3'],
+      ['$14B+', 'GLOBAL TAM'],
+    ].forEach(([val, label], i) => {
+      const sy = 108 + i * 28;
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...hexToRgb(t.text));
+      doc.text(val, rx, sy);
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...hexToRgb(t.accent));
+      doc.text(label, rx, sy + 7);
+    });
+
+  } else if (tid === 'canadian') {
+    // Top red block — 35%
+    const blockH = H * 0.35;
+    doc.setFillColor(...hexToRgb(t.accent));
+    doc.rect(0, 0, W, blockH, 'F');
+
+    // Divider
+    doc.setFillColor(...hexToRgb(t.text));
+    doc.rect(0, blockH, W, 3, 'F');
+
+    // Ghost large letter on red
+    doc.setFontSize(160);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.bg));
+    doc.setGState(doc.GState({ opacity: 0.07 }));
+    doc.text('T', W * 0.55, blockH + 8);
+    doc.setGState(doc.GState({ opacity: 1 }));
+
+    // Red block content
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.bg));
+    doc.setGState(doc.GState({ opacity: 0.65 }));
+    doc.text('CONFIDENTIAL  ·  BUSINESS PLAN', 14, 18);
+    doc.setGState(doc.GState({ opacity: 1 }));
+
+    doc.setFontSize(54);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.bg));
+    doc.text(COMPANY.name, 14, blockH - 14);
+
+    // White block content
+    const by = blockH + 20;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.text('COMPLETE BUSINESS PLAN', 14, by);
+
+    doc.setDrawColor(...hexToRgb(t.border));
+    doc.setLineWidth(0.3);
+    doc.line(14, by + 6, 196, by + 6);
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.textMuted));
+    doc.text(`${FOUNDER_INFO.name}  ·  ${FOUNDER_INFO.title}`, 14, by + 16);
+    doc.text(`${COMPANY.location}`, 14, by + 23);
+    doc.text(`${COMPANY.url}  ·  Founded ${COMPANY.founded}`, 14, by + 30);
+
+    // Stats
+    const sy = by + 50;
+    doc.line(14, sy - 4, 196, sy - 4);
+    [
+      [`${TRACTION.betaMerchants}`, 'BETA MERCHANTS'],
+      [`$${(CFG_MILESTONES.y3.arr / 1000).toFixed(0)}K`, 'ARR · YEAR 3'],
+      ['$14B+', 'GLOBAL TAM'],
+    ].forEach(([val, label], i) => {
+      const sx = 14 + i * 62;
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...hexToRgb(t.text));
+      doc.text(val, sx, sy + 10);
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...hexToRgb(t.accent));
+      doc.text(label, sx, sy + 17);
+    });
+    doc.line(14, sy + 23, 196, sy + 23);
+  }
+
+  // Shared footer
+  const footY = H - 13;
+  doc.setDrawColor(...hexToRgb(t.border));
+  doc.setLineWidth(0.3);
+  doc.line(14, footY, 196, footY);
+  doc.setFontSize(6);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb(t.textFaint || t.textMuted));
+  doc.text(`${COMPANY.name.toUpperCase()}  ·  BUSINESS PLAN`, 14, footY + 5);
+  doc.text(meta.long.toUpperCase(), 196, footY + 5, { align: 'right' });
+}
+
+// Editorial — DESIGN-FORWARD
+function drawCoverEditorial(doc, theme, meta) {
+  const t = theme.colors;
+  const W = 210, H = 297;
+
+  // Background
+  doc.setFillColor(...hexToRgb(t.bg));
+  doc.rect(0, 0, W, H, 'F');
+
+  // Grid lines — subtle
+  doc.setDrawColor(...hexToRgb(t.accent));
+  doc.setLineWidth(0.15);
+  doc.setGState(doc.GState({ opacity: 0.08 }));
+  for (let x = 0; x <= W; x += W / 4) doc.line(x, 0, x, H);
+  for (let y = 0; y <= H; y += H / 4) doc.line(0, y, W, y);
+  doc.setGState(doc.GState({ opacity: 1 }));
+
+  // Diagonal accent line
+  doc.setDrawColor(...hexToRgb(t.accent));
+  doc.setLineWidth(0.4);
+  doc.setGState(doc.GState({ opacity: 0.35 }));
+  doc.line(0, H * 0.28, W, H * 0.42);
+  doc.setGState(doc.GState({ opacity: 1 }));
+
+  // Vertical accent rule — right quarter
+  doc.setDrawColor(...hexToRgb(t.accent));
+  doc.setLineWidth(0.5);
+  doc.line(W * 0.75, 0, W * 0.75, H * 0.48);
+
+  // Eyebrow
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.setGState(doc.GState({ opacity: 0.7 }));
+  doc.text('BUSINESS PLAN  ·  CONFIDENTIAL', 14, 20);
+  doc.setGState(doc.GState({ opacity: 1 }));
+
+  // Company name — elegant italic treatment
+  doc.setFontSize(48);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...hexToRgb(t.text));
+  doc.text(COMPANY.name, 14, H * 0.48);
+
+  // Tagline
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb(t.textMuted));
+  doc.text('Complete Business Plan', 14, H * 0.48 + 12);
+
+  // Right column metadata
+  const rc = W * 0.78;
+  doc.setFontSize(6);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.setGState(doc.GState({ opacity: 0.55 }));
+  ['BUSINESS', 'PLAN', '', meta.short, '', 'CONFIDENTIAL'].forEach((line, i) => {
+    doc.text(line, rc, 24 + i * 9);
+  });
+  doc.setGState(doc.GState({ opacity: 1 }));
+
+  // Horizontal rule below name
+  doc.setDrawColor(...hexToRgb(t.accent));
+  doc.setLineWidth(0.4);
+  doc.line(14, H * 0.48 + 18, W * 0.72, H * 0.48 + 18);
+
+  // Founder details
+  const dy = H * 0.48 + 30;
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb(t.accent));
+  doc.text('FOUNDER', 14, dy);
+  doc.setTextColor(...hexToRgb(t.textMuted));
+  doc.text(`${FOUNDER_INFO.name}  ·  ${FOUNDER_INFO.title}`, 14, dy + 8);
+  doc.text(`${COMPANY.location}  ·  ${COMPANY.url}`, 14, dy + 15);
+  doc.text(`Founded ${COMPANY.founded}`, 14, dy + 22);
+
+  // Stats — horizontal, minimal
+  const sy = dy + 42;
+  doc.setDrawColor(...hexToRgb(t.border));
+  doc.setLineWidth(0.25);
+  doc.line(14, sy, 196, sy);
+  [
+    [`${TRACTION.betaMerchants}`, 'BETA MERCHANTS'],
+    [`$${(CFG_MILESTONES.y3.arr / 1000).toFixed(0)}K`, 'ARR · YEAR 3'],
+    ['$14B+', 'GLOBAL TAM'],
+  ].forEach(([val, label], i) => {
+    const sx = 14 + i * 62;
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb(t.text));
+    doc.text(val, sx, sy + 12);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb(t.accent));
+    doc.setGState(doc.GState({ opacity: 0.7 }));
+    doc.text(label, sx, sy + 19);
+    doc.setGState(doc.GState({ opacity: 1 }));
+  });
+  doc.line(14, sy + 25, 196, sy + 25);
+
+  // Footer
+  const footY = H - 13;
+  doc.setDrawColor(...hexToRgb(t.border));
+  doc.setLineWidth(0.25);
+  doc.line(14, footY, 196, footY);
+  doc.setFontSize(6);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb(t.textFaint || t.textMuted));
+  doc.setGState(doc.GState({ opacity: 0.6 }));
+  doc.text(`${COMPANY.name.toUpperCase()}  ·  BUSINESS PLAN`, 14, footY + 5);
+  doc.text(meta.long.toUpperCase(), 196, footY + 5, { align: 'right' });
+  doc.setGState(doc.GState({ opacity: 1 }));
+}
+
 export async function generateBusinessPlanPDF(theme) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const t = theme.colors;
   const total = PLAN_SECTIONS.length + 1;
+  const meta = coverMeta();
 
-  // Cover
-  doc.setFillColor(...hexToRgb(t.bg));
-  doc.rect(0, 0, 210, 297, 'F');
-  doc.setFillColor(...hexToRgb(t.accent));
-  doc.rect(0, 0, 210, 3, 'F');
+  // Theme-specific cover
+  if (theme.id === 'editorial') {
+    drawCoverEditorial(doc, theme, meta);
+  } else {
+    drawCoverBold(doc, theme, meta);
+  }
 
-  doc.setFontSize(8);
+  // Page number on cover
+  doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...hexToRgb(t.accent));
-  doc.text(`${COMPANY.name.toUpperCase()} — BUSINESS PLAN`, 14, 20);
-
-  doc.setFontSize(30);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...hexToRgb(t.text));
-  doc.text(COMPANY.name, 14, 48);
-
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...hexToRgb(t.textMuted));
-  doc.text('Complete Business Plan', 14, 58);
-
-  accentRule(doc, 14, 66, theme);
-
-  doc.setFontSize(10);
-  doc.setTextColor(...hexToRgb(t.textMuted));
-  doc.text('One platform. One login. Operational in under an hour.', 14, 76);
-
-  [['5', 'Beta Merchants'], ['$948K', 'ARR · Year 3'], ['$14B+', 'TAM']].forEach(([val, label], i) => {
-    const sx = 14 + i * 60;
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...hexToRgb(t.text));
-    doc.text(val, sx, 108);
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...hexToRgb(t.accent));
-    doc.text(label.toUpperCase(), sx, 114);
-  });
-
-  accentRule(doc, 14, 122, theme);
-
-  doc.setFontSize(8);
-  doc.setTextColor(...hexToRgb(t.textMuted));
-  doc.text(`${FOUNDER.name} · ${FOUNDER.title}`, 14, 132);
-  doc.text(`Generated ${new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}`, 14, 139);
-  doc.text('Confidential — For investor review only', 14, 146);
-
-  // Page footer on cover
-  doc.setDrawColor(...hexToRgb(t.border));
-  doc.line(14, 284, 196, 284);
-  doc.setFontSize(6.5);
-  doc.setTextColor(...hexToRgb(t.textFaint));
-  doc.text('THEAPP · BUSINESS PLAN', 14, 289);
-  doc.text(`1 / ${total}`, 196, 289, { align: 'right' });
+  doc.setTextColor(...hexToRgb(t.textFaint || t.textMuted));
+  doc.text(`1 / ${total}`, 196, 284, { align: 'right' });
 
   // Sections
   PLAN_SECTIONS.forEach((section, idx) => {
@@ -537,7 +889,7 @@ export async function generateBusinessPlanPDF(theme) {
     doc.text(`${idx + 2} / ${total}`, 196, 289, { align: 'right' });
   });
 
-  doc.save(`${COMPANY.name.toLowerCase().replace(/\s+/g, '-')}-business-plan.pdf`);
+  doc.save(`${COMPANY.name.toLowerCase().replace(/\s+/g, '-')}-business-plan-${meta.file}.pdf`);
 }
 
 // ── FINANCIALS PDF ────────────────────────────────────────────────────────────
@@ -622,5 +974,6 @@ export async function generateFinancialsPDF(theme) {
   doc.text('THEAPP · FINANCIAL PROJECTIONS', 14, 289);
   doc.text('1 / 1', 196, 289, { align: 'right' });
 
-  doc.save('theapp-financials.pdf');
+  const { file: finDateStr } = coverMeta();
+  doc.save(`${COMPANY.name.toLowerCase().replace(/\s+/g, '-')}-financials-${finDateStr}.pdf`);
 }

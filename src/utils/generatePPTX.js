@@ -96,7 +96,9 @@ export async function generatePitchDeckPPTX(theme) {
     });
   });
 
-  await pptx.writeFile({ fileName: 'theapp-pitch-deck.pptx' });
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  await pptx.writeFile({ fileName: `${COMPANY.name.toLowerCase().replace(/\s+/g, '-')}-pitch-deck-${dateStr}.pptx` });
 }
 
 function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, textMain, border, bgAlt, bg) {

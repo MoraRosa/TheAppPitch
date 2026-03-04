@@ -15,7 +15,7 @@ export const COMPANY = {
   email:          'hello@theapp.ca',
   location:       'Calgary, Alberta, Canada',
   legalStructure: 'Sole proprietorship (federal incorporation planned at launch)',
-  founded:        '2024',
+  founded:        '2026',
   incorporatedAt: null, // set when incorporated e.g. 'January 2026'
 };
 
