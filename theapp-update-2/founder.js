@@ -1,7 +1,7 @@
 // ─── FOUNDER DATA ─────────────────────────────────────────────────────────────
 
 export const FOUNDER = {
-  name: "Rosa Mora",
+  name: "Hikmah Adepoju",               // ← REPLACE
   title: "Founder & Full-Stack Developer",
   location: "Canada",
 
