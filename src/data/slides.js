@@ -63,7 +63,7 @@ export const SLIDES = [
     id: 7,
     slug: "traction",
     eyebrow: "Traction",
-    headline: "5 beta merchants. Zero paid marketing. One developer.",
+    headline: "15 beta merchants. Zero paid marketing. One developer.",
     body: "Multi-tenant architecture, dual authentication, full REST API with 23+ endpoints, merchant dashboard, Pulse, Constellation CRM, Compass task management — all built. Approaching first beta release.",
     speakerNote: "One person built all of this. That is the signal.",
     tag: "07",

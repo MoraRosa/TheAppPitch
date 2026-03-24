@@ -378,7 +378,7 @@ export default function AestheticExplorer() {
               gap: 32,
             }}>
               {[
-                { num: "5", label: "Beta merchants" },
+                { num: "15", label: "Beta merchants" },
                 { num: "$948K", label: "ARR · Year 3" },
                 { num: "3.8M", label: "CA small businesses" },
               ].map((stat) => (

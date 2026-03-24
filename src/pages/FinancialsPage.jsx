@@ -38,7 +38,7 @@ export default function FinancialsPage() {
           Financial Projections
         </p>
         <h1 style={{ fontFamily: theme.fonts.display, fontSize: theme.type.headSize, fontWeight: theme.type.headWeight, fontStyle: theme.type.headStyle, color: t.text }}>
-          From 5 beta merchants to $948K ARR.
+          From 15 beta merchants to $948K ARR.
         </h1>
       </div>
 

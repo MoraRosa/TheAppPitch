@@ -10,7 +10,7 @@ export default function HomePage() {
   const pad = isMobile ? '20px' : theme.space.pagePadding;
 
   const stats = [
-    { value: '5',     label: 'Beta merchants waiting' },
+    { value: '15',     label: 'Beta merchants waiting' },
     { value: '$948K', label: 'ARR projection · Year 3' },
     { value: '23+',   label: 'API endpoints built' },
     { value: '1',     label: 'Developer. No team yet.' },

@@ -31,7 +31,7 @@ export const FOUNDER_INFO = {
 
 // ── Traction (update as you grow) ─────────────────────────────────────────────
 export const TRACTION = {
-  betaMerchants:  5,
+  betaMerchants:  15,
   apiEndpoints:   23,    // "23+ endpoints"
   dbTables:       21,    // "21+ tables"
   churn:          0,     // current churn

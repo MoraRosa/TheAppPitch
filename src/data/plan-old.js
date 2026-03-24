@@ -12,7 +12,7 @@ export const PLAN_SECTIONS = [
 
 The platform is built for two customer types: small product-based businesses (beauty brands, skincare makers, small manufacturers, food producers) who need both a storefront and operational tools; and service-based businesses (fitness trainers, photographers, salons, therapists) who need a professional online presence with client-facing functionality.
 
-TheApp is currently pre-revenue, built entirely by a solo Canadian developer, with 5 beta merchants signed up and waiting for launch.`,
+TheApp is currently pre-revenue, built entirely by a solo Canadian developer, with 15 beta merchants signed up and waiting for launch.`,
   },
 
   {
@@ -20,7 +20,7 @@ TheApp is currently pre-revenue, built entirely by a solo Canadian developer, wi
     number: "02",
     title: "Company Description",
     blocks: [
-      { type: 'text', text: 'TheApp is a Canadian-built, Alberta-founded SaaS company providing integrated operational infrastructure for small makers, independent brands, and service businesses. It is currently in active development with a working multi-tenant platform, 5 confirmed beta merchants, and a clear path to launch.' },
+      { type: 'text', text: 'TheApp is a Canadian-built, Alberta-founded SaaS company providing integrated operational infrastructure for small makers, independent brands, and service businesses. It is currently in active development with a working multi-tenant platform, 15 confirmed beta merchants, and a clear path to launch.' },
       { type: 'label', text: 'Mission' },
       { type: 'callout', text: 'To remove the operational chaos that prevents talented makers and small business owners from focusing on their craft, by replacing the spreadsheets, subscriptions, and workarounds with storefront, CRM, production costing, and task management in one integrated platform that just works.' },
       { type: 'label', text: 'Vision' },
@@ -131,7 +131,7 @@ Unit economics at current assumptions: ARPU of $79 per month, monthly churn of 5
         type: 'weakness',
         title: 'Pre-revenue and pre-launch',
         challenge: 'TheApp has not yet generated subscription revenue. There is no proven willingness-to-pay data.',
-        mitigation: '5 beta merchants are actively waiting to onboard. Beta launch with a free or discounted period will generate the first revenue data and testimonials within 30 days of completing the cart and payments module. Revenue is a milestone, not an assumption.',
+        mitigation: '15 beta merchants are actively waiting to onboard. Beta launch with a free or discounted period will generate the first revenue data and testimonials within 30 days of completing the cart and payments module. Revenue is a milestone, not an assumption.',
       },
       {
         type: 'weakness',
@@ -172,7 +172,7 @@ Unit economics at current assumptions: ARPU of $79 per month, monthly churn of 5
           'Founder operates Lumina — is a primary user of the platform',
           'Full-stack capability: React, Supabase, Stripe, multi-tenant SaaS architecture',
           'Deep customer empathy built from lived experience, not assumption',
-          '5 beta merchants confirmed — real demand before public launch',
+          '15 beta merchants confirmed — real demand before public launch',
           'Canadian-built and Alberta-based — aligned with local small business identity',
           'Low overhead: solo founder, fast iteration cycle',
         ],
@@ -207,7 +207,7 @@ Unit economics at current assumptions: ARPU of $79 per month, monthly churn of 5
     id: "marketing",
     number: "09",
     title: "Marketing & Sales Strategy",
-    content: `Phase one targets the first 50 merchants through the existing 5 beta merchants and word of mouth. The goal is to onboard them, learn fast, fix what breaks, and earn referrals. A merchant who replaces Shopify, Mailchimp, and a costing spreadsheet with one platform and saves $300 per month tells other merchants.
+    content: `Phase one targets the first 50 merchants through the existing 15 beta merchants and word of mouth. The goal is to onboard them, learn fast, fix what breaks, and earn referrals. A merchant who replaces Shopify, Mailchimp, and a costing spreadsheet with one platform and saves $300 per month tells other merchants.
 
 The primary target in this phase is beauty brands and small product makers in Alberta and British Columbia who are currently on Shopify and using spreadsheets for production costing.
 
