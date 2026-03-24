@@ -72,7 +72,7 @@ export function usePitchControls(defaultAutoSlideMs = 5000) {
       if (file) {
         const audio = new Audio(file);
         audioRef.current = audio;
-        audio.play().catch(() => {});
+        audio.play().catch(console.error);
         audio.onended = () => next();
       } else {
         // File not yet available, fall back to timer
