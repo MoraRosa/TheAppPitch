@@ -66,7 +66,7 @@ export default function PitchLandingPage() {
                 fontFamily: theme.fonts.mono, fontSize: '9px', color: t.accent,
                 letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '10px',
               }}>
-                {deck.audience} \u00b7 {deck.slides.length} Slides
+                {deck.audience} · {deck.slides.length} Slides
               </p>
               <h2 style={{
                 fontFamily: theme.fonts.display, fontSize: theme.type.headSize,
@@ -83,7 +83,7 @@ export default function PitchLandingPage() {
                 marginTop: '18px', display: 'flex', alignItems: 'center', gap: '6px',
                 fontFamily: theme.fonts.mono, fontSize: '10px', color: t.accent, letterSpacing: '0.08em',
               }}>
-                OPEN DECK \u2192
+                OPEN DECK →
               </div>
             </Link>
           </motion.div>

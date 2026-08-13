@@ -65,7 +65,7 @@ function VisualProblem({ theme, size }) {
               {tool.tool.split('/')[0].trim()}
             </span>
             <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent }}>
-              ${tool.min}\u2013${tool.max}
+              ${tool.min}–${tool.max}
             </span>
           </div>
           <div style={{ height: `${5 * size}px`, background: t.bgAlt, borderRadius: '2px', overflow: 'hidden' }}>
@@ -87,12 +87,12 @@ function VisualProblem({ theme, size }) {
 function VisualSolution({ theme, size }) {
   const t = theme.colors;
   const modules = [
-    { icon: '\u25c8', name: 'Storefront', desc: '5 themes' },
-    { icon: '\u25ce', name: 'Pulse', desc: 'Production' },
-    { icon: '\u25d0', name: 'Constellation', desc: 'CRM' },
-    { icon: '\u25d1', name: 'Compass', desc: 'Tasks' },
-    { icon: '\u25d2', name: 'Orders', desc: 'Commerce' },
-    { icon: '\u25d3', name: 'Email', desc: 'Marketing' },
+    { icon: '◈', name: 'Storefront', desc: '5 themes' },
+    { icon: '◎', name: 'Pulse', desc: 'Production' },
+    { icon: '◐', name: 'Constellation', desc: 'CRM' },
+    { icon: '◑', name: 'Compass', desc: 'Tasks' },
+    { icon: '◒', name: 'Orders', desc: 'Commerce' },
+    { icon: '◓', name: 'Email', desc: 'Marketing' },
   ];
   return (
     <div style={{
@@ -159,7 +159,7 @@ function VisualDifferentiator({ theme, size }) {
               fontSize: `${9 * size}px`, color: t.textFaint,
               textDecoration: 'line-through',
               animation: `fadeSlideIn 0.3s ease ${i * 0.07}s both`,
-            }}>{row} \u2192 Sheet</div>
+            }}>{row} → Sheet</div>
             <div style={{
               padding: `${6 * size}px ${8 * size}px`,
               background: t.bgAlt,
@@ -168,7 +168,7 @@ function VisualDifferentiator({ theme, size }) {
               fontFamily: theme.fonts.body,
               fontSize: `${9 * size}px`, color: t.text,
               animation: `fadeSlideIn 0.3s ease ${i * 0.07 + 0.05}s both`,
-            }}>{row} \u2713 Built-in</div>
+            }}>{row} ✓ Built-in</div>
           </React.Fragment>
         ))}
       </div>
@@ -232,7 +232,7 @@ function VisualModel({ theme, size }) {
         color: t.accent, letterSpacing: '0.12em',
         marginBottom: `${8 * size}px`, textTransform: 'uppercase',
       }}>
-        MRR Growth \u00b7 3 Years
+        MRR Growth · 3 Years
       </div>
 
       <svg
@@ -264,7 +264,7 @@ function VisualModel({ theme, size }) {
       <div style={{ marginTop: `${14 * size}px`, fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${22 * size}px`, color: t.text }}>
         $79K{' '}
         <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent }}>
-          MRR \u00b7 Y3
+          MRR · Y3
         </span>
       </div>
     </div>
@@ -335,7 +335,7 @@ function VisualRoadmap({ theme, size }) {
           <div>
             <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.1em', marginBottom: '4px' }}>{phase.label}</div>
             {phase.items.map((item, j) => (
-              <div key={j} style={{ fontFamily: theme.fonts.body, fontSize: `${10 * size}px`, color: t.textMuted, lineHeight: 1.6 }}>\u2014 {item}</div>
+              <div key={j} style={{ fontFamily: theme.fonts.body, fontSize: `${10 * size}px`, color: t.textMuted, lineHeight: 1.6 }}>— {item}</div>
             ))}
           </div>
         </div>
@@ -356,7 +356,7 @@ function VisualCompetition({ theme, size }) {
   }));
   const Check = ({ v }) => (
     <span style={{ color: v ? t.accent : t.textFaint, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px` }}>
-      {v ? '\u2713' : '\u00d7'}
+      {v ? '✓' : '×'}
     </span>
   );
   return (

@@ -9,10 +9,10 @@
 
 // ── Company ───────────────────────────────────────────────────────────────────
 export const COMPANY = {
-  name:           'TheApp',
+  name:           'Peak',
   tagline:        'One platform. Every operation.',
-  url:            'theapp.ca',
-  email:          'hello@theapp.ca',
+  url:            'peakenterprise.ca',
+  email:          'hello@peakenterprise.ca',
   location:       'Calgary, Alberta, Canada',
   legalStructure: 'Sole proprietorship (federal incorporation planned at launch)',
   founded:        '2026',

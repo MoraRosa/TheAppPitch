@@ -53,13 +53,13 @@ function PitchDeckPageInner({ deck }) {
               letterSpacing: '0.1em', textTransform: 'uppercase', textDecoration: 'none',
               display: 'inline-block', marginBottom: '10px',
             }}>
-              \u2190 All decks
+              ← All decks
             </Link>
             <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: theme.type.monoTracking, textTransform: 'uppercase', marginBottom: '8px' }}>
-              {deck.name} \u00b7 {deck.slides.length} Slides
+              {deck.name} · {deck.slides.length} Slides
             </p>
             <h1 style={{ fontFamily: theme.fonts.display, fontSize: theme.type.headSize, fontWeight: theme.type.headWeight, fontStyle: theme.type.headStyle, color: t.text }}>
-              {COMPANY.name} \u2014 {deck.name}
+              {COMPANY.name} — {deck.name}
             </h1>
           </div>
           <button onClick={controls.enterFullscreen} style={{
@@ -70,7 +70,7 @@ function PitchDeckPageInner({ deck }) {
             fontSize: '11px', letterSpacing: '0.12em', fontWeight: 500,
             alignSelf: isMobile ? 'flex-start' : 'auto',
           }}>
-            \u25b6 PRESENT
+            ▶ PRESENT
           </button>
         </div>
 
