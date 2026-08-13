@@ -86,7 +86,7 @@ export async function generatePitchDeckPPTX(theme) {
       x: 0, y: H - 0.38, w: W, h: 0,
       line: { color: border, width: 0.5 },
     });
-    s.addText('THEAPP — INVESTOR PITCH', {
+    s.addText(`${COMPANY.name.toUpperCase()} — INVESTOR PITCH`, {
       x: PAD, y: H - 0.35, w: 4, h: 0.25,
       fontSize: 6.5, color: textFaint, fontFace: 'Arial',
     });
@@ -164,7 +164,7 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
       const rows = ['Ingredients', 'Suppliers', 'Batch Costing', 'Packaging', 'QuickBooks'];
       const colW = (rw - 0.5) / 2;
       s.addText('SHOPIFY', { x: pad, y: contentY, w: colW, h: 0.3, fontSize: 7, color: textFaint, fontFace: 'Arial', align: 'center', charSpacing: 2 });
-      s.addText('THEAPP', { x: pad + colW + 0.1, y: contentY, w: colW, h: 0.3, fontSize: 7, color: accent, fontFace: 'Arial', align: 'center', charSpacing: 2 });
+      s.addText(COMPANY.name.toUpperCase(), { x: pad + colW + 0.1, y: contentY, w: colW, h: 0.3, fontSize: 7, color: accent, fontFace: 'Arial', align: 'center', charSpacing: 2 });
       rows.forEach((row, i) => {
         const y = contentY + 0.4 + i * 1.18;
         s.addShape(pptx.ShapeType.rect, { x: pad, y, w: colW, h: 1.0, fill: { color: bgAlt }, line: { color: border, width: 0.5 } });

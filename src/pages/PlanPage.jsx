@@ -2,6 +2,7 @@ import { useTheme } from '../context/ThemeContext.jsx';
 import { useIsMobile } from '../hooks/useIsMobile.js';
 import { PLAN_SECTIONS } from '../data/plan.js';
 import { useScrollReveal } from '../hooks/useScrollReveal.js';
+import { COMPANY } from '../data/config.js';
 
 // ─── BLOCK RENDERERS ──────────────────────────────────────────────────────────
 
@@ -180,7 +181,7 @@ export default function PlanPage() {
           Business Plan · Full Document
         </p>
         <h1 style={{ fontFamily: theme.fonts.display, fontSize: theme.type.headSize, fontWeight: theme.type.headWeight, fontStyle: theme.type.headStyle, color: t.text }}>
-          TheApp — Complete Business Plan
+          {COMPANY.name} — Complete Business Plan
         </h1>
       </div>
       {PLAN_SECTIONS.map(section => (

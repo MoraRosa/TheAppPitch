@@ -1,14 +1,16 @@
 // ─── FOUNDER DATA ─────────────────────────────────────────────────────────────
 // Replace placeholder values with real content before presenting.
 
+import { COMPANY } from './config.js';
+
 export const FOUNDER = {
   name: "Hikmah Adepoju",               // ← REPLACE
   title: "Founder & Developer",
   location: "Canada",
-  bio: `A full-stack developer with 5 years of experience building production software. TheApp was built entirely solo, from database architecture to deployment because the tools small business owners actually need did not exist in one place, so the decision was to build them.`,
+  bio: `A full-stack developer with 5 years of experience building production software. ${COMPANY.name} was built entirely solo, from database architecture to deployment because the tools small business owners actually need did not exist in one place, so the decision was to build them.`,
   // ← REPLACE bio with your real story
   
-  whyUnique: "Building TheApp from scratch | multi-tenant database, dual auth systems, production costing engine, five isolated theme systems | demonstrates not just technical ability but product thinking. This is not a prototype. It is a platform.",
+  whyUnique: `Building ${COMPANY.name} from scratch | multi-tenant database, dual auth systems, production costing engine, five isolated theme systems | demonstrates not just technical ability but product thinking. This is not a prototype. It is a platform.`,
 
   skills: [
     "React 18/19 + TypeScript",
@@ -35,8 +37,8 @@ export const FOUNDER = {
       desc: "Operating e-commerce business. Custom headless Shopify storefront with real transactions.",
     },
     {
-      name: "TheApp",
-      url: "https://TheApp.com",
+      name: COMPANY.name,
+      url: `https://${COMPANY.url}`,
       desc: "e-commerce platform. React 19, Supabase, Stripe, monorepo.",
     },
     {

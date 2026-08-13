@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useIsMobile } from '../hooks/useIsMobile.js';
+import { COMPANY } from '../data/config.js';
 
 export default function HomePage() {
   const { theme } = useTheme();
@@ -46,7 +47,7 @@ export default function HomePage() {
         <motion.p
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
           style={{ fontFamily: theme.fonts.body, fontSize: isMobile ? '15px' : '17px', fontWeight: theme.type.bodyWeight, color: t.textMuted, lineHeight: 1.75, maxWidth: '580px', marginBottom: '40px' }}>
-          TheApp is the complete business platform for small brands and makers — storefront, CRM, production costing, and task management in one subscription. Built in Canada.
+          {COMPANY.name} is the complete business platform for small brands and makers — storefront, CRM, production costing, and task management in one subscription. Built in Canada.
         </motion.p>
 
         <motion.div

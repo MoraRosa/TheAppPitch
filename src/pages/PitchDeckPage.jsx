@@ -1,16 +1,30 @@
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { SLIDES } from '../data/slides.js';
+import { DECKS } from '../data/decks/index.js';
+import { COMPANY } from '../data/config.js';
 import { usePitchControls } from '../hooks/usePitchControls.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useIsMobile } from '../hooks/useIsMobile.js';
 import SlideRenderer from '../components/pitch/SlideRenderer.jsx';
 import PresentMode from '../components/pitch/PresentMode.jsx';
 
-export default function PitchPage() {
+export default function PitchDeckPage() {
+  const { deckId } = useParams();
+  const deck = DECKS[deckId];
+
+  if (!deck) return <Navigate to="/pitch" replace />;
+
+  return <PitchDeckPageInner deck={deck} />;
+}
+
+function PitchDeckPageInner({ deck }) {
   const { theme } = useTheme();
   const t = theme.colors;
   const isMobile = useIsMobile();
-  const controls = usePitchControls(theme.motion.autoSlide);
+  const controls = usePitchControls(deck.slides.length, {
+    defaultAutoSlideMs: theme.motion.autoSlide,
+    useAudio: deck.id === 'investor',
+  });
   const pad = isMobile ? '16px' : theme.space.pagePadding;
 
   return (
@@ -18,7 +32,7 @@ export default function PitchPage() {
       <AnimatePresence>
         {controls.isFullscreen && (
           <motion.div key="presenter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
-            <PresentMode controls={controls} />
+            <PresentMode controls={controls} deck={deck} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -34,11 +48,18 @@ export default function PitchPage() {
           gap: '16px',
         }}>
           <div>
+            <Link to="/pitch" style={{
+              fontFamily: theme.fonts.mono, fontSize: '9px', color: t.textFaint,
+              letterSpacing: '0.1em', textTransform: 'uppercase', textDecoration: 'none',
+              display: 'inline-block', marginBottom: '10px',
+            }}>
+              \u2190 All decks
+            </Link>
             <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: theme.type.monoTracking, textTransform: 'uppercase', marginBottom: '8px' }}>
-              Pitch Deck · {SLIDES.length} Slides
+              {deck.name} \u00b7 {deck.slides.length} Slides
             </p>
             <h1 style={{ fontFamily: theme.fonts.display, fontSize: theme.type.headSize, fontWeight: theme.type.headWeight, fontStyle: theme.type.headStyle, color: t.text }}>
-              TheApp — Investor Presentation
+              {COMPANY.name} \u2014 {deck.name}
             </h1>
           </div>
           <button onClick={controls.enterFullscreen} style={{
@@ -49,7 +70,7 @@ export default function PitchPage() {
             fontSize: '11px', letterSpacing: '0.12em', fontWeight: 500,
             alignSelf: isMobile ? 'flex-start' : 'auto',
           }}>
-            ▶ PRESENT
+            \u25b6 PRESENT
           </button>
         </div>
 
@@ -62,7 +83,7 @@ export default function PitchPage() {
             : 'repeat(auto-fill, minmax(360px, 1fr))',
           gap: isMobile ? '12px' : '20px',
         }}>
-          {SLIDES.map((slide, i) => (
+          {deck.slides.map((slide, i) => (
             <motion.button
               key={slide.id}
               onClick={() => { controls.goTo(i); controls.enterFullscreen(); }}
@@ -81,7 +102,7 @@ export default function PitchPage() {
               onMouseEnter={e => !isMobile && (e.currentTarget.style.borderColor = t.accent)}
               onMouseLeave={e => !isMobile && (e.currentTarget.style.borderColor = t.border)}
             >
-              <SlideRenderer slide={slide} isFullscreen={false} />
+              <SlideRenderer slide={slide} visuals={deck.visuals} isFullscreen={false} />
             </motion.button>
           ))}
         </div>

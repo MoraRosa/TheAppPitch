@@ -4,13 +4,13 @@
 
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { SLIDES } from '../../data/slides.js';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import SlideRenderer from './SlideRenderer.jsx';
 
-export default function PresentMode({ controls }) {
+export default function PresentMode({ controls, deck }) {
   const { theme } = useTheme();
   const t = theme.colors;
+  const SLIDES = deck.slides;
   const slide = SLIDES[controls.current];
 
   // Prevent body scroll while fullscreen
@@ -95,7 +95,7 @@ export default function PresentMode({ controls }) {
             transition={{ duration: parseFloat(theme.motion.enter), ease: [0.16, 1, 0.3, 1] }}
             style={{ position: 'absolute', inset: 0 }}
           >
-            <SlideRenderer slide={slide} isFullscreen />
+            <SlideRenderer slide={slide} visuals={deck.visuals} isFullscreen />
           </motion.div>
         </AnimatePresence>
       </div>

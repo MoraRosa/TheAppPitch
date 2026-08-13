@@ -1,6 +1,6 @@
-# TheApp — Investor Pitch Site
+# Peak Enterprise — Investor Pitch Site
 
-A premium React + Vite pitch showcase for TheApp, featuring 4 fully independent design themes, a fullscreen cinematic pitch deck presenter with auto-play mode, interactive financial charts, and a complete readable business plan.
+A premium React + Vite pitch showcase for Peak Enterprise, featuring 4 fully independent design themes, a fullscreen cinematic pitch deck presenter with auto-play mode, interactive financial charts, and a complete readable business plan.
 
 ## Quick Start
 
@@ -18,7 +18,7 @@ Open `http://localhost:5173/theapp-pitch/`
 ### First-time setup
 
 ```bash
-# 1. Create your repo on GitHub named: theapp-pitch
+# 1. Create your repo on GitHub named: Peak Enterprise-pitch
 # 2. Clone it and copy all these files in
 git init
 git remote add origin https://github.com/YOUR_USERNAME/theapp-pitch.git
@@ -119,7 +119,7 @@ Auto-play timing is set per theme in `src/themes/[theme]/tokens.js` → `motion.
 ## Phase 2 — Coming Later
 
 - **ElevenLabs voice narration** → audio files per slide, synced to auto-play timer
-- **Product tour overlay** → Shepherd.js or custom, for TheApp MVP onboarding demo
+- **Product tour overlay** → Shepherd.js or custom, for Peak Enterprise MVP onboarding demo
 - **Auto-present with timed animations** → slide elements animate in sequence per slide
 
 ---

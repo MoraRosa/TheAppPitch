@@ -8,11 +8,11 @@ export const PLAN_SECTIONS = [
     id: "executive-summary",
     number: "01",
     title: "Executive Summary",
-    content: `TheApp is a Canadian multi-tenant vertical SaaS platform that gives small business owners a complete, ready-to-operate online business from day one. Unlike Shopify, Squarespace, or any single-purpose tool, TheApp combines a fully themed customer storefront with an integrated merchant back-office — including a CRM (Constellation), a production costing engine (Pulse), task management (Compass), email, blog, newsletter, reviews, FAQ, and legal tools — all in one platform, activated through a module toggle system.
+    content: `Peak Enterprise is a Canadian multi-tenant vertical SaaS platform that gives small business owners a complete, ready-to-operate online business from day one. Unlike Shopify, Squarespace, or any single-purpose tool, Peak Enterprise combines a fully themed customer storefront with an integrated merchant back-office — including a CRM (Constellation), a production costing engine (Pulse), task management (Compass), email, blog, newsletter, reviews, FAQ, and legal tools — all in one platform, activated through a module toggle system.
 
 The platform is built for two customer types: small product-based businesses (beauty brands, skincare makers, small manufacturers, food producers) who need both a storefront and operational tools; and service-based businesses (fitness trainers, photographers, salons, therapists) who need a professional online presence with client-facing functionality.
 
-TheApp is currently pre-revenue, built entirely by a solo Canadian developer, with 15 beta merchants signed up and waiting for launch.`,
+Peak Enterprise is currently pre-revenue, built entirely by a solo Canadian developer, with 15 beta merchants signed up and waiting for launch.`,
   },
 
   {
@@ -20,7 +20,7 @@ TheApp is currently pre-revenue, built entirely by a solo Canadian developer, wi
     number: "02",
     title: "Company Description",
     blocks: [
-      { type: 'text', text: 'TheApp is a Canadian-built, Alberta-founded SaaS company providing integrated operational infrastructure for small makers, independent brands, and service businesses. It is currently in active development with a working multi-tenant platform, 15 confirmed beta merchants, and a clear path to launch.' },
+      { type: 'text', text: 'Peak Enterprise is a Canadian-built, Alberta-founded SaaS company providing integrated operational infrastructure for small makers, independent brands, and service businesses. It is currently in active development with a working multi-tenant platform, 15 confirmed beta merchants, and a clear path to launch.' },
       { type: 'label', text: 'Mission' },
       { type: 'callout', text: 'To remove the operational chaos that prevents talented makers and small business owners from focusing on their craft, by replacing the spreadsheets, subscriptions, and workarounds with storefront, CRM, production costing, and task management in one integrated platform that just works.' },
       { type: 'label', text: 'Vision' },
@@ -28,7 +28,7 @@ TheApp is currently pre-revenue, built entirely by a solo Canadian developer, wi
       { type: 'label', text: 'Who We Serve' },
       { type: 'text', text: 'Small product-based businesses — beauty brands, skincare makers, food producers, small manufacturers — who need both a storefront and production operations in one place. Service-based businesses — fitness trainers, photographers, salons, therapists — who need a professional online presence with client-facing booking and content tools.' },
       { type: 'label', text: 'What Need We Satisfy' },
-      { type: 'text', text: 'Small business owners are currently paying $160–850/month across 6–10 disconnected tools that do not share data. There is no single platform built specifically for makers who need to track ingredients, calculate batch costs, manage suppliers, and run a storefront simultaneously. TheApp is that platform.' },
+      { type: 'text', text: 'Small business owners are currently paying $160–850/month across 6–10 disconnected tools that do not share data. There is no single platform built specifically for makers who need to track ingredients, calculate batch costs, manage suppliers, and run a storefront simultaneously. Peak Enterprise is that platform.' },
     ],
   },
 
@@ -49,7 +49,7 @@ The result: small makers are overpaying for tools that were not designed for the
     title: "The Solution",
     content: `One platform. One login. Everything operational on day one.
 
-When a merchant signs up for TheApp, they choose their business type, pick a theme, and are operational without setting up a single integration.
+When a merchant signs up for Peak Enterprise, they choose their business type, pick a theme, and are operational without setting up a single integration.
 
 The storefront is a fully themed customer-facing store powered by a curated theme engine — five radically isolated design universes. These are not color swaps. Each theme has its own typography, spacing, layout philosophy, animation system, component structure, and interaction design.
 
@@ -63,13 +63,13 @@ The module system means merchants enable only what their business needs. The sid
     number: "05",
     title: "Products & Services",
     blocks: [
-      { type: 'text', text: 'TheApp is a subscription-based SaaS platform. Merchants pay a monthly fee for access to the full module suite. There is no physical product — the service is the software.' },
+      { type: 'text', text: 'Peak Enterprise is a subscription-based SaaS platform. Merchants pay a monthly fee for access to the full module suite. There is no physical product — the service is the software.' },
       { type: 'label', text: 'What Makes It Unique' },
       { type: 'text', text: 'No competitor combines a fully themed storefront with production costing, CRM, and task management in a single platform. The production costing engine (Pulse) has no direct equivalent in Shopify, Squarespace, Kajabi, or any current small business platform. The radically isolated theme engine is not a color swap — each theme is architecturally distinct.' },
       { type: 'label', text: 'How It Will Be Used' },
-      { type: 'text', text: 'Merchants access TheApp through a web browser on desktop or mobile. Buyers access the merchant\'s public storefront through a custom-branded URL. No app install required for either party. Merchants configure their store once and operate continuously from the dashboard.' },
+      { type: 'text', text: 'Merchants access Peak Enterprise through a web browser on desktop or mobile. Buyers access the merchant\'s public storefront through a custom-branded URL. No app install required for either party. Merchants configure their store once and operate continuously from the dashboard.' },
       { type: 'label', text: 'How Price Is Established' },
-      { type: 'text', text: 'Pricing is based on a tiered subscription model anchored to competitor pricing and the value of tools replaced. A merchant replacing Shopify ($79), Mailchimp ($20), and a costing spreadsheet saves $100+/month by consolidating onto TheApp at $79/month. Pricing will be validated through beta merchant survey data before public launch.' },
+      { type: 'text', text: 'Pricing is based on a tiered subscription model anchored to competitor pricing and the value of tools replaced. A merchant replacing Shopify ($79), Mailchimp ($20), and a costing spreadsheet saves $100+/month by consolidating onto Peak Enterprise at $79/month. Pricing will be validated through beta merchant survey data before public launch.' },
       { type: 'label', text: 'Competitive Advantages' },
       { type: 'bullets', items: [
         'Production costing engine — no equivalent exists in the market for small makers',
@@ -80,7 +80,7 @@ The module system means merchants enable only what their business needs. The sid
         'AI-native architecture — external API access ready for AI agent integration from day one',
       ]},
       { type: 'label', text: 'Copyrights & IP' },
-      { type: 'text', text: 'All source code is proprietary and privately held. The TheApp name and brand are unregistered trademarks at this stage. Trademark registration will be pursued at federal incorporation. The competitive moat is execution and product depth.' },
+      { type: 'text', text: 'All source code is proprietary and privately held. The Peak Enterprise name and brand are unregistered trademarks at this stage. Trademark registration will be pursued at federal incorporation. The competitive moat is execution and product depth.' },
     ],
   },
 
@@ -116,7 +116,7 @@ Unit economics at current assumptions: ARPU of $79 per month, monthly churn of 5
     blocks: [
       { type: 'text', text: 'Shopify is the largest ecommerce ecosystem but was built for retailers, not makers. It has no ingredient management, no batch costing, and no native CRM. Its app ecosystem adds cost and integration friction at every step.' },
       { type: 'text', text: 'Squarespace is design-first and business-second. No ecommerce depth, no back-office tools, and booking requires third-party integration. Kajabi serves digital products and courses at $150–400/month — overkill for most small merchants with no physical ecommerce or production costing. HoneyBook and Dubsado serve service business CRM and invoicing but have no storefront or ecommerce capability.' },
-      { type: 'text', text: 'TheApp\'s advantages are integrated operations that work on day one, a production costing engine no competitor has, radically isolated theming, and AI-native architecture designed for external access from day one.' },
+      { type: 'text', text: 'Peak Enterprise\'s advantages are integrated operations that work on day one, a production costing engine no competitor has, radically isolated theming, and AI-native architecture designed for external access from day one.' },
       { type: 'placeholder', text: 'Competitor market share, advertising spend, and distribution analysis — pending secondary market research.' },
     ],
   },
@@ -126,11 +126,11 @@ Unit economics at current assumptions: ARPU of $79 per month, monthly churn of 5
     number: "08b",
     title: "Competitive Weaknesses & Mitigation",
     blocks: [
-      { type: 'text', text: 'Every early-stage SaaS product carries structural disadvantages. The following is an honest assessment of TheApp\'s current weaknesses and the specific strategy for overcoming each.' },
+      { type: 'text', text: 'Every early-stage SaaS product carries structural disadvantages. The following is an honest assessment of Peak Enterprise\'s current weaknesses and the specific strategy for overcoming each.' },
       {
         type: 'weakness',
         title: 'Pre-revenue and pre-launch',
-        challenge: 'TheApp has not yet generated subscription revenue. There is no proven willingness-to-pay data.',
+        challenge: 'Peak Enterprise has not yet generated subscription revenue. There is no proven willingness-to-pay data.',
         mitigation: '15 beta merchants are actively waiting to onboard. Beta launch with a free or discounted period will generate the first revenue data and testimonials within 30 days of completing the cart and payments module. Revenue is a milestone, not an assumption.',
       },
       {
@@ -142,7 +142,7 @@ Unit economics at current assumptions: ARPU of $79 per month, monthly churn of 5
       {
         type: 'weakness',
         title: 'Zero brand awareness at launch',
-        challenge: 'TheApp is an unknown brand entering a market where Shopify and Squarespace have years of brand equity.',
+        challenge: 'Peak Enterprise is an unknown brand entering a market where Shopify and Squarespace have years of brand equity.',
         mitigation: 'The go-to-market strategy is deliberately narrow: Alberta makers and independent brands first. Word-of-mouth within tight craft and small business communities travels faster than paid advertising. Beta merchant success stories will be the primary acquisition channel in Year 1.',
       },
       {
@@ -165,7 +165,7 @@ Unit economics at current assumptions: ARPU of $79 per month, monthly churn of 5
     number: "08c",
     title: "SWOT Analysis",
     blocks: [
-      { type: 'text', text: 'Strengths and Weaknesses are internal. Opportunities and Threats are external. This reflects TheApp\'s position as of current development stage — pre-revenue, pre-launch, with a working product and confirmed beta demand.' },
+      { type: 'text', text: 'Strengths and Weaknesses are internal. Opportunities and Threats are external. This reflects Peak Enterprise\'s position as of current development stage — pre-revenue, pre-launch, with a working product and confirmed beta demand.' },
       {
         type: 'swot',
         strengths: [
@@ -222,7 +222,7 @@ Phase three targets 250 or more merchants through paid acquisition on Meta and G
     title: "Operations",
     blocks: [
       { type: 'label', text: 'Service Delivery' },
-      { type: 'text', text: 'TheApp is a SaaS product delivered through a web browser and cross-platform mobile application. No physical production, inventory, or logistics. Available 24/7, hosted on cloud infrastructure with automatic scaling. New merchants self-onboard through a guided setup flow. The founder provides direct onboarding support to beta merchants via email and video call. At scale, onboarding will be automated through in-app tutorials and a knowledge base.' },
+      { type: 'text', text: 'Peak Enterprise is a SaaS product delivered through a web browser and cross-platform mobile application. No physical production, inventory, or logistics. Available 24/7, hosted on cloud infrastructure with automatic scaling. New merchants self-onboard through a guided setup flow. The founder provides direct onboarding support to beta merchants via email and video call. At scale, onboarding will be automated through in-app tutorials and a knowledge base.' },
       { type: 'label', text: 'Staffing' },
       { type: 'text', text: 'Current stage: single founder handles all product development, design, customer support, and business operations — sustainable through beta and up to approximately 50 merchants. First planned hire at 100 merchants: a part-time Customer Success and Operations role, freeing the founder to focus on product development and the US expansion roadmap.' },
       { type: 'label', text: 'Distribution' },
@@ -244,7 +244,7 @@ Phase three targets 250 or more merchants through paid acquisition on Meta and G
     title: "Management & Ownership",
     blocks: [
       { type: 'label', text: 'Founder' },
-      { type: 'text', text: 'Hikmah Adepoju — Founder & Full-Stack Developer. Sole owner, 100% equity. Responsible for all product architecture, development, design, operations, and business strategy. Also operates Lumina, a live e-commerce business that serves as the primary testbed and proof of concept for TheApp\'s feature set.' },
+      { type: 'text', text: 'Hikmah Adepoju — Founder & Full-Stack Developer. Sole owner, 100% equity. Responsible for all product architecture, development, design, operations, and business strategy. Also operates Lumina, a live e-commerce business that serves as the primary testbed and proof of concept for Peak Enterprise\'s feature set.' },
       { type: 'label', text: 'Legal Structure & Ownership' },
       { type: 'text', text: 'Sole proprietorship (current). Federal incorporation planned at launch. 100% owned by Hikmah Adepoju. No external shareholders, partners, or equity agreements at this stage.' },
       { type: 'label', text: 'Professional Resource Team' },

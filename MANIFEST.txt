@@ -1,0 +1,77 @@
+THEAPPPITCH — UPDATE PACKAGE
+=============================
+Everything below is relative to your repo root (TheAppPitch/).
+Copy each file into the SAME path in your local clone — same folder, same name.
+
+──────────────────────────────
+DELETE THIS FILE FIRST
+──────────────────────────────
+src/pages/PitchPage.jsx
+  → Replaced by PitchLandingPage.jsx + PitchDeckPage.jsx below. Delete it or
+    the old route file just sits there unused — either is safe, but deleting
+    is cleaner.
+
+──────────────────────────────
+NEW FILES (create these paths)
+──────────────────────────────
+src/data/decks/investorSlides.js
+src/data/decks/demoSlides.js
+src/data/decks/index.js
+src/components/pitch/visuals/DeviceFrame.jsx
+src/components/pitch/visuals/investorVisuals.jsx
+src/components/pitch/visuals/demoVisuals.jsx
+src/themes/showroom/tokens.js
+src/pages/PitchLandingPage.jsx
+src/pages/PitchDeckPage.jsx
+
+──────────────────────────────
+MODIFIED FILES (overwrite existing)
+──────────────────────────────
+src/App.jsx                              — routes: /pitch is now a picker, /pitch/:deckId is the deck
+src/themes/index.js                      — registers the new Showroom theme
+src/components/pitch/SlideRenderer.jsx   — deck-agnostic visuals + Showroom slide shell
+src/components/pitch/PresentMode.jsx     — takes a `deck` prop instead of hardcoded SLIDES
+src/hooks/usePitchControls.js            — takes slideCount + { useAudio } instead of hardcoded SLIDE_COUNT
+src/pages/HomePage.jsx                   — hero copy now reads from COMPANY.name
+src/pages/PlanPage.jsx                   — heading now reads from COMPANY.name
+src/data/slides.js                       — investor slide copy now reads from COMPANY.name
+src/data/founder.js                      — bio/whyUnique/notableProjects now read from COMPANY
+src/data/financials.js                   — one comment made brand-agnostic (no code change)
+src/utils/generatePDF.js                 — THEAPP strings + the cover-page name split now read from COMPANY.name
+src/utils/generatePPTX.js                — THEAPP strings now read from COMPANY.name
+
+──────────────────────────────
+NEW FOLDER — for your product photos
+──────────────────────────────
+public/demo-assets/ember-moss/
+  Drop these exact filenames in once you have them exported:
+    moon-dew-mist.jpg      (clean white-bg spray bottle)
+    solar-radiance.jpg     (clean white-bg dropper bottle)
+    dragon-mint-tea.jpg    (clean white-bg tin)
+    phoenix-ember.jpg      (lifestyle candle-with-dragon shot)
+    hero-apothecary.jpg    (wide storefront concept, used as the hero background)
+  Nothing breaks if these aren't there yet — the demo deck shows a soft
+  placeholder in their place until you add them. No code changes needed
+  when you do; the paths are already wired in demoVisuals.jsx.
+
+──────────────────────────────
+UNCHANGED — did NOT touch, no need to copy
+──────────────────────────────
+Everything else in the repo (Nav, Footer, BottomNav, AboutPage, FinancialsPage,
+DownloadsPage, the 4 existing theme token files, plan.js, config.js, audio.js,
+context/, hooks/ other than usePitchControls, etc.) is exactly as it was in
+your clone. plan-old.js is unused dead code — still hardcodes "TheApp" but
+nothing imports it, so it's safe to ignore or delete whenever.
+
+──────────────────────────────
+THE ONE FILE YOU EDIT WHEN YOU'RE READY TO RENAME
+──────────────────────────────
+src/data/config.js — line ~12
+  Change:  name: 'TheApp',
+  To:      name: 'Peak',        (or 'Peak Enterprise' — your call)
+That's it. Every file above that says "reads from COMPANY.name" will update
+automatically — nav, slides, PDF/PPTX exports, business plan, founder bio,
+all of it. Nothing else in the app hardcodes the brand name anymore (aside
+from the dead plan-old.js file noted above, and the /TheAppPitch/ path in
+audio.js, which is your GitHub Pages repo folder name, not the brand — that
+one only needs to change if you ever rename the actual repo).

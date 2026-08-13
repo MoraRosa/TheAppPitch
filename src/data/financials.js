@@ -1,5 +1,5 @@
 // ─── FINANCIAL PROJECTIONS DATA ───────────────────────────────────────────────
-// Source: TheApp business plan projections.
+// Source: business plan projections (company name comes from config.js).
 // ARPU: $79/month. Monthly churn: 5%. CAC: ~$150. LTV: ~$1,580.
 
 export const MERCHANT_GROWTH = [

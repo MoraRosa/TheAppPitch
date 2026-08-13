@@ -1,12 +1,15 @@
 // ─── PITCH CONTROLS HOOK ──────────────────────────────────────────────────────
 // Manages slide index, fullscreen, auto-play, and ElevenLabs audio sync.
-// Audio is opt-in — set AUDIO_ENABLED = true in src/data/audio.js when ready.
+// Audio is opt-in per deck — the recorded voiceover is investor-deck-specific
+// narration, so `useAudio` must be passed explicitly true only for that deck.
+// Any other deck (demo, and future ones) falls back to plain timer autoplay.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { SLIDE_COUNT } from '../data/slides.js';
 import { AUDIO_ENABLED, getAudioFile, getAudioDuration } from '../data/audio.js';
 
-export function usePitchControls(defaultAutoSlideMs = 5000) {
+export function usePitchControls(slideCount, { defaultAutoSlideMs = 5000, useAudio = false } = {}) {
+  const SLIDE_COUNT = slideCount;
+  const audioActive = useAudio && AUDIO_ENABLED;
   const [current, setCurrent]     = useState(0);
   const [isFullscreen, setFS]     = useState(false);
   const [isAutoPlay, setAutoPlay] = useState(false);
@@ -62,11 +65,11 @@ export function usePitchControls(defaultAutoSlideMs = 5000) {
     return () => window.removeEventListener('keydown', handler);
   }, [isFullscreen, next, prev, exitFullscreen, toggleAutoPlay]);
 
-  // Auto-play: audio-synced if AUDIO_ENABLED, timer-based otherwise
+  // Auto-play: audio-synced if this deck has audio enabled, timer-based otherwise
   useEffect(() => {
     if (!isAutoPlay || !isFullscreen) { cleanupAudio(); return; }
 
-    if (AUDIO_ENABLED) {
+    if (audioActive) {
       // Audio-driven: advance when audio ends
       const file = getAudioFile(current);
       if (file) {
@@ -84,14 +87,14 @@ export function usePitchControls(defaultAutoSlideMs = 5000) {
     }
 
     return cleanupAudio;
-  }, [isAutoPlay, isFullscreen, current, next, cleanupAudio, defaultAutoSlideMs]);
+  }, [isAutoPlay, isFullscreen, current, next, cleanupAudio, defaultAutoSlideMs, audioActive]);
 
   return {
     current, direction, isFullscreen, isAutoPlay,
     goTo, next, prev, enterFullscreen, exitFullscreen, toggleAutoPlay,
     isFirst:  current === 0,
     isLast:   current === SLIDE_COUNT - 1,
-    progress: ((current + 1) / SLIDE_COUNT) * 100,
-    audioEnabled: AUDIO_ENABLED,
+    progress: SLIDE_COUNT ? ((current + 1) / SLIDE_COUNT) * 100 : 0,
+    audioEnabled: audioActive,
   };
 }

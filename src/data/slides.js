@@ -2,13 +2,15 @@
 // Theme-agnostic. All visual decisions live in /themes.
 // To add a slide: push to this array. Nothing else needs to change.
 
+import { COMPANY } from './config.js';
+
 export const SLIDES = [
   {
     id: 1,
     slug: "hook",
     eyebrow: "Introduction",
     headline: "Small businesses are paying for 10 tools when one should do.",
-    body: "TheApp is the complete business platform for small brands and makers. Built in Canada. 15 merchants already waiting.",
+    body: `${COMPANY.name} is the complete business platform for small brands and makers. Built in Canada. 15 merchants already waiting.`,
     speakerNote: "Open with the core tension. Every person in this room knows a small business owner drowning in subscriptions.",
     tag: "01",
   },
@@ -36,7 +38,7 @@ export const SLIDES = [
     slug: "differentiator",
     eyebrow: "The Differentiator",
     headline: "Pulse is the production costing engine no competitor has.",
-    body: "For a beauty brand on Shopify: ingredients go to a spreadsheet. Supplier management goes to a spreadsheet. Batch costing goes to a spreadsheet. For a beauty brand on TheApp: all of it, built in, visual, synced automatically.",
+    body: `For a beauty brand on Shopify: ingredients go to a spreadsheet. Supplier management goes to a spreadsheet. Batch costing goes to a spreadsheet. For a beauty brand on ${COMPANY.name}: all of it, built in, visual, synced automatically.`,
     speakerNote: "Pulse is the moat. Shopify has no equivalent at this price point.",
     tag: "04",
   },
@@ -45,7 +47,7 @@ export const SLIDES = [
     slug: "market",
     eyebrow: "Market Opportunity",
     headline: "3.8 million small businesses in Canada. 33 million in the US.",
-    body: "TheApp does not need 1% of this market to reach $5M ARR. It needs the slice of makers and service providers who have been underserved by every tool built for someone else.",
+    body: `${COMPANY.name} does not need 1% of this market to reach $5M ARR. It needs the slice of makers and service providers who have been underserved by every tool built for someone else.`,
     stat: { value: "$14B+", label: "Global SaaS ecommerce market" },
     speakerNote: "Stay focused on the maker segment. That is the wedge.",
     tag: "05",
@@ -82,7 +84,7 @@ export const SLIDES = [
     slug: "competition",
     eyebrow: "Competition",
     headline: "Shopify has no production costing. Squarespace has no back-office. Nobody has both.",
-    body: "TheApp is the only platform combining a branded storefront, a full CRM, and a production costing engine in one subscription — without an app ecosystem that adds cost and integration friction at every step.",
+    body: `${COMPANY.name} is the only platform combining a branded storefront, a full CRM, and a production costing engine in one subscription — without an app ecosystem that adds cost and integration friction at every step.`,
     speakerNote: "Acknowledge what competitors do well, then name the specific gap only we fill.",
     tag: "09",
   },

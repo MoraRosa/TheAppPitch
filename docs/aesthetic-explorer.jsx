@@ -17,7 +17,7 @@ const AESTHETICS = [
     border: "#D4C9B0",
     isLight: true,
     sampleHeadline: "One platform. Every small business. Built in Canada.",
-    sampleSub: "TheApp replaces the stack of disconnected tools that small makers are forced to stitch together.",
+    sampleSub: "Peak Enterprise replaces the stack of disconnected tools that small makers are forced to stitch together.",
   },
   {
     id: "B",
@@ -35,7 +35,7 @@ const AESTHETICS = [
     border: "#2A2F3E",
     isLight: false,
     sampleHeadline: "One platform. Every small business. Built in Canada.",
-    sampleSub: "TheApp replaces the stack of disconnected tools that small makers are forced to stitch together.",
+    sampleSub: "Peak Enterprise replaces the stack of disconnected tools that small makers are forced to stitch together.",
   },
   {
     id: "C",
@@ -53,7 +53,7 @@ const AESTHETICS = [
     border: "#1A1210",
     isLight: true,
     sampleHeadline: "One platform. Every small business. Built in Canada.",
-    sampleSub: "TheApp replaces the stack of disconnected tools that small makers are forced to stitch together.",
+    sampleSub: "Peak Enterprise replaces the stack of disconnected tools that small makers are forced to stitch together.",
   },
   {
     id: "D",
@@ -71,7 +71,7 @@ const AESTHETICS = [
     border: "#2A2420",
     isLight: false,
     sampleHeadline: "One platform. Every small business. Built in Canada.",
-    sampleSub: "TheApp replaces the stack of disconnected tools that small makers are forced to stitch together.",
+    sampleSub: "Peak Enterprise replaces the stack of disconnected tools that small makers are forced to stitch together.",
   },
   {
     id: "E",
@@ -89,7 +89,7 @@ const AESTHETICS = [
     border: "#E0E0DC",
     isLight: true,
     sampleHeadline: "One platform. Every small business. Built in Canada.",
-    sampleSub: "TheApp replaces the stack of disconnected tools that small makers are forced to stitch together.",
+    sampleSub: "Peak Enterprise replaces the stack of disconnected tools that small makers are forced to stitch together.",
   },
 ];
 
@@ -188,7 +188,7 @@ export default function AestheticExplorer() {
             letterSpacing: "0.25em",
             marginBottom: 4,
           }}>
-            THEAPP PITCH SITE — AESTHETIC DIRECTION
+            Peak Enterprise PITCH SITE — AESTHETIC DIRECTION
           </div>
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
@@ -272,7 +272,7 @@ export default function AestheticExplorer() {
                 fontWeight: headlineFontWeight,
                 color: current.text,
               }}>
-                TheApp
+                Peak Enterprise
               </div>
               <div style={{ display: "flex", gap: 20 }}>
                 {["Pitch", "Plan", "Financials"].map((item) => (

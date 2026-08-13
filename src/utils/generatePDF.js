@@ -13,6 +13,16 @@ function hexToRgb(hex) {
   return [parseInt(c.slice(0,2),16), parseInt(c.slice(2,4),16), parseInt(c.slice(4,6),16)];
 }
 
+// Splits a brand name across two lines for the big cover-page wordmark.
+// Splits at the first space if there is one ("Peak Enterprise" → "Peak" / "Enterprise"),
+// otherwise at the midpoint ("Peak Enterprise" → "The" / "App"). No hardcoded name.
+function splitBrandName(name) {
+  const spaceIdx = name.indexOf(' ');
+  if (spaceIdx > -1) return [name.slice(0, spaceIdx), name.slice(spaceIdx + 1)];
+  const mid = Math.ceil(name.length / 2);
+  return [name.slice(0, mid), name.slice(mid)];
+}
+
 function accentRule(doc, x, y, theme) {
   doc.setDrawColor(...hexToRgb(theme.colors.accent));
   doc.setLineWidth(0.7);
@@ -27,7 +37,7 @@ function pageFooter(doc, num, total, theme) {
   doc.setFontSize(6.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...hexToRgb(theme.colors.textFaint));
-  doc.text('THEAPP — INVESTOR PITCH', 10, y + 4);
+  doc.text(`${COMPANY.name.toUpperCase()} — INVESTOR PITCH`, 10, y + 4);
   doc.text(`${num} / ${total}`, 287, y + 4, { align: 'right' });
 }
 
@@ -88,7 +98,7 @@ function drawRightDiff(doc, x, y, w, h, theme) {
   doc.setTextColor(...hexToRgb(t.textFaint));
   doc.text('SHOPIFY', x + colW / 2, y + 5, { align: 'center' });
   doc.setTextColor(...hexToRgb(t.accent));
-  doc.text('THEAPP', x + colW + 2 + colW / 2, y + 5, { align: 'center' });
+  doc.text(COMPANY.name.toUpperCase(), x + colW + 2 + colW / 2, y + 5, { align: 'center' });
   let cy = y + 10;
   rows.forEach(row => {
     doc.setFontSize(7);
@@ -498,9 +508,10 @@ function drawCoverBold(doc, theme, meta) {
     doc.setFontSize(54);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...hexToRgb(t.bg));
-    // Split "TheApp" across two lines
-    doc.text('The', 10, H * 0.42);
-    doc.text('App', 10, H * 0.42 + 46);
+    // Split brand name across two lines — adapts to any COMPANY.name
+    const [brandLine1, brandLine2] = splitBrandName(COMPANY.name);
+    doc.text(brandLine1, 10, H * 0.42);
+    doc.text(brandLine2, 10, H * 0.42 + 46);
 
     doc.setFontSize(6.5);
     doc.setFont('helvetica', 'normal');
@@ -905,7 +916,7 @@ export async function generateFinancialsPDF(theme) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...hexToRgb(t.accent));
-  doc.text('THEAPP — FINANCIAL PROJECTIONS', 14, 18);
+  doc.text(`${COMPANY.name.toUpperCase()} — FINANCIAL PROJECTIONS`, 14, 18);
 
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
@@ -971,7 +982,7 @@ export async function generateFinancialsPDF(theme) {
   doc.line(14, 284, 196, 284);
   doc.setFontSize(6.5);
   doc.setTextColor(...hexToRgb(t.textFaint));
-  doc.text('THEAPP · FINANCIAL PROJECTIONS', 14, 289);
+  doc.text(`${COMPANY.name.toUpperCase()} · FINANCIAL PROJECTIONS`, 14, 289);
   doc.text('1 / 1', 196, 289, { align: 'right' });
 
   const { file: finDateStr } = coverMeta();
