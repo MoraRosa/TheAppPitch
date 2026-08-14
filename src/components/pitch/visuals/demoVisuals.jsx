@@ -8,15 +8,24 @@ import { useState } from 'react';
 import QRCode from 'react-qr-code';
 import DeviceFrame from './DeviceFrame.jsx';
 import { COMPANY } from '../../../data/config.js';
-import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, STOREFRONT_THEME_SWATCHES } from '../../../data/decks/emberMoss.js';
+import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, EMBER_MOSS_JOURNAL, EMBER_MOSS_TESTIMONIALS, EMBER_MOSS_FAQ, STOREFRONT_THEME_SWATCHES } from '../../../data/decks/emberMoss.js';
 
 // Product photos live in /public/demo-assets/<brand>/<file>. Renders the real
 // image once it exists; falls back to a soft placeholder swatch until then —
 // nothing breaks in the meantime, it just looks a little plainer.
-function ProductImg({ src, alt, radius = 4, size = 1, aspect = '1' }) {
+function ProductImg({ src, alt, radius = 4, size = 1, aspect = '1', fallbackIcon = null }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
-    return <div style={{ width: '100%', aspectRatio: aspect, borderRadius: `${radius * size}px`, background: 'linear-gradient(135deg, #00000010, #00000004)' }} />;
+    return (
+      <div style={{
+        width: '100%', aspectRatio: aspect, borderRadius: `${radius * size}px`,
+        background: 'linear-gradient(135deg, #00000010, #00000004)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: fallbackIcon ? `${22 * size}px` : undefined,
+      }}>
+        {fallbackIcon}
+      </div>
+    );
   }
   return (
     <img src={src} alt={alt} onError={() => setFailed(true)} style={{
@@ -52,9 +61,12 @@ function Chip({ label, active, onClick, theme, size }) {
 function MockupWelcome({ theme, size, isFullscreen }) {
   const t = theme.colors;
   const [heroFailed, setHeroFailed] = useState(false);
+  const [openFaq, setOpenFaq] = useState(null);
+  const featured = EMBER_MOSS_PRODUCTS.slice(0, 3);
+
   return (
-    <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${14 * size}px` }}>
+    <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${12 * size}px` }}>
         <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.text }}>Ember &amp; Moss</span>
         <div style={{ display: 'flex', gap: `${10 * size}px` }}>
           {['Shop', 'Dragons', 'Cart'].map(l => (
@@ -62,13 +74,13 @@ function MockupWelcome({ theme, size, isFullscreen }) {
           ))}
         </div>
       </div>
+
+      {/* ── Hero ── */}
       <div style={{
-        position: 'relative', borderRadius: `${6 * size}px`, padding: `${20 * size}px`,
-        overflow: 'hidden', minHeight: `${120 * size}px`, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-        background: heroFailed
-          ? `linear-gradient(135deg, ${t.accent}18, ${t.accent}05)`
-          : '#1B3B2E',
-        border: `1px solid ${t.accent}30`,
+        position: 'relative', borderRadius: `${6 * size}px`, padding: `${18 * size}px`,
+        overflow: 'hidden', minHeight: `${100 * size}px`, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+        background: heroFailed ? `linear-gradient(135deg, ${t.accent}18, ${t.accent}05)` : '#1B3B2E',
+        border: `1px solid ${t.accent}30`, marginBottom: `${22 * size}px`,
       }}>
         {!heroFailed && (
           <img src="./demo-assets/ember-moss/hero-apothecary.jpg" alt="" onError={() => setHeroFailed(true)} style={{
@@ -77,23 +89,104 @@ function MockupWelcome({ theme, size, isFullscreen }) {
         )}
         {!heroFailed && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.55), rgba(0,0,0,0.05))' }} />}
         <div style={{ position: 'relative' }}>
-          <div style={{ fontFamily: theme.fonts.display, fontWeight: theme.type.headWeight, fontSize: `${17 * size}px`, color: heroFailed ? t.text : '#F5F1E4', marginBottom: `${6 * size}px` }}>
+          <div style={{ fontFamily: theme.fonts.display, fontWeight: theme.type.headWeight, fontSize: `${16 * size}px`, color: heroFailed ? t.text : '#F5F1E4', marginBottom: `${5 * size}px` }}>
             Everyday magic, handmade by dragons.
           </div>
-          <div style={{ fontFamily: theme.fonts.body, fontSize: `${9.5 * size}px`, color: heroFailed ? t.textMuted : '#E7DFC8', marginBottom: `${12 * size}px`, maxWidth: '85%' }}>
+          <div style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: heroFailed ? t.textMuted : '#E7DFC8', marginBottom: `${10 * size}px`, maxWidth: '85%' }}>
             One login runs the storefront, the shop, and everything behind it.
           </div>
           <span style={{
-            display: 'inline-block', padding: `${7 * size}px ${14 * size}px`,
+            display: 'inline-block', padding: `${6 * size}px ${13 * size}px`,
             background: t.accent, color: theme.isLight ? '#fff' : t.bg,
             borderRadius: theme.space.radius === '0px' ? '0px' : `${5 * size}px`,
-            fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${9 * size}px`,
+            fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`,
           }}>Shop the collection</span>
         </div>
+      </div>
+
+      {/* ── Featured products ── */}
+      <SectionLabel size={size} theme={theme}>Featured</SectionLabel>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
+        {featured.map(p => (
+          <div key={p.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${7 * size}px`, textAlign: 'center' }}>
+            <div style={{ marginBottom: `${5 * size}px` }}>
+              <ProductImg src={p.img} alt={p.name} size={size} />
+            </div>
+            <div style={{ fontFamily: theme.fonts.body, fontWeight: 500, fontSize: `${7.5 * size}px`, color: t.text }}>{p.name}</div>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.accent }}>{p.price}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── From the journal ── */}
+      <SectionLabel size={size} theme={theme}>From the Journal</SectionLabel>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
+        {EMBER_MOSS_JOURNAL.map(post => (
+          <div key={post.title} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, overflow: 'hidden' }}>
+            <ProductImg src={post.img} alt={post.title} size={size} radius={0} aspect="16/10" fallbackIcon={post.icon} />
+            <div style={{ padding: `${8 * size}px` }}>
+              <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${7.5 * size}px`, color: t.text, marginBottom: `${3 * size}px`, lineHeight: 1.3 }}>{post.title}</div>
+              <div style={{ fontFamily: theme.fonts.body, fontSize: `${7 * size}px`, color: t.textFaint, lineHeight: 1.4 }}>{post.excerpt}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Testimonials ── */}
+      <SectionLabel size={size} theme={theme}>What People Are Saying</SectionLabel>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
+        {EMBER_MOSS_TESTIMONIALS.map(rev => (
+          <div key={rev.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px`, background: t.bgAlt }}>
+            <div style={{ color: t.accent, fontSize: `${8 * size}px`, marginBottom: `${4 * size}px`, letterSpacing: '1px' }}>{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</div>
+            <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.5, marginBottom: `${5 * size}px`, fontStyle: 'italic' }}>&ldquo;{rev.quote}&rdquo;</div>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{rev.name}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── FAQ ── */}
+      <SectionLabel size={size} theme={theme}>Questions</SectionLabel>
+      <div style={{ marginBottom: `${18 * size}px` }}>
+        {EMBER_MOSS_FAQ.map((item, i) => (
+          <div key={item.q} style={{ borderBottom: `1px solid ${t.border}` }}>
+            <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{
+              width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: `${8 * size}px 0`, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+            }}>
+              <span style={{ fontFamily: theme.fonts.body, fontWeight: 500, fontSize: `${8.5 * size}px`, color: t.text }}>{item.q}</span>
+              <span style={{ color: t.accent, fontSize: `${10 * size}px`, transform: openFaq === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.15s ease' }}>+</span>
+            </button>
+            {openFaq === i && (
+              <div style={{ fontFamily: theme.fonts.body, fontSize: `${8 * size}px`, color: t.textMuted, lineHeight: 1.6, paddingBottom: `${8 * size}px` }}>{item.a}</div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ── Footer ── */}
+      <div style={{
+        borderTop: `1px solid ${t.border}`, paddingTop: `${10 * size}px`,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: `${6 * size}px`,
+      }}>
+        <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${9 * size}px`, color: t.textFaint }}>Ember &amp; Moss</span>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em' }}>&copy; 2026 · emberandmoss.shop</span>
       </div>
     </DeviceFrame>
   );
 }
+
+function SectionLabel({ size, theme, children }) {
+  const t = theme.colors;
+  return (
+    <div style={{
+      fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.accent,
+      letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: `${8 * size}px`,
+    }}>
+      {children}
+    </div>
+  );
+}
+
 
 // ── 2. problem — scattered tools consolidate on click ──────────────────────────
 function MockupProblem({ theme, size }) {
@@ -293,6 +386,80 @@ function MockupCustomer({ theme, size }) {
 }
 
 // ── 5. merchant — dashboard tabs ─────────────────────────────────────────────────
+// Order status counts are derived from the ORDERS list itself — not a
+// separately invented number — so the donut can never disagree with the
+// Orders tab.
+function OrderStatusDonut({ theme, size, orders, statusColor }) {
+  const t = theme.colors;
+  const counts = orders.reduce((acc, o) => { acc[o.s] = (acc[o.s] || 0) + 1; return acc; }, {});
+  const entries = Object.entries(counts);
+  const total = orders.length;
+  const r = 28;
+  const circumference = 2 * Math.PI * r;
+  let cumulative = 0;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: `${10 * size}px`, width: '100%' }}>
+      <svg width={72 * size} height={72 * size} viewBox="0 0 80 80" style={{ flexShrink: 0 }}>
+        <circle cx="40" cy="40" r={r} fill="none" stroke={t.border} strokeWidth="11" />
+        {entries.map(([status, count]) => {
+          const dash = (count / total) * circumference;
+          const el = (
+            <circle key={status} cx="40" cy="40" r={r} fill="none"
+              stroke={statusColor[status] || t.textFaint} strokeWidth="11"
+              strokeDasharray={`${dash} ${circumference - dash}`}
+              strokeDashoffset={-cumulative}
+              transform="rotate(-90 40 40)"
+              style={{ transition: 'stroke-dasharray 0.6s ease' }}
+            />
+          );
+          cumulative += dash;
+          return el;
+        })}
+        <text x="40" y="44" textAnchor="middle" fontSize="16" fontFamily={theme.fonts.display} fontWeight="700" fill={t.text}>{total}</text>
+      </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: `${3 * size}px` }}>
+        {entries.map(([status, count]) => (
+          <div key={status} style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px` }}>
+            <span style={{ width: `${7 * size}px`, height: `${7 * size}px`, borderRadius: '50%', background: statusColor[status] || t.textFaint, flexShrink: 0 }} />
+            <span style={{ fontFamily: theme.fonts.body, fontSize: `${7 * size}px`, color: t.textMuted }}>{status} ({count})</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function VisitorsLineChart({ theme, size, data }) {
+  const t = theme.colors;
+  const max = Math.max(...data);
+  const VW = 220, VH = 50;
+  const pathD = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * VW;
+    const y = VH - (v / max) * VH * 0.9;
+    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+  }).join(' ');
+  const areaD = pathD + ` L ${VW} ${VH} L 0 ${VH} Z`;
+
+  return (
+    <svg width="100%" height={`${60 * size}px`} viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" style={{ display: 'block' }}>
+      <defs>
+        <linearGradient id="visitorsGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={t.accent} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={t.accent} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={areaD} fill="url(#visitorsGrad)" />
+      <path d={pathD} fill="none" stroke={t.accent} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+      {data.map((v, i) => {
+        const x = (i / (data.length - 1)) * VW;
+        const y = VH - (v / max) * VH * 0.9;
+        return <circle key={i} cx={x} cy={y} r="2.5" fill={t.accent} vectorEffect="non-scaling-stroke" />;
+      })}
+    </svg>
+  );
+}
+
 function MockupMerchant({ theme, size }) {
   const t = theme.colors;
   const tabs = ['Overview', 'Orders', 'Products', 'Customers'];
@@ -300,6 +467,7 @@ function MockupMerchant({ theme, size }) {
 
   const REVENUE_7D = [820, 1140, 960, 1480, 1290, 1860, 1620];
   const maxRev = Math.max(...REVENUE_7D);
+  const VISITORS_7D = [140, 165, 152, 210, 188, 240, 209];
 
   const ORDERS = [
     { id: '#1048', c: 'R. Alvarez', items: 3, total: '$96',  s: 'Shipped',    tag: null },
@@ -345,7 +513,7 @@ function MockupMerchant({ theme, size }) {
       {tab === 0 && (
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${12 * size}px` }}>
-            {[{ l: 'Revenue', v: '$9,170', d: '+18%' }, { l: 'Orders', v: '38', d: '+6%' }, { l: 'Visitors', v: '1,204', d: '+11%' }].map(k => (
+            {[{ l: 'Revenue', v: '$9,170', d: '+18%' }, { l: 'Orders', v: String(ORDERS.length * 4), d: '+6%' }, { l: 'Visitors', v: '1,204', d: '+11%' }].map(k => (
               <div key={k.l} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px` }}>
                 <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{k.l}</div>
                 <div style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${14 * size}px`, color: t.text }}>{k.v}</div>
@@ -353,18 +521,32 @@ function MockupMerchant({ theme, size }) {
               </div>
             ))}
           </div>
-          <div style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${10 * size}px` }}>
-            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: `${8 * size}px` }}>Revenue · Last 7 Days</div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: `${5 * size}px`, height: `${56 * size}px` }}>
-              {REVENUE_7D.map((v, i) => (
-                <div key={i} style={{
-                  flex: 1, height: `${(v / maxRev) * 100}%`, borderRadius: `${2 * size}px ${2 * size}px 0 0`,
-                  background: i === REVENUE_7D.length - 1 ? t.accent : `${t.accent}55`,
-                  animation: `barGrowUp 0.5s ease ${i * 0.05}s both`,
-                }} />
-              ))}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: `${8 * size}px`, marginBottom: `${8 * size}px` }}>
+            <div style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${10 * size}px` }}>
+              <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: `${8 * size}px` }}>Revenue · Last 7 Days</div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: `${5 * size}px`, height: `${56 * size}px` }}>
+                {REVENUE_7D.map((v, i) => (
+                  <div key={i} style={{
+                    flex: 1, height: `${(v / maxRev) * 100}%`, borderRadius: `${2 * size}px ${2 * size}px 0 0`,
+                    background: i === REVENUE_7D.length - 1 ? t.accent : `${t.accent}55`,
+                    animation: `barGrowUp 0.5s ease ${i * 0.05}s both`,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            <div style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${10 * size}px`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: `${6 * size}px`, alignSelf: 'flex-start' }}>Order Status</div>
+              <OrderStatusDonut theme={theme} size={size} orders={ORDERS} statusColor={STATUS_COLOR} />
             </div>
           </div>
+
+          <div style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${10 * size}px` }}>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: `${8 * size}px` }}>Visitors · Last 7 Days</div>
+            <VisitorsLineChart theme={theme} size={size} data={VISITORS_7D} />
+          </div>
+
           <style>{`@keyframes barGrowUp { from { height: 0; } }`}</style>
         </div>
       )}

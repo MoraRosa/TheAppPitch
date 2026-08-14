@@ -32,6 +32,27 @@ export const EMBER_MOSS_PRODUCTS = [
   { name: "Bramble's Bath Ritual",  price: '$26', stock: 22, img: `${ASSET_PATH}/bath-ritual.jpg` },
 ];
 
+// Featured on the Welcome slide's storefront landing page. Images optional —
+// falls back to the icon on a soft placeholder until real photos exist (see
+// blog-* filenames below). Drop files into /public/demo-assets/ember-moss/journal/.
+export const EMBER_MOSS_JOURNAL = [
+  { icon: '🍵', title: "A Dragon's Guide to Brewing the Perfect Cup of Tea", excerpt: 'Bramble walks through water temperature, steep time, and why he insists on glass.', img: `${ASSET_PATH}/journal/blog-tea-guide.jpg` },
+  { icon: '🌿', title: 'Seven Herbs We Gather Before Sunrise', excerpt: 'The dawn harvest ritual behind every batch of Dragon Mint Tea.', img: `${ASSET_PATH}/journal/blog-herb-harvest.jpg` },
+  { icon: '🕯️', title: 'Why Our Candle Makers Insist on Crackling Wood Wicks', excerpt: 'A small obsession with sound, and what it does for the whole ritual.', img: `${ASSET_PATH}/journal/blog-candle-wicks.jpg` },
+];
+
+export const EMBER_MOSS_TESTIMONIALS = [
+  { quote: 'The Moon Dew mist is the first skincare thing I\u2019ve ever finished a bottle of and immediately reordered.', name: 'R. Alvarez', rating: 5 },
+  { quote: 'Ordered the tea as a joke gift. Now three people in my office are hooked.', name: 'S. Kim', rating: 5 },
+  { quote: 'Shipping was fast and the packaging alone made it worth it.', name: 'D. Osei', rating: 4 },
+];
+
+export const EMBER_MOSS_FAQ = [
+  { q: 'Is everything cruelty-free?', a: 'Yes — nothing in the collection is tested on anyone, dragons included.' },
+  { q: 'How long does shipping take?', a: 'Most orders arrive within 3\u20135 business days across Canada.' },
+  { q: 'Can I return something?', a: '30-day returns on unopened items, no questions asked.' },
+];
+
 // Storefront-theme swatches for the Storefront Customization slide. One of
 // these is the real Ember & Moss palette; the other three are placeholder
 // "other tenants on the platform" to demonstrate multi-tenant theming.
