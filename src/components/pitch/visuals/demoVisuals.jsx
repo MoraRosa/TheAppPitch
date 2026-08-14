@@ -69,7 +69,7 @@ function MockupWelcome({ theme, size, isFullscreen }) {
         border: `1px solid ${t.accent}30`,
       }}>
         {!heroFailed && (
-          <img src="/demo-assets/ember-moss/hero-apothecary.jpg" alt="" onError={() => setHeroFailed(true)} style={{
+          <img src="./demo-assets/ember-moss/hero-apothecary.jpg" alt="" onError={() => setHeroFailed(true)} style={{
             position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
           }} />
         )}
@@ -193,12 +193,12 @@ function MockupPlatform({ theme, size }) {
 // read from this single list, so the two sides of the demo never disagree
 // with each other again.
 const EMBER_MOSS_PRODUCTS = [
-  { name: 'Moon Dew Facial Mist',   price: '$34', stock: 42, img: '/demo-assets/ember-moss/moon-dew-mist.jpg' },
-  { name: 'Solar Radiance Elixir',  price: '$48', stock: 18, img: '/demo-assets/ember-moss/solar-radiance.jpg' },
-  { name: 'Dragon Mint Tea',        price: '$22', stock: 65, img: '/demo-assets/ember-moss/dragon-mint-tea.jpg' },
-  { name: 'Phoenix Ember Candle',   price: '$28', stock: 31, img: '/demo-assets/ember-moss/phoenix-ember.jpg' },
-  { name: 'Whispering Moss Soap',   price: '$18', stock: 54, img: '/demo-assets/ember-moss/whispering-moss-soap.jpg' },
-  { name: "Bramble's Bath Ritual",  price: '$26', stock: 22, img: '/demo-assets/ember-moss/bath-ritual.jpg' },
+  { name: 'Moon Dew Facial Mist',   price: '$34', stock: 42, img: './demo-assets/ember-moss/moon-dew-mist.jpg' },
+  { name: 'Solar Radiance Elixir',  price: '$48', stock: 18, img: './demo-assets/ember-moss/solar-radiance.jpg' },
+  { name: 'Dragon Mint Tea',        price: '$22', stock: 65, img: './demo-assets/ember-moss/dragon-mint-tea.jpg' },
+  { name: 'Phoenix Ember Candle',   price: '$28', stock: 31, img: './demo-assets/ember-moss/phoenix-ember.jpg' },
+  { name: 'Whispering Moss Soap',   price: '$18', stock: 54, img: './demo-assets/ember-moss/whispering-moss-soap.jpg' },
+  { name: "Bramble's Bath Ritual",  price: '$26', stock: 22, img: './demo-assets/ember-moss/bath-ritual.jpg' },
 ];
 function MockupCustomer({ theme, size }) {
   const t = theme.colors;

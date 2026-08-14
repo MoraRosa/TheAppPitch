@@ -6,41 +6,34 @@ A premium React + Vite pitch showcase for Peak Enterprise, featuring 4 fully ind
 
 ```bash
 npm install
-npm run dev
+npm run dev -- --host 0.0.0.0 --port 4173
 ```
 
-Open `http://localhost:5173/theapp-pitch/`
+Open `http://localhost:4173/`
 
 ---
 
 ## GitHub Pages Deploy
 
-### First-time setup
+This repo deploys through the GitHub Pages workflow in [./.github/workflows/deploy.yml](.github/workflows/deploy.yml). It does not rely on a local `npm run deploy` script.
+
+### Build locally
 
 ```bash
-# 1. Create your repo on GitHub named: Peak Enterprise-pitch
-# 2. Clone it and copy all these files in
-git init
-git remote add origin https://github.com/YOUR_USERNAME/theapp-pitch.git
-
-# 3. Install dependencies
-npm install
-
-# 4. Deploy
-npm run deploy
+npm run build
 ```
 
-This runs `vite build` then pushes the `/dist` folder to a `gh-pages` branch automatically.
+### Deploy
 
-Your site will be live at: `https://YOUR_USERNAME.github.io/theapp-pitch/`
+Push to the `main` branch and GitHub Actions will publish the built site from the `dist` folder.
 
-### Subsequent deploys
+Your site will be live at:
 
-```bash
-npm run deploy
-```
+`https://YOUR_USERNAME.github.io/TheAppPitch/`
 
-That's it. One command.
+### Important note for images
+
+Use relative asset paths such as `./demo-assets/...` instead of `/demo-assets/...` so the images resolve correctly when the site is served from a repo subpath on GitHub Pages.
 
 ---
 
