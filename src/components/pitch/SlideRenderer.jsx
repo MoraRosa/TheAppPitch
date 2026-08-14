@@ -24,7 +24,14 @@ function SlideVisual({ slideSlug, visuals, theme, isFullscreen }) {
   const size = isFullscreen ? 1 : 0.6;
   const Visual = visuals[slideSlug];
   if (!Visual) return null;
-  return <Visual theme={theme} size={size} isFullscreen={isFullscreen} />;
+  return (
+    <div style={{
+      flex: '1 1 auto', minHeight: 0, width: '100%',
+      display: 'flex', flexDirection: 'column', justifyContent: 'center',
+    }}>
+      <Visual theme={theme} size={size} isFullscreen={isFullscreen} />
+    </div>
+  );
 }
 
 // ─── SHARED CONTENT COLUMN ────────────────────────────────────────────────────
@@ -182,7 +189,6 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
           ? 'clamp(32px, 5vh, 52px) clamp(28px, 3.5vw, 48px)'
           : '28px 24px',
         display: 'flex', flexDirection: 'column',
-        justifyContent: 'center',
         position: 'relative', overflow: 'hidden',
       }}>
         <div style={{
@@ -265,7 +271,7 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
             <p style={{ fontFamily: theme.fonts.body, fontSize: isFullscreen ? theme.type.bodySize : 'clamp(10px, 1.1vw, 13px)', color: t.textMuted, lineHeight: 1.7, maxWidth: '440px', borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px' }}>{slide.body}</p>
           </div>
         </div>
-        <div style={{ padding: isFullscreen ? '40px 48px' : '24px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ padding: isFullscreen ? '40px 48px' : '24px 24px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', bottom: '12px', right: '16px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: isFullscreen ? '72px' : '44px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
           <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} />
         </div>

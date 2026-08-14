@@ -2,8 +2,15 @@
 // Reusable "browser window" chrome that wraps the demo-deck mockups so they
 // read as a real app surface rather than a floating card. Theme-driven, no
 // fixed colors, so it adapts to whichever theme is active — including Showroom.
+//
+// `fill`: pass true for mockups with a scrollable list (Customer, Merchant) —
+// the frame stretches to use all available height in the slide's visual
+// column, with the content area scrolling internally if it still overflows.
+// Leave false (default) for short/fixed-height mockups (hero, workflow steps,
+// etc.) so they stay compact and vertically centered like before — forcing
+// those to stretch would just add empty space inside the frame.
 
-export default function DeviceFrame({ theme, url, size = 1, children, minHeight }) {
+export default function DeviceFrame({ theme, url, size = 1, children, minHeight, fill = false }) {
   const t = theme.colors;
   return (
     <div style={{
@@ -13,11 +20,13 @@ export default function DeviceFrame({ theme, url, size = 1, children, minHeight 
       overflow: 'hidden',
       background: t.surface || t.bg,
       boxShadow: `0 ${8 * size}px ${24 * size}px -12px rgba(0,0,0,0.18)`,
+      ...(fill ? { height: '100%', display: 'flex', flexDirection: 'column' } : {}),
     }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: `${8 * size}px`,
         padding: `${8 * size}px ${12 * size}px`,
         background: t.bgAlt, borderBottom: `1px solid ${t.border}`,
+        flexShrink: 0,
       }}>
         <div style={{ display: 'flex', gap: `${5 * size}px` }}>
           {[0, 1, 2].map(i => (
@@ -37,7 +46,11 @@ export default function DeviceFrame({ theme, url, size = 1, children, minHeight 
           </div>
         )}
       </div>
-      <div style={{ padding: `${12 * size}px`, minHeight: minHeight ? `${minHeight * size}px` : undefined }}>
+      <div style={{
+        padding: `${12 * size}px`,
+        minHeight: minHeight ? `${minHeight * size}px` : undefined,
+        ...(fill ? { flex: '1 1 auto', minHeight: 0, overflowY: 'auto' } : {}),
+      }}>
         {children}
       </div>
     </div>

@@ -1,87 +1,63 @@
-THEAPPPITCH — ROUND 2: BUGFIXES + CUSTOMER/MERCHANT REWORK
-=============================================================
-This package REPLACES the previous one — it contains everything from before
-PLUS the fixes below. If you already copied files from the first zip, just
-overwrite them with these; if you haven't copied anything yet, this is now
-the only zip you need (still copy the NEW files list from the first
-MANIFEST.txt too — PitchLandingPage.jsx, demoSlides.js, decks/index.js etc.
-are unchanged from before and not repeated in this smaller package).
-
-HOW TO APPLY: same as before — unzip, copy src/ into your repo overwriting
-matching paths, `npm run dev` to check locally.
+THEAPPPITCH — ROUND 3: DESKTOP SPACE, LIVE LINK, QR CODE, DATA EXTRACTION
+===========================================================================
+Apply like before: copy these into your repo at the same paths, overwrite.
+This round adds a new dependency (react-qr-code) — run `npm install` after
+copying package.json / package-lock.json, or just copy those two files in
+and it'll pick it up next install.
 
 ──────────────────────────────
-BUG #1 — the literal \u25b6 / \u2014 text
+NEW FILE
 ──────────────────────────────
-Real bug, not your setup. When I write special characters as raw JSX text
-(not inside an actual JS string), the browser doesn't interpret backslash-u
-escapes — it prints the six characters literally. That's what you were
-seeing on the Present buttons, the "All decks" link, the arrows in Checkout
-→, the workflow breadcrumbs, and a few spots in the investor deck's visuals
-too (→ · — ✓ × etc.). Fixed by replacing every instance with the actual
-character, in:
-  src/pages/PitchDeckPage.jsx
-  src/pages/PitchLandingPage.jsx
-  src/components/pitch/visuals/demoVisuals.jsx
-  src/components/pitch/visuals/investorVisuals.jsx
+src/data/decks/emberMoss.js
+  The extraction you asked for. Product catalog (name/price/stock/image),
+  the storefront theme swatches, and the brand name/url all live here now —
+  not scattered as inline arrays and string literals inside the mockup
+  component file. Add a 7th product, change a price, swap an image path:
+  this is the only file you touch. Customer, Merchant, and the theme-switch
+  slide all read from it, so they can't drift apart again.
 
 ──────────────────────────────
-BUG #2 — Merchant "Products" tab still showed generic items
+MODIFIED FILES
 ──────────────────────────────
-I updated the Customer/cart slide to use the real Ember & Moss catalog but
-missed the Merchant dashboard's Products tab, which still had the old
-placeholder items (Shea Body Butter, etc.). Both sides now read from one
-shared list (EMBER_MOSS_PRODUCTS in demoVisuals.jsx), so they can't drift
-apart again — this is also why the Customer and Merchant catalogs will
-always match going forward, add a product once and it shows up both places.
+src/components/pitch/SlideRenderer.jsx
+  The actual fix for the desktop vertical-space issue. The right-side visual
+  column was `justifyContent: center`, which shrink-wraps its content instead
+  of letting it fill the column — that's why the shop mockup looked short
+  once we added scrolling. Removed that from both the generic layout (used
+  by 4 of 5 themes) and Brutalist's custom layout. Short mockups (hero,
+  workflow, etc.) are unaffected — they still center themselves, just via a
+  wrapper that now also knows how to stretch when a mockup asks it to.
+
+src/components/pitch/visuals/DeviceFrame.jsx
+  Added an opt-in `fill` prop. When true (Customer, Merchant), the frame
+  stretches to use all available height in the slide and only scrolls
+  internally if content still doesn't fit — so on desktop, in Present mode,
+  it now actually uses the vertical room it has. When false (default —
+  every other mockup), nothing changes, they stay exactly as compact and
+  centered as before.
+
+src/components/pitch/visuals/demoVisuals.jsx
+  - Removed the fixed maxHeight caps on Customer's grid/cart and Merchant's
+    Orders/Products/Customers lists — DeviceFrame handles the scroll as a
+    whole now, so these just flow naturally.
+  - "▶ Live now" on the last slide is a real link to peakenterprise.ca now
+    (opens in a new tab).
+  - Added a real, offline-generated QR code next to it, same link — no
+    external API call, so it works even on bad venue wifi.
+  - Product/theme data now imported from emberMoss.js instead of being
+    defined inline (see above).
+
+package.json / package-lock.json
+  Added react-qr-code (~3kb, zero dependencies, pure SVG — no canvas, no
+  external network call at render time). Ran `npm audit` after adding it:
+  the vulnerabilities npm reports are all pre-existing, from jsPDF, Vite,
+  react-router, etc. — none new from this package.
 
 ──────────────────────────────
-BUG #3 — "TheApp" still showing / images 404ing
+STILL AHEAD (per the approved plan)
 ──────────────────────────────
-Both were a sync issue, not a new bug — your dev server was running the
-repo before the rename landed (config.js still said 'TheApp') and before
-the /demo-assets/ember-moss/ folder existed with real files in it. This zip
-includes the renamed config.js. The 404s for the photos are still expected
-until you actually drop the .jpg files in — see the note at the bottom.
-
-──────────────────────────────
-WHAT ELSE CHANGED THIS ROUND (the "10x it" pass — customer + merchant only)
-──────────────────────────────
-Customer slide (demoVisuals.jsx → MockupCustomer):
-  - Catalog expanded from 4 to 6 products (added Whispering Moss Soap,
-    Bramble's Bath Ritual)
-  - Product grid now scrolls (was silently clipping past 4 items — this is
-    what you were hitting)
-  - Real quantity steppers (−/+) instead of one flat "add to cart"
-  - Cart now shows a thumbnail per line item + running subtotal, not just
-    a bare list of names and prices
-
-Merchant slide (demoVisuals.jsx → MockupMerchant):
-  - Overview tab: added a 7-day animated revenue bar chart, plus % change
-    on each stat card
-  - Orders: 3 rows → 9, real variety (Shipped / Delivered / Processing /
-    Refunded / Fulfilled), a "Gift" tag on two orders, item counts and
-    totals per row, scrollable list
-  - Products tab: now the same 6 Ember & Moss items as the customer side,
-    with thumbnails and real stock counts (color-flags anything under 20)
-  - Customers tab: added initials avatars, order counts, and lifetime spend
-
-──────────────────────────────
-NOT DONE YET — waiting on your go-ahead per slide
-──────────────────────────────
-You flagged Storefront Customization and Workflow as the next two that need
-the same treatment (real structural differences per theme, not just
-recolors; the workflow slide acted out with real interactions instead of
-described in words), plus a new 11th slide for the services/booking side of
-the business. Per your "one slide at a time, I'll tell you when I'm happy"
-approach — I didn't touch those yet. Say the word on which's next.
-
-──────────────────────────────
-STILL WAITING ON YOU
-──────────────────────────────
-public/demo-assets/ember-moss/ — drop these in whenever:
-  moon-dew-mist.jpg, solar-radiance.jpg, dragon-mint-tea.jpg,
-  phoenix-ember.jpg, hero-apothecary.jpg
-  + two new ones since the catalog grew to 6:
-  whispering-moss-soap.jpg, bath-ritual.jpg
-Nothing breaks without them — soft placeholder shows until they exist.
+Next up is the plumbing pass — pulling StorefrontPreview, CartCheckout,
+OrdersPanel, and AuthFlow into genuinely reusable pieces — then Storefront
+Customization (with real structural differences between themes, using the
+concept files you sent as the bar for what "different" should mean), then
+Workflow, then the new Services/Booking slide, then a full polish pass.

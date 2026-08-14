@@ -5,8 +5,10 @@
 // automatically with the presenter's active theme (including Showroom).
 
 import { useState } from 'react';
+import QRCode from 'react-qr-code';
 import DeviceFrame from './DeviceFrame.jsx';
 import { COMPANY } from '../../../data/config.js';
+import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, STOREFRONT_THEME_SWATCHES } from '../../../data/decks/emberMoss.js';
 
 // Product photos live in /public/demo-assets/<brand>/<file>. Renders the real
 // image once it exists; falls back to a soft placeholder swatch until then —
@@ -51,7 +53,7 @@ function MockupWelcome({ theme, size, isFullscreen }) {
   const t = theme.colors;
   const [heroFailed, setHeroFailed] = useState(false);
   return (
-    <DeviceFrame theme={theme} size={size} url="emberandmoss.shop">
+    <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${14 * size}px` }}>
         <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.text }}>Ember &amp; Moss</span>
         <div style={{ display: 'flex', gap: `${10 * size}px` }}>
@@ -69,7 +71,7 @@ function MockupWelcome({ theme, size, isFullscreen }) {
         border: `1px solid ${t.accent}30`,
       }}>
         {!heroFailed && (
-          <img src="./demo-assets/ember-moss/hero-apothecary.jpg" alt="" onError={() => setHeroFailed(true)} style={{
+          <img src="/demo-assets/ember-moss/hero-apothecary.jpg" alt="" onError={() => setHeroFailed(true)} style={{
             position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
           }} />
         )}
@@ -189,17 +191,6 @@ function MockupPlatform({ theme, size }) {
   );
 }
 
-// Shared catalog — both the customer storefront and the merchant dashboard
-// read from this single list, so the two sides of the demo never disagree
-// with each other again.
-const EMBER_MOSS_PRODUCTS = [
-  { name: 'Moon Dew Facial Mist',   price: '$34', stock: 42, img: './demo-assets/ember-moss/moon-dew-mist.jpg' },
-  { name: 'Solar Radiance Elixir',  price: '$48', stock: 18, img: './demo-assets/ember-moss/solar-radiance.jpg' },
-  { name: 'Dragon Mint Tea',        price: '$22', stock: 65, img: './demo-assets/ember-moss/dragon-mint-tea.jpg' },
-  { name: 'Phoenix Ember Candle',   price: '$28', stock: 31, img: './demo-assets/ember-moss/phoenix-ember.jpg' },
-  { name: 'Whispering Moss Soap',   price: '$18', stock: 54, img: './demo-assets/ember-moss/whispering-moss-soap.jpg' },
-  { name: "Bramble's Bath Ritual",  price: '$26', stock: 22, img: './demo-assets/ember-moss/bath-ritual.jpg' },
-];
 function MockupCustomer({ theme, size }) {
   const t = theme.colors;
   const products = EMBER_MOSS_PRODUCTS;
@@ -215,7 +206,7 @@ function MockupCustomer({ theme, size }) {
   const subtotal = cartEntries.reduce((s, e) => s + parseFloat(e.price.replace('$', '')) * e.qty, 0);
 
   return (
-    <DeviceFrame theme={theme} size={size} url="emberandmoss.shop/shop">
+    <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/shop`} fill>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${10 * size}px` }}>
         <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</span>
         <button onClick={() => setOpen(o => !o)} style={{
@@ -230,7 +221,7 @@ function MockupCustomer({ theme, size }) {
       {!open ? (
         <div style={{
           display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: `${8 * size}px`,
-          maxHeight: `${240 * size}px`, overflowY: 'auto', paddingRight: '2px',
+          paddingRight: '2px',
         }}>
           {products.map(p => {
             const qty = cart[p.name] || 0;
@@ -266,7 +257,7 @@ function MockupCustomer({ theme, size }) {
             </div>
           ) : (
             <>
-              <div style={{ maxHeight: `${160 * size}px`, overflowY: 'auto', marginBottom: `${10 * size}px` }}>
+              <div style={{ marginBottom: `${10 * size}px` }}>
                 {cartEntries.map(e => (
                   <div key={e.name} style={{ display: 'flex', alignItems: 'center', gap: `${8 * size}px`, padding: `${6 * size}px 0`, borderBottom: `1px solid ${t.border}` }}>
                     <div style={{ width: `${28 * size}px`, flexShrink: 0 }}>
@@ -339,7 +330,7 @@ function MockupMerchant({ theme, size }) {
   ];
 
   return (
-    <DeviceFrame theme={theme} size={size} url={`${COMPANY.url}/merchant`}>
+    <DeviceFrame theme={theme} size={size} url={`${COMPANY.url}/merchant`} fill>
       <div style={{ display: 'flex', gap: `${4 * size}px`, marginBottom: `${10 * size}px`, borderBottom: `1px solid ${t.border}`, paddingBottom: `${6 * size}px` }}>
         {tabs.map((label, i) => (
           <button key={label} onClick={() => setTab(i)} style={{
@@ -378,7 +369,7 @@ function MockupMerchant({ theme, size }) {
         </div>
       )}
       {tab === 1 && (
-        <div style={{ maxHeight: `${220 * size}px`, overflowY: 'auto' }}>
+        <div>
           {ORDERS.map(o => (
             <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${7 * size}px 0`, borderBottom: `1px solid ${t.border}`, fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px` }}>
               <div>
@@ -395,7 +386,7 @@ function MockupMerchant({ theme, size }) {
         </div>
       )}
       {tab === 2 && (
-        <div style={{ maxHeight: `${220 * size}px`, overflowY: 'auto' }}>
+        <div>
           {EMBER_MOSS_PRODUCTS.map(p => (
             <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: `${8 * size}px`, padding: `${6 * size}px 0`, borderBottom: `1px solid ${t.border}` }}>
               <div style={{ width: `${24 * size}px`, flexShrink: 0 }}>
@@ -408,7 +399,7 @@ function MockupMerchant({ theme, size }) {
         </div>
       )}
       {tab === 3 && (
-        <div style={{ maxHeight: `${220 * size}px`, overflowY: 'auto' }}>
+        <div>
           {CUSTOMERS.map(c => (
             <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: `${8 * size}px`, padding: `${6 * size}px 0`, borderBottom: `1px solid ${t.border}` }}>
               <div style={{
@@ -427,15 +418,9 @@ function MockupMerchant({ theme, size }) {
 }
 
 // ── 6. storefront-theme — live theme switch ──────────────────────────────────────
-const MINI_THEMES = [
-  { id: 'a', label: 'Ember & Moss', bg: '#1B3B2E', accent: '#C9A227', text: '#F5F1E4', font: "'Cormorant Garamond', serif" },
-  { id: 'b', label: 'Studio', bg: '#111111', accent: '#F2E205', text: '#F5F5F5', font: "'Space Mono', monospace" },
-  { id: 'c', label: 'Blush', bg: '#FCEFEF', accent: '#D6597A', text: '#402A2E', font: "'Quicksand', sans-serif" },
-  { id: 'd', label: 'Slate', bg: '#F4F6F8', accent: '#3B5BDB', text: '#1B2430', font: "'Inter', sans-serif" },
-];
 function MockupThemeSwitch({ theme, size }) {
   const t = theme.colors;
-  const [mt, setMt] = useState(MINI_THEMES[0]);
+  const [mt, setMt] = useState(STOREFRONT_THEME_SWATCHES[0]);
   return (
     <div style={{ width: '100%' }}>
       <div style={{
@@ -456,7 +441,7 @@ function MockupThemeSwitch({ theme, size }) {
         </div>
       </div>
       <div style={{ display: 'flex', gap: `${6 * size}px`, flexWrap: 'wrap' }}>
-        {MINI_THEMES.map(candidate => (
+        {STOREFRONT_THEME_SWATCHES.map(candidate => (
           <button key={candidate.id} onClick={() => setMt(candidate)} style={{
             display: 'flex', alignItems: 'center', gap: `${5 * size}px`,
             padding: `${5 * size}px ${9 * size}px`, borderRadius: '100px',
@@ -594,13 +579,16 @@ function MockupLiveDemo({ theme, size }) {
   const flow = ['Business', 'Storefront', 'Customer', 'Checkout', 'Dashboard', 'Order'];
   return (
     <div style={{ width: '100%', textAlign: 'center' }}>
-      <div style={{
+      <a href="https://peakenterprise.ca/" target="_blank" rel="noopener noreferrer" style={{
+        display: 'inline-flex', alignItems: 'center', gap: `${6 * size}px`,
         fontFamily: theme.fonts.display, fontWeight: theme.type.displayWeight,
         fontSize: `${20 * size}px`, color: t.accent, marginBottom: `${16 * size}px`,
+        textDecoration: 'none', cursor: 'pointer',
       }}>
         ▶ Live now
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${4 * size}px`, flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.textFaint, fontWeight: 400 }}>peakenterprise.ca ↗</span>
+      </a>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${4 * size}px`, flexWrap: 'wrap', marginBottom: `${20 * size}px` }}>
         {flow.map((step, i) => (
           <span key={step} style={{ display: 'flex', alignItems: 'center', gap: `${4 * size}px` }}>
             <span style={{
@@ -610,6 +598,20 @@ function MockupLiveDemo({ theme, size }) {
             {i < flow.length - 1 && <span style={{ color: t.textFaint, fontSize: `${9 * size}px` }}>→</span>}
           </span>
         ))}
+      </div>
+      <div style={{
+        display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: `${6 * size}px`,
+        padding: `${10 * size}px`, background: '#fff', borderRadius: `${8 * size}px`,
+        border: `1px solid ${t.border}`,
+      }}>
+        <QRCode
+          value="https://peakenterprise.ca/"
+          size={64 * size}
+          fgColor={t.bgDeep || '#111'}
+          bgColor="#ffffff"
+          style={{ width: `${64 * size}px`, height: `${64 * size}px` }}
+        />
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: '#666', letterSpacing: '0.06em' }}>Scan to open</span>
       </div>
     </div>
   );
