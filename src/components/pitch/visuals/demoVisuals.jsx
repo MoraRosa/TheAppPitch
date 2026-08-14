@@ -4,7 +4,7 @@
 // something to a cart, swap a theme. They use theme.colors so they repaint
 // automatically with the presenter's active theme (including Showroom).
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 import DeviceFrame from './DeviceFrame.jsx';
 import { COMPANY } from '../../../data/config.js';
@@ -398,29 +398,43 @@ function OrderStatusDonut({ theme, size, orders, statusColor }) {
   const circumference = 2 * Math.PI * r;
   let cumulative = 0;
 
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    setRevealed(false);
+    const id = setTimeout(() => setRevealed(true), 50);
+    return () => clearTimeout(id);
+  }, [orders]);
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: `${10 * size}px`, width: '100%' }}>
       <svg width={72 * size} height={72 * size} viewBox="0 0 80 80" style={{ flexShrink: 0 }}>
         <circle cx="40" cy="40" r={r} fill="none" stroke={t.border} strokeWidth="11" />
-        {entries.map(([status, count]) => {
+        {entries.map(([status, count], i) => {
           const dash = (count / total) * circumference;
+          const startOffset = -cumulative;
           const el = (
             <circle key={status} cx="40" cy="40" r={r} fill="none"
               stroke={statusColor[status] || t.textFaint} strokeWidth="11"
-              strokeDasharray={`${dash} ${circumference - dash}`}
-              strokeDashoffset={-cumulative}
+              strokeDasharray={revealed ? `${dash} ${circumference - dash}` : `0 ${circumference}`}
+              strokeDashoffset={startOffset}
+              strokeLinecap="butt"
               transform="rotate(-90 40 40)"
-              style={{ transition: 'stroke-dasharray 0.6s ease' }}
+              style={{ transition: `stroke-dasharray 0.7s cubic-bezier(0.4,0,0.2,1) ${i * 0.12}s` }}
             />
           );
           cumulative += dash;
           return el;
         })}
-        <text x="40" y="44" textAnchor="middle" fontSize="16" fontFamily={theme.fonts.display} fontWeight="700" fill={t.text}>{total}</text>
+        <text x="40" y="44" textAnchor="middle" fontSize="16" fontFamily={theme.fonts.display} fontWeight="700" fill={t.text}
+          style={{ opacity: revealed ? 1 : 0, transition: 'opacity 0.4s ease 0.5s' }}>{total}</text>
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: `${3 * size}px` }}>
-        {entries.map(([status, count]) => (
-          <div key={status} style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px` }}>
+        {entries.map(([status, count], i) => (
+          <div key={status} style={{
+            display: 'flex', alignItems: 'center', gap: `${5 * size}px`,
+            opacity: revealed ? 1 : 0, transform: revealed ? 'translateX(0)' : 'translateX(6px)',
+            transition: `opacity 0.4s ease ${i * 0.08 + 0.3}s, transform 0.4s ease ${i * 0.08 + 0.3}s`,
+          }}>
             <span style={{ width: `${7 * size}px`, height: `${7 * size}px`, borderRadius: '50%', background: statusColor[status] || t.textFaint, flexShrink: 0 }} />
             <span style={{ fontFamily: theme.fonts.body, fontSize: `${7 * size}px`, color: t.textMuted }}>{status} ({count})</span>
           </div>
@@ -441,22 +455,35 @@ function VisitorsLineChart({ theme, size, data }) {
   }).join(' ');
   const areaD = pathD + ` L ${VW} ${VH} L 0 ${VH} Z`;
 
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    setRevealed(false);
+    const id = setTimeout(() => setRevealed(true), 50);
+    return () => clearTimeout(id);
+  }, [data]);
+
   return (
-    <svg width="100%" height={`${60 * size}px`} viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" style={{ display: 'block' }}>
-      <defs>
-        <linearGradient id="visitorsGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={t.accent} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={t.accent} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={areaD} fill="url(#visitorsGrad)" />
-      <path d={pathD} fill="none" stroke={t.accent} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-      {data.map((v, i) => {
-        const x = (i / (data.length - 1)) * VW;
-        const y = VH - (v / max) * VH * 0.9;
-        return <circle key={i} cx={x} cy={y} r="2.5" fill={t.accent} vectorEffect="non-scaling-stroke" />;
-      })}
-    </svg>
+    <div style={{
+      width: '100%', overflow: 'hidden',
+      clipPath: revealed ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)',
+      transition: 'clip-path 0.9s cubic-bezier(0.4,0,0.2,1)',
+    }}>
+      <svg width="100%" height={`${60 * size}px`} viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" style={{ display: 'block', overflow: 'visible' }}>
+        <defs>
+          <linearGradient id="visitorsGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={t.accent} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={t.accent} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaD} fill="url(#visitorsGrad)" />
+        <path d={pathD} fill="none" stroke={t.accent} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        {data.map((v, i) => {
+          const x = (i / (data.length - 1)) * VW;
+          const y = VH - (v / max) * VH * 0.9;
+          return <circle key={i} cx={x} cy={y} r="2.5" fill={t.accent} vectorEffect="non-scaling-stroke" />;
+        })}
+      </svg>
+    </div>
   );
 }
 

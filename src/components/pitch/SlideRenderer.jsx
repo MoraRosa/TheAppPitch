@@ -154,7 +154,7 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
         <div style={{
           flex: '1 1 50%', background: rightBg || t.bgAlt,
           padding: '14px 18px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          display: 'flex', flexDirection: 'column',
           position: 'relative', overflow: 'hidden',
         }}>
           <div style={{
@@ -249,7 +249,7 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
             <p style={{ fontFamily: theme.fonts.body, fontSize: '13px', color: t.textMuted, lineHeight: 1.7, maxWidth: '440px', borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px' }}>{slide.body}</p>
           </div>
         </div>
-        <div style={{ flex: '1 1 50%', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ flex: '1 1 50%', padding: '14px 18px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', bottom: '8px', right: '12px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: '40px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
           <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} />
         </div>
@@ -267,8 +267,8 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
         <div style={{ borderRight: `2px solid ${t.border}` }}>
           <div style={{ padding: isFullscreen ? '40px 56px' : '24px 32px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: isFullscreen ? '20px' : '10px' }}>{slide.eyebrow}</p>
-            <h2 style={{ fontFamily: theme.fonts.display, fontSize: isFullscreen ? theme.type.displaySize : 'clamp(16px, 2.4vw, 28px)', fontWeight: theme.type.displayWeight, color: t.text, lineHeight: 1.05, marginBottom: isFullscreen ? '24px' : '12px', maxWidth: '480px' }}>{slide.headline}</h2>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: isFullscreen ? theme.type.bodySize : 'clamp(10px, 1.1vw, 13px)', color: t.textMuted, lineHeight: 1.7, maxWidth: '440px', borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px' }}>{slide.body}</p>
+            <h2 style={{ fontFamily: theme.fonts.display, fontSize: isFullscreen ? 'clamp(22px, 2.8vw, 36px)' : 'clamp(16px, 2.4vw, 28px)', fontWeight: theme.type.displayWeight, color: t.text, lineHeight: 1.05, marginBottom: isFullscreen ? '24px' : '12px', maxWidth: '480px' }}>{slide.headline}</h2>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: isFullscreen ? 'clamp(12px, 1.3vw, 15px)' : 'clamp(10px, 1.1vw, 13px)', color: t.textMuted, lineHeight: 1.7, maxWidth: '440px', borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px' }}>{slide.body}</p>
           </div>
         </div>
         <div style={{ padding: isFullscreen ? '40px 48px' : '24px 24px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
