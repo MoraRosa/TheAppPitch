@@ -15,9 +15,13 @@ export const EMBER_MOSS_BRAND = {
   url: 'emberandmoss.shop',
 };
 
-// Photos live in /public/demo-assets/ember-moss/. Missing files degrade to a
-// soft placeholder (see ProductImg in demoVisuals.jsx) — nothing breaks.
-const ASSET_PATH = '/demo-assets/ember-moss';
+// Photos live in /public/demo-assets/ember-moss/. Relative path (no leading
+// slash) — this deploys to GitHub Pages under a repo subpath (base:
+// '/TheAppPitch/' in vite.config.js), and an absolute '/demo-assets/...'
+// path resolves against the domain root, not the repo subpath, and 404s.
+// HashRouter keeps the document location constant across routes, so a
+// relative path here stays correct everywhere in the app.
+const ASSET_PATH = './demo-assets/ember-moss';
 
 export const EMBER_MOSS_PRODUCTS = [
   { name: 'Moon Dew Facial Mist',   price: '$34', stock: 42, img: `${ASSET_PATH}/moon-dew-mist.jpg` },

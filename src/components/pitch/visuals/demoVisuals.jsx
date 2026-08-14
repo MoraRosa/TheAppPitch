@@ -71,7 +71,7 @@ function MockupWelcome({ theme, size, isFullscreen }) {
         border: `1px solid ${t.accent}30`,
       }}>
         {!heroFailed && (
-          <img src="/demo-assets/ember-moss/hero-apothecary.jpg" alt="" onError={() => setHeroFailed(true)} style={{
+          <img src="./demo-assets/ember-moss/hero-apothecary.jpg" alt="" onError={() => setHeroFailed(true)} style={{
             position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
           }} />
         )}
