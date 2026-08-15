@@ -7,33 +7,10 @@
 import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 import DeviceFrame from './DeviceFrame.jsx';
+import ProductImg from './ProductImg.jsx';
+import { ProductDetailView, BlogPostView, ContactView } from './storefrontViews.jsx';
 import { COMPANY } from '../../../data/config.js';
 import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, EMBER_MOSS_JOURNAL, EMBER_MOSS_TESTIMONIALS, EMBER_MOSS_FAQ, STOREFRONT_THEME_SWATCHES } from '../../../data/decks/emberMoss.js';
-
-// Product photos live in /public/demo-assets/<brand>/<file>. Renders the real
-// image once it exists; falls back to a soft placeholder swatch until then —
-// nothing breaks in the meantime, it just looks a little plainer.
-function ProductImg({ src, alt, radius = 4, size = 1, aspect = '1', fallbackIcon = null }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
-    return (
-      <div style={{
-        width: '100%', aspectRatio: aspect, borderRadius: `${radius * size}px`,
-        background: 'linear-gradient(135deg, #00000010, #00000004)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: fallbackIcon ? `${22 * size}px` : undefined,
-      }}>
-        {fallbackIcon}
-      </div>
-    );
-  }
-  return (
-    <img src={src} alt={alt} onError={() => setFailed(true)} style={{
-      width: '100%', aspectRatio: aspect, objectFit: 'cover',
-      borderRadius: `${radius * size}px`, display: 'block',
-    }} />
-  );
-}
 
 // ── shared bits ────────────────────────────────────────────────────────────────
 function Chip({ label, active, onClick, theme, size }) {
@@ -62,118 +39,148 @@ function MockupWelcome({ theme, size, isFullscreen }) {
   const t = theme.colors;
   const [heroFailed, setHeroFailed] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+  const [view, setView] = useState({ type: 'home' });
+  const [cart, setCart] = useState({});
   const featured = EMBER_MOSS_PRODUCTS.slice(0, 3);
+  const cartCount = Object.values(cart).reduce((s, q) => s + q, 0);
+
+  const goHome = () => setView({ type: 'home' });
+  const openProduct = (p) => setView({ type: 'product', product: p });
+  const openPost = (post) => setView({ type: 'post', post });
+  const addToCart = (p) => setCart(c => ({ ...c, [p.name]: (c[p.name] || 0) + 1 }));
 
   return (
     <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${12 * size}px` }}>
-        <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.text }}>Ember &amp; Moss</span>
-        <div style={{ display: 'flex', gap: `${10 * size}px` }}>
-          {['Shop', 'Dragons', 'Cart'].map(l => (
-            <span key={l} style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{l}</span>
-          ))}
+        <button onClick={goHome} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.text }}>Ember &amp; Moss</button>
+        <div style={{ display: 'flex', gap: `${10 * size}px`, alignItems: 'center' }}>
+          <button onClick={goHome} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Shop</button>
+          <button onClick={() => setView({ type: 'contact' })} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Contact</button>
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Cart{cartCount > 0 ? ` (${cartCount})` : ''}</span>
         </div>
       </div>
 
-      {/* ── Hero ── */}
-      <div style={{
-        position: 'relative', borderRadius: `${6 * size}px`, padding: `${18 * size}px`,
-        overflow: 'hidden', minHeight: `${100 * size}px`, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-        background: heroFailed ? `linear-gradient(135deg, ${t.accent}18, ${t.accent}05)` : '#1B3B2E',
-        border: `1px solid ${t.accent}30`, marginBottom: `${22 * size}px`,
-      }}>
-        {!heroFailed && (
-          <img src="./demo-assets/ember-moss/hero-apothecary.jpg" alt="" onError={() => setHeroFailed(true)} style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-          }} />
-        )}
-        {!heroFailed && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.55), rgba(0,0,0,0.05))' }} />}
-        <div style={{ position: 'relative' }}>
-          <div style={{ fontFamily: theme.fonts.display, fontWeight: theme.type.headWeight, fontSize: `${16 * size}px`, color: heroFailed ? t.text : '#F5F1E4', marginBottom: `${5 * size}px` }}>
-            Everyday magic, handmade by dragons.
-          </div>
-          <div style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: heroFailed ? t.textMuted : '#E7DFC8', marginBottom: `${10 * size}px`, maxWidth: '85%' }}>
-            One login runs the storefront, the shop, and everything behind it.
-          </div>
-          <span style={{
-            display: 'inline-block', padding: `${6 * size}px ${13 * size}px`,
-            background: t.accent, color: theme.isLight ? '#fff' : t.bg,
-            borderRadius: theme.space.radius === '0px' ? '0px' : `${5 * size}px`,
-            fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`,
-          }}>Shop the collection</span>
-        </div>
-      </div>
+      {view.type === 'product' && (
+        <ProductDetailView theme={theme} size={size} product={view.product} onBack={goHome} onAddToCart={addToCart} cartQty={cart[view.product.name] || 0} />
+      )}
+      {view.type === 'post' && (
+        <BlogPostView theme={theme} size={size} post={view.post} onBack={goHome} />
+      )}
+      {view.type === 'contact' && (
+        <ContactView theme={theme} size={size} onBack={goHome} />
+      )}
 
-      {/* ── Featured products ── */}
-      <SectionLabel size={size} theme={theme}>Featured</SectionLabel>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
-        {featured.map(p => (
-          <div key={p.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${7 * size}px`, textAlign: 'center' }}>
-            <div style={{ marginBottom: `${5 * size}px` }}>
-              <ProductImg src={p.img} alt={p.name} size={size} />
-            </div>
-            <div style={{ fontFamily: theme.fonts.body, fontWeight: 500, fontSize: `${7.5 * size}px`, color: t.text }}>{p.name}</div>
-            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.accent }}>{p.price}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── From the journal ── */}
-      <SectionLabel size={size} theme={theme}>From the Journal</SectionLabel>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
-        {EMBER_MOSS_JOURNAL.map(post => (
-          <div key={post.title} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, overflow: 'hidden' }}>
-            <ProductImg src={post.img} alt={post.title} size={size} radius={0} aspect="16/10" fallbackIcon={post.icon} />
-            <div style={{ padding: `${8 * size}px` }}>
-              <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${7.5 * size}px`, color: t.text, marginBottom: `${3 * size}px`, lineHeight: 1.3 }}>{post.title}</div>
-              <div style={{ fontFamily: theme.fonts.body, fontSize: `${7 * size}px`, color: t.textFaint, lineHeight: 1.4 }}>{post.excerpt}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Testimonials ── */}
-      <SectionLabel size={size} theme={theme}>What People Are Saying</SectionLabel>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
-        {EMBER_MOSS_TESTIMONIALS.map(rev => (
-          <div key={rev.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px`, background: t.bgAlt }}>
-            <div style={{ color: t.accent, fontSize: `${8 * size}px`, marginBottom: `${4 * size}px`, letterSpacing: '1px' }}>{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</div>
-            <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.5, marginBottom: `${5 * size}px`, fontStyle: 'italic' }}>&ldquo;{rev.quote}&rdquo;</div>
-            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{rev.name}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── FAQ ── */}
-      <SectionLabel size={size} theme={theme}>Questions</SectionLabel>
-      <div style={{ marginBottom: `${18 * size}px` }}>
-        {EMBER_MOSS_FAQ.map((item, i) => (
-          <div key={item.q} style={{ borderBottom: `1px solid ${t.border}` }}>
-            <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{
-              width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: `${8 * size}px 0`, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
-            }}>
-              <span style={{ fontFamily: theme.fonts.body, fontWeight: 500, fontSize: `${8.5 * size}px`, color: t.text }}>{item.q}</span>
-              <span style={{ color: t.accent, fontSize: `${10 * size}px`, transform: openFaq === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.15s ease' }}>+</span>
-            </button>
-            {openFaq === i && (
-              <div style={{ fontFamily: theme.fonts.body, fontSize: `${8 * size}px`, color: t.textMuted, lineHeight: 1.6, paddingBottom: `${8 * size}px` }}>{item.a}</div>
+      {view.type === 'home' && (
+        <>
+          {/* ── Hero ── */}
+          <div style={{
+            position: 'relative', borderRadius: `${6 * size}px`, padding: `${18 * size}px`,
+            overflow: 'hidden', minHeight: `${100 * size}px`, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+            background: heroFailed ? `linear-gradient(135deg, ${t.accent}18, ${t.accent}05)` : '#1B3B2E',
+            border: `1px solid ${t.accent}30`, marginBottom: `${22 * size}px`,
+          }}>
+            {!heroFailed && (
+              <img src="./demo-assets/ember-moss/hero-apothecary.jpg" alt="" onError={() => setHeroFailed(true)} style={{
+                position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+              }} />
             )}
+            {!heroFailed && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.55), rgba(0,0,0,0.05))' }} />}
+            <div style={{ position: 'relative' }}>
+              <div style={{ fontFamily: theme.fonts.display, fontWeight: theme.type.headWeight, fontSize: `${16 * size}px`, color: heroFailed ? t.text : '#F5F1E4', marginBottom: `${5 * size}px` }}>
+                Everyday magic, handmade by dragons.
+              </div>
+              <div style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: heroFailed ? t.textMuted : '#E7DFC8', marginBottom: `${10 * size}px`, maxWidth: '85%' }}>
+                One login runs the storefront, the shop, and everything behind it.
+              </div>
+              <span style={{
+                display: 'inline-block', padding: `${6 * size}px ${13 * size}px`,
+                background: t.accent, color: theme.isLight ? '#fff' : t.bg,
+                borderRadius: theme.space.radius === '0px' ? '0px' : `${5 * size}px`,
+                fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`,
+              }}>Shop the collection</span>
+            </div>
           </div>
-        ))}
-      </div>
 
-      {/* ── Footer ── */}
-      <div style={{
-        borderTop: `1px solid ${t.border}`, paddingTop: `${10 * size}px`,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: `${6 * size}px`,
-      }}>
-        <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${9 * size}px`, color: t.textFaint }}>Ember &amp; Moss</span>
-        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em' }}>&copy; 2026 · emberandmoss.shop</span>
-      </div>
+          {/* ── Featured products ── */}
+          <SectionLabel size={size} theme={theme}>Featured</SectionLabel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
+            {featured.map(p => (
+              <button key={p.name} onClick={() => openProduct(p)} style={{
+                border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${7 * size}px`, textAlign: 'center',
+                background: 'none', cursor: 'pointer', font: 'inherit',
+              }}>
+                <div style={{ marginBottom: `${5 * size}px` }}>
+                  <ProductImg src={p.img} alt={p.name} size={size} />
+                </div>
+                <div style={{ fontFamily: theme.fonts.body, fontWeight: 500, fontSize: `${7.5 * size}px`, color: t.text }}>{p.name}</div>
+                <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.accent }}>{p.price}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* ── From the journal ── */}
+          <SectionLabel size={size} theme={theme}>From the Journal</SectionLabel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
+            {EMBER_MOSS_JOURNAL.map(post => (
+              <button key={post.title} onClick={() => openPost(post)} style={{
+                border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, overflow: 'hidden',
+                background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', font: 'inherit',
+              }}>
+                <ProductImg src={post.img} alt={post.title} size={size} radius={0} aspect="16/10" fallbackIcon={post.icon} />
+                <div style={{ padding: `${8 * size}px` }}>
+                  <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${7.5 * size}px`, color: t.text, marginBottom: `${3 * size}px`, lineHeight: 1.3 }}>{post.title}</div>
+                  <div style={{ fontFamily: theme.fonts.body, fontSize: `${7 * size}px`, color: t.textFaint, lineHeight: 1.4 }}>{post.excerpt}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* ── Testimonials ── */}
+          <SectionLabel size={size} theme={theme}>What People Are Saying</SectionLabel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
+            {EMBER_MOSS_TESTIMONIALS.map(rev => (
+              <div key={rev.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px`, background: t.bgAlt }}>
+                <div style={{ color: t.accent, fontSize: `${8 * size}px`, marginBottom: `${4 * size}px`, letterSpacing: '1px' }}>{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</div>
+                <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.5, marginBottom: `${5 * size}px`, fontStyle: 'italic' }}>&ldquo;{rev.quote}&rdquo;</div>
+                <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{rev.name}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── FAQ ── */}
+          <SectionLabel size={size} theme={theme}>Questions</SectionLabel>
+          <div style={{ marginBottom: `${18 * size}px` }}>
+            {EMBER_MOSS_FAQ.map((item, i) => (
+              <div key={item.q} style={{ borderBottom: `1px solid ${t.border}` }}>
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{
+                  width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: `${8 * size}px 0`, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+                }}>
+                  <span style={{ fontFamily: theme.fonts.body, fontWeight: 500, fontSize: `${8.5 * size}px`, color: t.text }}>{item.q}</span>
+                  <span style={{ color: t.accent, fontSize: `${10 * size}px`, transform: openFaq === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.15s ease' }}>+</span>
+                </button>
+                {openFaq === i && (
+                  <div style={{ fontFamily: theme.fonts.body, fontSize: `${8 * size}px`, color: t.textMuted, lineHeight: 1.6, paddingBottom: `${8 * size}px` }}>{item.a}</div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* ── Footer ── */}
+          <div style={{
+            borderTop: `1px solid ${t.border}`, paddingTop: `${10 * size}px`,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: `${6 * size}px`,
+          }}>
+            <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${9 * size}px`, color: t.textFaint }}>Ember &amp; Moss</span>
+            <button onClick={() => setView({ type: 'contact' })} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textDecoration: 'underline' }}>Contact</button>
+            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em' }}>&copy; 2026 · emberandmoss.shop</span>
+          </div>
+        </>
+      )}
     </DeviceFrame>
   );
 }
+
 
 function SectionLabel({ size, theme, children }) {
   const t = theme.colors;
@@ -288,30 +295,36 @@ function MockupCustomer({ theme, size }) {
   const t = theme.colors;
   const products = EMBER_MOSS_PRODUCTS;
   const [cart, setCart] = useState({});          // { productName: qty }
-  const [open, setOpen] = useState(false);
+  const [view, setView] = useState('shop');      // 'shop' | 'cart' | product object
 
   const setQty = (name, qty) => setCart(c => {
     if (qty <= 0) { const { [name]: _, ...rest } = c; return rest; }
     return { ...c, [name]: qty };
   });
+  const addOne = (p) => setQty(p.name, (cart[p.name] || 0) + 1);
   const cartEntries = Object.entries(cart).map(([name, qty]) => ({ ...products.find(p => p.name === name), qty }));
   const cartCount = cartEntries.reduce((s, e) => s + e.qty, 0);
   const subtotal = cartEntries.reduce((s, e) => s + parseFloat(e.price.replace('$', '')) * e.qty, 0);
+  const isProductView = typeof view === 'object';
 
   return (
     <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/shop`} fill>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${10 * size}px` }}>
-        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</span>
-        <button onClick={() => setOpen(o => !o)} style={{
+        <button onClick={() => setView('shop')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</button>
+        <button onClick={() => setView(view === 'cart' ? 'shop' : 'cart')} style={{
           position: 'relative', border: `1px solid ${t.border}`, borderRadius: '100px',
           padding: `${4 * size}px ${9 * size}px`, background: 'transparent', cursor: 'pointer',
           fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.text,
         }}>
-          {open ? '← Shop' : `Cart ${cartCount > 0 ? `(${cartCount})` : ''}`}
+          {view === 'cart' ? '← Shop' : `Cart ${cartCount > 0 ? `(${cartCount})` : ''}`}
         </button>
       </div>
 
-      {!open ? (
+      {isProductView && (
+        <ProductDetailView theme={theme} size={size} product={view} onBack={() => setView('shop')} onAddToCart={addOne} cartQty={cart[view.name] || 0} />
+      )}
+
+      {view === 'shop' && (
         <div style={{
           display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: `${8 * size}px`,
           paddingRight: '2px',
@@ -320,10 +333,12 @@ function MockupCustomer({ theme, size }) {
             const qty = cart[p.name] || 0;
             return (
               <div key={p.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px`, textAlign: 'center' }}>
-                <div style={{ marginBottom: `${6 * size}px` }}>
-                  <ProductImg src={p.img} alt={p.name} size={size} />
-                </div>
-                <div style={{ fontFamily: theme.fonts.body, fontWeight: 500, fontSize: `${8 * size}px`, color: t.text, marginBottom: '2px' }}>{p.name}</div>
+                <button onClick={() => setView(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'center', font: 'inherit' }}>
+                  <div style={{ marginBottom: `${6 * size}px` }}>
+                    <ProductImg src={p.img} alt={p.name} size={size} />
+                  </div>
+                  <div style={{ fontFamily: theme.fonts.body, fontWeight: 500, fontSize: `${8 * size}px`, color: t.text, marginBottom: '2px' }}>{p.name}</div>
+                </button>
                 <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, marginBottom: `${6 * size}px` }}>{p.price}</div>
                 {qty === 0 ? (
                   <button onClick={() => setQty(p.name, 1)} style={{
@@ -342,7 +357,9 @@ function MockupCustomer({ theme, size }) {
             );
           })}
         </div>
-      ) : (
+      )}
+
+      {view === 'cart' && (
         <div>
           {cartEntries.length === 0 ? (
             <div style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: t.textFaint, padding: `${16 * size}px 0`, textAlign: 'center' }}>
@@ -384,6 +401,7 @@ function MockupCustomer({ theme, size }) {
     </DeviceFrame>
   );
 }
+
 
 // ── 5. merchant — dashboard tabs ─────────────────────────────────────────────────
 // Order status counts are derived from the ORDERS list itself — not a
