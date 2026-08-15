@@ -648,6 +648,7 @@ function MockupMerchant({ theme, size }) {
 function MockupThemeSwitch({ theme, size }) {
   const t = theme.colors;
   const [mt, setMt] = useState(STOREFRONT_THEME_SWATCHES[0]);
+  const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
 
   const Preview = {
     elegant: ElegantPreview,
@@ -659,8 +660,8 @@ function MockupThemeSwitch({ theme, size }) {
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: '1 1 auto', minHeight: 0, marginBottom: `${10 * size}px` }}>
-        <DeviceFrame theme={theme} size={size} url={mt.url} fill>
-          <Preview mt={mt} size={size} />
+        <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill>
+          <Preview mt={mt} size={size} products={products} />
         </DeviceFrame>
       </div>
       <div style={{ display: 'flex', gap: `${6 * size}px`, flexWrap: 'wrap', flexShrink: 0 }}>
@@ -677,43 +678,31 @@ function MockupThemeSwitch({ theme, size }) {
           </button>
         ))}
       </div>
+      <div style={{ marginTop: `${6 * size}px`, fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.04em' }}>
+        ↑ same products, same photos, same copy — only the layout changes
+      </div>
     </div>
   );
 }
 
-// A product tile that shows a real photo if given one (Ember & Moss), or an
-// icon on a tinted tile if not (the other three tenants — no photography for
-// fictional businesses, and the icon treatment fits each brand's voice fine).
-function TenantProductTile({ p, mt, size, radius = 4, tinted = false }) {
-  if (p.img) return <ProductImg src={p.img} alt={p.name} size={size} radius={radius} />;
-  return (
-    <div style={{
-      width: '100%', aspectRatio: '1', borderRadius: `${radius * size}px`,
-      background: tinted ? `${mt.accent}18` : mt.accent + '10',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: `${22 * size}px`,
-    }}>{p.icon}</div>
-  );
-}
-
-// ── Elegant (Ember & Moss) — hairline borders, rectangular frames, full page ──
-function ElegantPreview({ mt, size }) {
+// ── Elegant (Botanical) — hairline borders, rectangular frames, full page ────
+function ElegantPreview({ mt, size, products }) {
   return (
     <div style={{ background: mt.bg, minHeight: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${14 * size}px ${18 * size}px`, borderBottom: `1px solid ${mt.accent}30` }}>
-        <span style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${13 * size}px`, color: mt.text, letterSpacing: '0.02em' }}>{mt.label}</span>
+        <span style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${13 * size}px`, color: mt.text, letterSpacing: '0.02em' }}>{EMBER_MOSS_BRAND.name}</span>
         <div style={{ display: 'flex', gap: `${12 * size}px` }}>
           {['Shop', 'Journal', 'Cart'].map(l => <span key={l} style={{ fontFamily: mt.font, fontSize: `${8 * size}px`, color: mt.text, opacity: 0.7 }}>{l}</span>)}
         </div>
       </div>
       <div style={{ textAlign: 'center', padding: `${24 * size}px ${18 * size}px` }}>
-        <div style={{ fontFamily: mt.font, fontStyle: 'italic', fontSize: `${16 * size}px`, color: mt.text, marginBottom: `${6 * size}px` }}>{mt.tagline}</div>
+        <div style={{ fontFamily: mt.font, fontStyle: 'italic', fontSize: `${16 * size}px`, color: mt.text, marginBottom: `${6 * size}px` }}>{EMBER_MOSS_BRAND.tagline}</div>
         <div style={{ width: `${32 * size}px`, height: '1px', background: mt.accent, margin: '0 auto' }} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${12 * size}px`, padding: `0 ${18 * size}px ${20 * size}px` }}>
-        {mt.products.map(p => (
+        {products.map(p => (
           <div key={p.name} style={{ border: `1px solid ${mt.accent}30`, borderRadius: `${3 * size}px`, overflow: 'hidden' }}>
-            <TenantProductTile p={p} mt={mt} size={size} radius={0} />
+            <ProductImg src={p.img} alt={p.name} size={size} radius={0} />
             <div style={{ padding: `${8 * size}px`, textAlign: 'center' }}>
               <div style={{ fontFamily: mt.font, fontSize: `${7.5 * size}px`, color: mt.text, marginBottom: '2px' }}>{p.name}</div>
               <div style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.accent }}>{p.price}</div>
@@ -722,31 +711,31 @@ function ElegantPreview({ mt, size }) {
         ))}
       </div>
       <div style={{ borderTop: `1px solid ${mt.accent}30`, padding: `${18 * size}px`, textAlign: 'center' }}>
-        <div style={{ fontFamily: mt.font, fontStyle: 'italic', fontSize: `${9.5 * size}px`, color: mt.text, opacity: 0.85, maxWidth: '70%', margin: '0 auto', lineHeight: 1.6 }}>{mt.manifesto}</div>
+        <div style={{ fontFamily: mt.font, fontStyle: 'italic', fontSize: `${9.5 * size}px`, color: mt.text, opacity: 0.85, maxWidth: '70%', margin: '0 auto', lineHeight: 1.6 }}>{EMBER_MOSS_BRAND.manifesto}</div>
       </div>
     </div>
   );
 }
 
-// ── Brutalist (Iron & Ash) — hard borders, offset shadow, industrial ─────────
-function BrutalistPreview({ mt, size }) {
+// ── Brutalist (Workshop) — hard borders, offset shadow, industrial ───────────
+function BrutalistPreview({ mt, size, products }) {
   return (
     <div style={{ background: mt.bg, minHeight: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${12 * size}px ${16 * size}px`, borderBottom: `3px solid ${mt.accent}` }}>
-        <span style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${13 * size}px`, color: mt.text, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{mt.label}</span>
+        <span style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${13 * size}px`, color: mt.text, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{EMBER_MOSS_BRAND.name}</span>
         <span style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.bg, background: mt.accent, padding: `${3 * size}px ${7 * size}px`, fontWeight: 700 }}>SHOP →</span>
       </div>
       <div style={{ padding: `${20 * size}px ${16 * size}px 10px` }}>
-        <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${15 * size}px`, color: mt.accent, textTransform: 'uppercase', lineHeight: 1.2 }}>{mt.tagline}</div>
+        <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${15 * size}px`, color: mt.accent, textTransform: 'uppercase', lineHeight: 1.2 }}>{EMBER_MOSS_BRAND.tagline}</div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${14 * size}px`, padding: `${14 * size}px ${16 * size}px` }}>
-        {mt.products.map((p, i) => (
+        {products.map((p, i) => (
           <div key={p.name} style={{
             border: `2px solid ${mt.text}`, background: mt.bg,
             boxShadow: `${3 * size}px ${3 * size}px 0 ${mt.accent}`,
             transform: `rotate(${i % 2 === 0 ? -2 : 2}deg)`,
           }}>
-            <TenantProductTile p={p} mt={mt} size={size} radius={0} tinted />
+            <ProductImg src={p.img} alt={p.name} size={size} radius={0} />
             <div style={{ padding: `${5 * size}px`, borderTop: `2px solid ${mt.text}` }}>
               <div style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text, marginBottom: '2px' }}>{p.name}</div>
               <div style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.accent, fontWeight: 700 }}>{p.price}</div>
@@ -755,18 +744,18 @@ function BrutalistPreview({ mt, size }) {
         ))}
       </div>
       <div style={{ background: mt.accent, padding: `${16 * size}px`, textAlign: 'center' }}>
-        <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${9.5 * size}px`, color: mt.bg, letterSpacing: '0.02em' }}>{mt.manifesto}</div>
+        <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${9.5 * size}px`, color: mt.bg, letterSpacing: '0.02em' }}>{EMBER_MOSS_BRAND.manifesto.toUpperCase()}</div>
       </div>
     </div>
   );
 }
 
-// ── Bubbly (Prism & Bow) — pastel, rounded, maximalist ────────────────────────
-function BubblyPreview({ mt, size }) {
+// ── Bubbly (Bubblegum) — pastel, rounded, maximalist ──────────────────────────
+function BubblyPreview({ mt, size, products }) {
   return (
     <div style={{ background: mt.bg, minHeight: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'center', gap: `${10 * size}px`, padding: `${12 * size}px`, flexWrap: 'wrap' }}>
-        {[mt.label, 'New In', 'Cart ♡'].map(l => (
+        {[EMBER_MOSS_BRAND.name, 'New In', 'Cart ♡'].map(l => (
           <span key={l} style={{
             fontFamily: mt.font, fontWeight: 700, fontSize: `${8.5 * size}px`, color: '#fff',
             background: mt.accent, borderRadius: '100px', padding: `${5 * size}px ${12 * size}px`,
@@ -774,45 +763,45 @@ function BubblyPreview({ mt, size }) {
         ))}
       </div>
       <div style={{ textAlign: 'center', padding: `${10 * size}px ${18 * size}px ${18 * size}px` }}>
-        <div style={{ fontFamily: mt.font, fontWeight: 800, fontSize: `${17 * size}px`, color: mt.text }}>{mt.tagline}</div>
+        <div style={{ fontFamily: mt.font, fontWeight: 800, fontSize: `${17 * size}px`, color: mt.text }}>{EMBER_MOSS_BRAND.tagline}</div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${12 * size}px`, padding: `0 ${16 * size}px ${18 * size}px` }}>
-        {mt.products.map((p, i) => (
+        {products.map((p, i) => (
           <div key={p.name} style={{
             background: '#fff', borderRadius: `${18 * size}px`, padding: `${7 * size}px`, textAlign: 'center',
             boxShadow: `0 ${5 * size}px ${12 * size}px rgba(255,62,158,0.18)`,
             transform: `rotate(${i === 1 ? 0 : (i === 0 ? -3 : 3)}deg)`,
           }}>
-            <TenantProductTile p={p} mt={mt} size={size} radius={14} tinted />
+            <ProductImg src={p.img} alt={p.name} size={size} radius={14} />
             <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${6.5 * size}px`, color: mt.text, marginTop: `${4 * size}px` }}>{p.name}</div>
             <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${7 * size}px`, color: mt.accent }}>{p.price}</div>
           </div>
         ))}
       </div>
       <div style={{ textAlign: 'center', padding: `${14 * size}px`, borderTop: `2px dashed ${mt.accent}50` }}>
-        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${9 * size}px`, color: mt.accent }}>{mt.manifesto}</div>
+        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${9 * size}px`, color: mt.accent }}>{EMBER_MOSS_BRAND.manifesto} ✨</div>
       </div>
     </div>
   );
 }
 
-// ── Minimal (Meridian Directorate) — institutional, no ornament ──────────────
-function MinimalPreview({ mt, size }) {
+// ── Minimal (Directorate) — institutional, no ornament ────────────────────────
+function MinimalPreview({ mt, size, products }) {
   return (
     <div style={{ background: mt.bg, minHeight: '100%', display: 'flex' }}>
       <div style={{ width: `${64 * size}px`, flexShrink: 0, borderRight: `1px solid ${mt.accent}30`, padding: `${16 * size}px ${10 * size}px`, display: 'flex', flexDirection: 'column', gap: `${10 * size}px` }}>
         <div style={{ width: `${20 * size}px`, height: `${20 * size}px`, borderRadius: '50%', border: `2px solid ${mt.accent}`, margin: '0 auto' }} />
-        {['Catalog', 'Directives', 'Status'].map(l => (
+        {['Catalog', 'Journal', 'Status'].map(l => (
           <div key={l} style={{ fontFamily: mt.font, fontSize: `${6 * size}px`, color: mt.text, textAlign: 'center', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{l}</div>
         ))}
       </div>
       <div style={{ flex: 1, padding: `${18 * size}px` }}>
-        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${9 * size}px`, color: mt.accent, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: `${4 * size}px` }}>{mt.label}</div>
-        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${12 * size}px`, color: mt.text, marginBottom: `${16 * size}px` }}>{mt.tagline}</div>
+        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${9 * size}px`, color: mt.accent, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: `${4 * size}px` }}>{EMBER_MOSS_BRAND.name}</div>
+        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${12 * size}px`, color: mt.text, marginBottom: `${16 * size}px` }}>{EMBER_MOSS_BRAND.tagline}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${14 * size}px`, marginBottom: `${16 * size}px` }}>
-          {mt.products.map(p => (
+          {products.map(p => (
             <div key={p.name}>
-              <TenantProductTile p={p} mt={mt} size={size} radius={2} />
+              <ProductImg src={p.img} alt={p.name} size={size} radius={2} />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: `${5 * size}px` }}>
                 <span style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text }}>{p.name}</span>
                 <span style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.accent }}>{p.price}</span>
@@ -821,12 +810,13 @@ function MinimalPreview({ mt, size }) {
           ))}
         </div>
         <div style={{ borderTop: `1px solid ${mt.accent}30`, paddingTop: `${10 * size}px` }}>
-          <div style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.text, letterSpacing: '0.06em' }}>{mt.manifesto}</div>
+          <div style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.text, letterSpacing: '0.06em' }}>{EMBER_MOSS_BRAND.manifesto}</div>
         </div>
       </div>
     </div>
   );
 }
+
 
 
 
