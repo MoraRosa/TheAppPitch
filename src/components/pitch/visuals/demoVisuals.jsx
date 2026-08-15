@@ -648,7 +648,6 @@ function MockupMerchant({ theme, size }) {
 function MockupThemeSwitch({ theme, size }) {
   const t = theme.colors;
   const [mt, setMt] = useState(STOREFRONT_THEME_SWATCHES[0]);
-  const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
 
   const Preview = {
     elegant: ElegantPreview,
@@ -658,11 +657,13 @@ function MockupThemeSwitch({ theme, size }) {
   }[mt.style];
 
   return (
-    <div style={{ width: '100%' }}>
-      <div style={{ marginBottom: `${10 * size}px` }}>
-        <Preview mt={mt} size={size} products={products} />
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: '1 1 auto', minHeight: 0, marginBottom: `${10 * size}px` }}>
+        <DeviceFrame theme={theme} size={size} url={mt.url} fill>
+          <Preview mt={mt} size={size} />
+        </DeviceFrame>
       </div>
-      <div style={{ display: 'flex', gap: `${6 * size}px`, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: `${6 * size}px`, flexWrap: 'wrap', flexShrink: 0 }}>
         {STOREFRONT_THEME_SWATCHES.map(candidate => (
           <button key={candidate.id} onClick={() => setMt(candidate)} style={{
             display: 'flex', alignItems: 'center', gap: `${5 * size}px`,
@@ -680,102 +681,153 @@ function MockupThemeSwitch({ theme, size }) {
   );
 }
 
-// ── Elegant (Ember & Moss) — thin hairlines, generous space, circular frames ──
-function ElegantPreview({ mt, size, products }) {
+// A product tile that shows a real photo if given one (Ember & Moss), or an
+// icon on a tinted tile if not (the other three tenants — no photography for
+// fictional businesses, and the icon treatment fits each brand's voice fine).
+function TenantProductTile({ p, mt, size, radius = 4, tinted = false }) {
+  if (p.img) return <ProductImg src={p.img} alt={p.name} size={size} radius={radius} />;
   return (
-    <div style={{ border: `1px solid ${mt.accent}40`, borderRadius: `${4 * size}px`, background: mt.bg, padding: `${16 * size}px`, transition: 'background 0.25s ease' }}>
-      <div style={{ textAlign: 'center', marginBottom: `${14 * size}px` }}>
-        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${13 * size}px`, color: mt.text, letterSpacing: '0.02em' }}>{mt.label}</div>
-        <div style={{ width: `${28 * size}px`, height: '1px', background: mt.accent, margin: `${6 * size}px auto 0` }} />
+    <div style={{
+      width: '100%', aspectRatio: '1', borderRadius: `${radius * size}px`,
+      background: tinted ? `${mt.accent}18` : mt.accent + '10',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: `${22 * size}px`,
+    }}>{p.icon}</div>
+  );
+}
+
+// ── Elegant (Ember & Moss) — hairline borders, rectangular frames, full page ──
+function ElegantPreview({ mt, size }) {
+  return (
+    <div style={{ background: mt.bg, minHeight: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${14 * size}px ${18 * size}px`, borderBottom: `1px solid ${mt.accent}30` }}>
+        <span style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${13 * size}px`, color: mt.text, letterSpacing: '0.02em' }}>{mt.label}</span>
+        <div style={{ display: 'flex', gap: `${12 * size}px` }}>
+          {['Shop', 'Journal', 'Cart'].map(l => <span key={l} style={{ fontFamily: mt.font, fontSize: `${8 * size}px`, color: mt.text, opacity: 0.7 }}>{l}</span>)}
+        </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px` }}>
-        {products.map(p => (
-          <div key={p.name} style={{ textAlign: 'center' }}>
-            <div style={{ borderRadius: '50%', overflow: 'hidden', border: `1px solid ${mt.accent}50`, marginBottom: `${5 * size}px` }}>
-              <ProductImg src={p.img} alt={p.name} size={size} radius={0} />
+      <div style={{ textAlign: 'center', padding: `${24 * size}px ${18 * size}px` }}>
+        <div style={{ fontFamily: mt.font, fontStyle: 'italic', fontSize: `${16 * size}px`, color: mt.text, marginBottom: `${6 * size}px` }}>{mt.tagline}</div>
+        <div style={{ width: `${32 * size}px`, height: '1px', background: mt.accent, margin: '0 auto' }} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${12 * size}px`, padding: `0 ${18 * size}px ${20 * size}px` }}>
+        {mt.products.map(p => (
+          <div key={p.name} style={{ border: `1px solid ${mt.accent}30`, borderRadius: `${3 * size}px`, overflow: 'hidden' }}>
+            <TenantProductTile p={p} mt={mt} size={size} radius={0} />
+            <div style={{ padding: `${8 * size}px`, textAlign: 'center' }}>
+              <div style={{ fontFamily: mt.font, fontSize: `${7.5 * size}px`, color: mt.text, marginBottom: '2px' }}>{p.name}</div>
+              <div style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.accent }}>{p.price}</div>
             </div>
-            <div style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text }}>{p.price}</div>
           </div>
         ))}
+      </div>
+      <div style={{ borderTop: `1px solid ${mt.accent}30`, padding: `${18 * size}px`, textAlign: 'center' }}>
+        <div style={{ fontFamily: mt.font, fontStyle: 'italic', fontSize: `${9.5 * size}px`, color: mt.text, opacity: 0.85, maxWidth: '70%', margin: '0 auto', lineHeight: 1.6 }}>{mt.manifesto}</div>
       </div>
     </div>
   );
 }
 
-// ── Brutalist (Studio) — hard borders, offset shadow, rotated cards ──────────
-function BrutalistPreview({ mt, size, products }) {
+// ── Brutalist (Iron & Ash) — hard borders, offset shadow, industrial ─────────
+function BrutalistPreview({ mt, size }) {
   return (
-    <div style={{ background: mt.bg, borderRadius: `${2 * size}px`, padding: `${16 * size}px`, transition: 'background 0.25s ease' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${14 * size}px` }}>
-        <span style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${11 * size}px`, color: mt.text, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{mt.label}</span>
-        <span style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.accent, background: mt.text, padding: `${2 * size}px ${6 * size}px`, border: `1.5px solid ${mt.accent}` }}>NEW</span>
+    <div style={{ background: mt.bg, minHeight: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${12 * size}px ${16 * size}px`, borderBottom: `3px solid ${mt.accent}` }}>
+        <span style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${13 * size}px`, color: mt.text, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{mt.label}</span>
+        <span style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.bg, background: mt.accent, padding: `${3 * size}px ${7 * size}px`, fontWeight: 700 }}>SHOP →</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px` }}>
-        {products.map((p, i) => (
+      <div style={{ padding: `${20 * size}px ${16 * size}px 10px` }}>
+        <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${15 * size}px`, color: mt.accent, textTransform: 'uppercase', lineHeight: 1.2 }}>{mt.tagline}</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${14 * size}px`, padding: `${14 * size}px ${16 * size}px` }}>
+        {mt.products.map((p, i) => (
           <div key={p.name} style={{
             border: `2px solid ${mt.text}`, background: mt.bg,
             boxShadow: `${3 * size}px ${3 * size}px 0 ${mt.accent}`,
             transform: `rotate(${i % 2 === 0 ? -2 : 2}deg)`,
           }}>
-            <ProductImg src={p.img} alt={p.name} size={size} radius={0} />
-            <div style={{ padding: `${4 * size}px`, borderTop: `2px solid ${mt.text}` }}>
-              <div style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text, fontWeight: 700 }}>{p.price}</div>
+            <TenantProductTile p={p} mt={mt} size={size} radius={0} tinted />
+            <div style={{ padding: `${5 * size}px`, borderTop: `2px solid ${mt.text}` }}>
+              <div style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text, marginBottom: '2px' }}>{p.name}</div>
+              <div style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.accent, fontWeight: 700 }}>{p.price}</div>
             </div>
           </div>
         ))}
+      </div>
+      <div style={{ background: mt.accent, padding: `${16 * size}px`, textAlign: 'center' }}>
+        <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${9.5 * size}px`, color: mt.bg, letterSpacing: '0.02em' }}>{mt.manifesto}</div>
       </div>
     </div>
   );
 }
 
-// ── Bubbly (Blush) — pill shapes, soft shadow, playful tilt ──────────────────
-function BubblyPreview({ mt, size, products }) {
+// ── Bubbly (Prism & Bow) — pastel, rounded, maximalist ────────────────────────
+function BubblyPreview({ mt, size }) {
   return (
-    <div style={{ background: mt.bg, borderRadius: `${20 * size}px`, padding: `${16 * size}px`, transition: 'background 0.25s ease' }}>
-      <div style={{ textAlign: 'center', marginBottom: `${12 * size}px` }}>
-        <span style={{
-          display: 'inline-block', fontFamily: mt.font, fontWeight: 700, fontSize: `${11 * size}px`, color: '#fff',
-          background: mt.accent, borderRadius: '100px', padding: `${4 * size}px ${14 * size}px`,
-          transform: 'rotate(-2deg)', boxShadow: `0 ${3 * size}px ${8 * size}px ${mt.accent}55`,
-        }}>{mt.label} ✦</span>
+    <div style={{ background: mt.bg, minHeight: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: `${10 * size}px`, padding: `${12 * size}px`, flexWrap: 'wrap' }}>
+        {[mt.label, 'New In', 'Cart ♡'].map(l => (
+          <span key={l} style={{
+            fontFamily: mt.font, fontWeight: 700, fontSize: `${8.5 * size}px`, color: '#fff',
+            background: mt.accent, borderRadius: '100px', padding: `${5 * size}px ${12 * size}px`,
+          }}>{l}</span>
+        ))}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px` }}>
-        {products.map((p, i) => (
+      <div style={{ textAlign: 'center', padding: `${10 * size}px ${18 * size}px ${18 * size}px` }}>
+        <div style={{ fontFamily: mt.font, fontWeight: 800, fontSize: `${17 * size}px`, color: mt.text }}>{mt.tagline}</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${12 * size}px`, padding: `0 ${16 * size}px ${18 * size}px` }}>
+        {mt.products.map((p, i) => (
           <div key={p.name} style={{
-            background: '#fff', borderRadius: `${16 * size}px`, padding: `${6 * size}px`, textAlign: 'center',
-            boxShadow: `0 ${4 * size}px ${10 * size}px rgba(0,0,0,0.08)`,
+            background: '#fff', borderRadius: `${18 * size}px`, padding: `${7 * size}px`, textAlign: 'center',
+            boxShadow: `0 ${5 * size}px ${12 * size}px rgba(255,62,158,0.18)`,
             transform: `rotate(${i === 1 ? 0 : (i === 0 ? -3 : 3)}deg)`,
           }}>
-            <div style={{ borderRadius: `${12 * size}px`, overflow: 'hidden', marginBottom: `${4 * size}px` }}>
-              <ProductImg src={p.img} alt={p.name} size={size} radius={0} />
-            </div>
-            <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${6.5 * size}px`, color: mt.accent }}>{p.price}</div>
+            <TenantProductTile p={p} mt={mt} size={size} radius={14} tinted />
+            <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${6.5 * size}px`, color: mt.text, marginTop: `${4 * size}px` }}>{p.name}</div>
+            <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${7 * size}px`, color: mt.accent }}>{p.price}</div>
           </div>
         ))}
+      </div>
+      <div style={{ textAlign: 'center', padding: `${14 * size}px`, borderTop: `2px dashed ${mt.accent}50` }}>
+        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${9 * size}px`, color: mt.accent }}>{mt.manifesto}</div>
       </div>
     </div>
   );
 }
 
-// ── Minimal (Slate) — quiet grid, no borders, whitespace does the work ───────
-function MinimalPreview({ mt, size, products }) {
+// ── Minimal (Meridian Directorate) — institutional, no ornament ──────────────
+function MinimalPreview({ mt, size }) {
   return (
-    <div style={{ background: mt.bg, padding: `${18 * size}px`, transition: 'background 0.25s ease' }}>
-      <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${10 * size}px`, color: mt.text, marginBottom: `${16 * size}px`, letterSpacing: '0.06em' }}>{mt.label.toUpperCase()}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${16 * size}px` }}>
-        {products.map(p => (
-          <div key={p.name}>
-            <ProductImg src={p.img} alt={p.name} size={size} radius={2} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: `${5 * size}px` }}>
-              <span style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text }}>{p.price}</span>
-              <span style={{ fontFamily: mt.font, fontSize: `${6 * size}px`, color: mt.accent }}>+</span>
-            </div>
-          </div>
+    <div style={{ background: mt.bg, minHeight: '100%', display: 'flex' }}>
+      <div style={{ width: `${64 * size}px`, flexShrink: 0, borderRight: `1px solid ${mt.accent}30`, padding: `${16 * size}px ${10 * size}px`, display: 'flex', flexDirection: 'column', gap: `${10 * size}px` }}>
+        <div style={{ width: `${20 * size}px`, height: `${20 * size}px`, borderRadius: '50%', border: `2px solid ${mt.accent}`, margin: '0 auto' }} />
+        {['Catalog', 'Directives', 'Status'].map(l => (
+          <div key={l} style={{ fontFamily: mt.font, fontSize: `${6 * size}px`, color: mt.text, textAlign: 'center', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{l}</div>
         ))}
+      </div>
+      <div style={{ flex: 1, padding: `${18 * size}px` }}>
+        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${9 * size}px`, color: mt.accent, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: `${4 * size}px` }}>{mt.label}</div>
+        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${12 * size}px`, color: mt.text, marginBottom: `${16 * size}px` }}>{mt.tagline}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${14 * size}px`, marginBottom: `${16 * size}px` }}>
+          {mt.products.map(p => (
+            <div key={p.name}>
+              <TenantProductTile p={p} mt={mt} size={size} radius={2} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: `${5 * size}px` }}>
+                <span style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text }}>{p.name}</span>
+                <span style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.accent }}>{p.price}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ borderTop: `1px solid ${mt.accent}30`, paddingTop: `${10 * size}px` }}>
+          <div style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.text, letterSpacing: '0.06em' }}>{mt.manifesto}</div>
+        </div>
       </div>
     </div>
   );
 }
+
 
 
 // ── 7. workflow — clickable horizontal steps ────────────────────────────────────

@@ -87,14 +87,51 @@ export const EMBER_MOSS_FAQ = [
   { q: 'Can I return something?', a: '30-day returns on unopened items, no questions asked.' },
 ];
 
-// Storefront-theme swatches for the Storefront Customization slide. Each has
-// a `style` key selecting a genuinely different layout skeleton in
-// MockupThemeSwitch — not just a recolor of the same card grid. One of
-// these is the real Ember & Moss palette; the other three are placeholder
-// "other tenants on the platform" to demonstrate multi-tenant theming.
+// Storefront-theme swatches for the Storefront Customization slide. These are
+// four SEPARATE fictional businesses on the platform, not one brand in four
+// outfits — that's the actual point of the slide: the same commerce platform
+// can host a botanical apothecary, a moto apparel brand, a hyper-feminine toy
+// shop, and a stark institutional supplier, and none of them would look like
+// they're related. Each has its own products, nav treatment, and voice.
 export const STOREFRONT_THEME_SWATCHES = [
-  { id: 'a', label: 'Ember & Moss', style: 'elegant',   bg: '#1B3B2E', accent: '#C9A227', text: '#F5F1E4', font: "'Cormorant Garamond', serif" },
-  { id: 'b', label: 'Studio',       style: 'brutalist', bg: '#111111', accent: '#F2E205', text: '#F5F5F5', font: "'Space Mono', monospace" },
-  { id: 'c', label: 'Blush',        style: 'bubbly',    bg: '#FCEFEF', accent: '#D6597A', text: '#402A2E', font: "'Quicksand', sans-serif" },
-  { id: 'd', label: 'Slate',        style: 'minimal',   bg: '#F4F6F8', accent: '#3B5BDB', text: '#1B2430', font: "'Inter', sans-serif" },
+  {
+    id: 'a', label: 'Ember & Moss', style: 'elegant', url: 'emberandmoss.shop',
+    bg: '#1B3B2E', accent: '#C9A227', text: '#F5F1E4', font: "'Cormorant Garamond', serif",
+    tagline: 'Handmade by tiny dragons.',
+    manifesto: 'Every jar, every mist, every match struck \u2014 someone small and scaled had a hand in it.',
+    products: EMBER_MOSS_PRODUCTS.slice(0, 3).map(p => ({ name: p.name, price: p.price, img: p.img })),
+  },
+  {
+    id: 'b', label: 'Iron & Ash', style: 'brutalist', url: 'ironandash.com',
+    bg: '#141414', accent: '#E8B923', text: '#F2F2F2', font: "'Space Mono', monospace",
+    tagline: 'Built for the road, not the runway.',
+    manifesto: 'WE DON\u2019T DO SEASONAL COLORS. WE DO BLACK, AND WE DO IT WELL.',
+    products: [
+      { name: 'Blackline Leather Jacket', price: '$220', icon: '\ud83e\udde5' },
+      { name: 'Steel-Toe Riding Boots',   price: '$180', icon: '\ud83e\udd7e' },
+      { name: 'Patch Kit \u2014 Road Crew',    price: '$24',  icon: '\ud83e\uddf5' },
+    ],
+  },
+  {
+    id: 'c', label: 'Prism & Bow', style: 'bubbly', url: 'prismandbow.shop',
+    bg: '#FFE9F4', accent: '#FF3E9E', text: '#5A1240', font: "'Quicksand', sans-serif",
+    tagline: 'Every day is a runway. \u2728',
+    manifesto: 'Life in plastic \u2014 okay, recycled plastic, but still fabulous.',
+    products: [
+      { name: 'Sparkle Convertible',  price: '$45', icon: '\ud83d\ude97' },
+      { name: 'Dream Closet Set',     price: '$38', icon: '\ud83d\udc57' },
+      { name: 'Glitter Vanity Kit',   price: '$29', icon: '\ud83d\udc84' },
+    ],
+  },
+  {
+    id: 'd', label: 'Meridian Directorate', style: 'minimal', url: 'meridiandirectorate.gov',
+    bg: '#EFF1F4', accent: '#2B3A55', text: '#1A222E', font: "'Inter', sans-serif",
+    tagline: 'Standard-issue reliability.',
+    manifesto: 'COMPLIANT. CATALOGED. DELIVERED ON SCHEDULE.',
+    products: [
+      { name: 'Field Utility Case',   price: '$96', icon: '\ud83d\udcbc' },
+      { name: 'Directive Binder Set', price: '$18', icon: '\ud83d\udcc1' },
+      { name: 'Regulation Compass',   price: '$42', icon: '\ud83e\udded' },
+    ],
+  },
 ];
