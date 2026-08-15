@@ -199,39 +199,99 @@ function SectionLabel({ size, theme, children }) {
 function MockupProblem({ theme, size }) {
   const t = theme.colors;
   const [merged, setMerged] = useState(false);
-  const tools = ['Shopify', 'Mailchimp', 'Sheets', 'Calendly', 'QuickBooks', 'Notion'];
+  const tools = [
+    { name: 'Shopify',    icon: '🛍️', color: '#95BF47' },
+    { name: 'Mailchimp',  icon: '✉️', color: '#FFCC00' },
+    { name: 'Sheets',     icon: '📊', color: '#188038' },
+    { name: 'Calendly',   icon: '📅', color: '#006BFF' },
+    { name: 'QuickBooks', icon: '💲', color: '#2CA01C' },
+    { name: 'Notion',     icon: '📝', color: t.textFaint },
+  ];
+  const positions = [
+    { top: '6%',  left: '4%'  }, { top: '58%', left: '2%'  }, { top: '10%', left: '68%' },
+    { top: '62%', left: '70%' }, { top: '36%', left: '36%' }, { top: '2%',  left: '38%' },
+  ];
+  const painPoints = ['6 logins a day', '~3 hrs/week stitching data', '$0 of it talking to each other'];
+
   return (
     <div style={{ width: '100%' }}>
       <div style={{
-        position: 'relative', height: `${120 * size}px`,
+        position: 'relative', height: `${168 * size}px`,
         border: `1px dashed ${t.border}`, borderRadius: `${8 * size}px`,
         marginBottom: `${12 * size}px`, overflow: 'hidden',
+        background: merged ? 'transparent' : `radial-gradient(ellipse at center, ${t.accent}06 0%, transparent 70%)`,
+        transition: 'background 0.4s ease',
       }}>
-        {!merged ? tools.map((tool, i) => {
-          const positions = [
-            { top: '10%', left: '6%' }, { top: '55%', left: '2%' }, { top: '15%', left: '62%' },
-            { top: '60%', left: '68%' }, { top: '38%', left: '32%' }, { top: '5%', left: '38%' },
-          ];
-          return (
-            <span key={tool} style={{
-              position: 'absolute', ...positions[i],
-              padding: `${5 * size}px ${9 * size}px`,
-              border: `1px solid ${t.border}`, borderRadius: '100px',
-              background: t.bgAlt, fontFamily: theme.fonts.mono,
-              fontSize: `${8 * size}px`, color: t.textMuted,
-              transform: `rotate(${(i % 2 === 0 ? -1 : 1) * (i * 3 % 7)}deg)`,
-            }}>{tool}</span>
-          );
-        }) : (
+        {!merged ? (
+          <>
+            {/* stressed user, centered background layer */}
+            <div style={{
+              position: 'absolute', top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)',
+              fontSize: `${44 * size}px`, opacity: 0.16,
+              animation: 'wobble 3.2s ease-in-out infinite',
+            }}>🧑‍💻</div>
+            {/* small stress particles orbiting the user */}
+            {['💫', '❗', '💦'].map((p, i) => (
+              <span key={p} style={{
+                position: 'absolute',
+                top: `${[28, 44, 62][i]}%`, left: `${[46, 60, 44][i]}%`,
+                fontSize: `${11 * size}px`, opacity: 0.5,
+                animation: `bob 1.8s ease-in-out ${i * 0.3}s infinite`,
+              }}>{p}</span>
+            ))}
+
+            {/* pain-point stat chips */}
+            {painPoints.map((pt, i) => (
+              <span key={pt} style={{
+                position: 'absolute', top: i === 0 ? '4%' : undefined, bottom: i !== 0 ? '4%' : undefined,
+                left: i === 1 ? '50%' : (i === 0 ? '50%' : undefined), right: i === 2 ? '3%' : undefined,
+                transform: i !== 2 ? 'translateX(-50%)' : 'none',
+                fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint,
+                letterSpacing: '0.04em', whiteSpace: 'nowrap',
+                opacity: 0, animation: `fadeSlideIn 0.4s ease ${0.5 + i * 0.15}s both`,
+              }}>{pt}</span>
+            ))}
+
+            {/* scattered tool tiles */}
+            {tools.map((tool, i) => (
+              <div key={tool.name} style={{
+                position: 'absolute', ...positions[i],
+                display: 'flex', alignItems: 'center', gap: `${4 * size}px`,
+                padding: `${5 * size}px ${9 * size}px`,
+                border: `1px solid ${t.border}`, borderRadius: `${6 * size}px`,
+                background: t.surface || t.bgAlt, boxShadow: `0 ${3 * size}px ${8 * size}px rgba(0,0,0,0.06)`,
+                fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textMuted,
+                animation: `jitter 2.4s ease-in-out ${i * 0.22}s infinite`,
+              }}>
+                <span style={{ position: 'relative', fontSize: `${11 * size}px`, lineHeight: 1 }}>
+                  {tool.icon}
+                  <span style={{
+                    position: 'absolute', top: `-${3 * size}px`, right: `-${3 * size}px`,
+                    width: `${5 * size}px`, height: `${5 * size}px`, borderRadius: '50%',
+                    background: t.negative || '#DB3521',
+                    animation: `pulseDot 1.6s ease-in-out ${i * 0.18}s infinite`,
+                  }} />
+                </span>
+                {tool.name}
+              </div>
+            ))}
+          </>
+        ) : (
           <div style={{
-            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'fadeSlideIn 0.35s ease both',
+            position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: `${8 * size}px`,
+            animation: 'fadeSlideIn 0.4s ease both',
           }}>
             <div style={{
-              padding: `${12 * size}px ${20 * size}px`, borderRadius: `${8 * size}px`,
+              padding: `${12 * size}px ${22 * size}px`, borderRadius: `${8 * size}px`,
               background: t.accent, color: theme.isLight ? '#fff' : t.bg,
               fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${14 * size}px`,
+              boxShadow: `0 0 0 ${8 * size}px ${t.accent}14`,
+              animation: 'settleGlow 1.2s ease-out both',
             }}>{COMPANY.name}</div>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.positive || t.accent, letterSpacing: '0.04em' }}>
+              ✓ One login. Done.
+            </div>
           </div>
         )}
       </div>
@@ -245,7 +305,14 @@ function MockupProblem({ theme, size }) {
       }}>
         {merged ? '↺ Show the tab chaos' : 'Consolidate →'}
       </button>
-      <style>{`@keyframes fadeSlideIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }`}</style>
+      <style>{`
+        @keyframes fadeSlideIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+        @keyframes wobble { 0%, 100% { transform: translate(-50%, -50%) rotate(-3deg); } 50% { transform: translate(-50%, -50%) rotate(3deg); } }
+        @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-${5 * size}px); } }
+        @keyframes jitter { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
+        @keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }
+        @keyframes settleGlow { 0% { box-shadow: 0 0 0 0 ${t.accent}30; } 100% { box-shadow: 0 0 0 ${8 * size}px ${t.accent}14; } }
+      `}</style>
     </div>
   );
 }
