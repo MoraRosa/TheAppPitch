@@ -648,24 +648,19 @@ function MockupMerchant({ theme, size }) {
 function MockupThemeSwitch({ theme, size }) {
   const t = theme.colors;
   const [mt, setMt] = useState(STOREFRONT_THEME_SWATCHES[0]);
+  const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
+
+  const Preview = {
+    elegant: ElegantPreview,
+    brutalist: BrutalistPreview,
+    bubbly: BubblyPreview,
+    minimal: MinimalPreview,
+  }[mt.style];
+
   return (
     <div style={{ width: '100%' }}>
-      <div style={{
-        border: `1px solid ${t.border}`, borderRadius: `${6 * size}px`, overflow: 'hidden',
-        background: mt.bg, transition: 'background 0.25s ease', marginBottom: `${10 * size}px`,
-      }}>
-        <div style={{ padding: `${12 * size}px`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${11 * size}px`, color: mt.text, transition: 'color 0.25s ease' }}>brand.</span>
-          <span style={{ width: `${9 * size}px`, height: `${9 * size}px`, borderRadius: '50%', background: mt.accent }} />
-        </div>
-        <div style={{ padding: `0 ${12 * size}px ${12 * size}px`, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: `${6 * size}px` }}>
-          {[0, 1, 2].map(i => (
-            <div key={i} style={{ borderRadius: `${4 * size}px`, overflow: 'hidden', border: `1px solid ${mt.accent}30` }}>
-              <div style={{ aspectRatio: '1', background: `${mt.accent}22` }} />
-              <div style={{ padding: `${4 * size}px`, fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text }}>Item {i + 1}</div>
-            </div>
-          ))}
-        </div>
+      <div style={{ marginBottom: `${10 * size}px` }}>
+        <Preview mt={mt} size={size} products={products} />
       </div>
       <div style={{ display: 'flex', gap: `${6 * size}px`, flexWrap: 'wrap' }}>
         {STOREFRONT_THEME_SWATCHES.map(candidate => (
@@ -684,6 +679,104 @@ function MockupThemeSwitch({ theme, size }) {
     </div>
   );
 }
+
+// ── Elegant (Ember & Moss) — thin hairlines, generous space, circular frames ──
+function ElegantPreview({ mt, size, products }) {
+  return (
+    <div style={{ border: `1px solid ${mt.accent}40`, borderRadius: `${4 * size}px`, background: mt.bg, padding: `${16 * size}px`, transition: 'background 0.25s ease' }}>
+      <div style={{ textAlign: 'center', marginBottom: `${14 * size}px` }}>
+        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${13 * size}px`, color: mt.text, letterSpacing: '0.02em' }}>{mt.label}</div>
+        <div style={{ width: `${28 * size}px`, height: '1px', background: mt.accent, margin: `${6 * size}px auto 0` }} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px` }}>
+        {products.map(p => (
+          <div key={p.name} style={{ textAlign: 'center' }}>
+            <div style={{ borderRadius: '50%', overflow: 'hidden', border: `1px solid ${mt.accent}50`, marginBottom: `${5 * size}px` }}>
+              <ProductImg src={p.img} alt={p.name} size={size} radius={0} />
+            </div>
+            <div style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text }}>{p.price}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Brutalist (Studio) — hard borders, offset shadow, rotated cards ──────────
+function BrutalistPreview({ mt, size, products }) {
+  return (
+    <div style={{ background: mt.bg, borderRadius: `${2 * size}px`, padding: `${16 * size}px`, transition: 'background 0.25s ease' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${14 * size}px` }}>
+        <span style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${11 * size}px`, color: mt.text, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{mt.label}</span>
+        <span style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.accent, background: mt.text, padding: `${2 * size}px ${6 * size}px`, border: `1.5px solid ${mt.accent}` }}>NEW</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px` }}>
+        {products.map((p, i) => (
+          <div key={p.name} style={{
+            border: `2px solid ${mt.text}`, background: mt.bg,
+            boxShadow: `${3 * size}px ${3 * size}px 0 ${mt.accent}`,
+            transform: `rotate(${i % 2 === 0 ? -2 : 2}deg)`,
+          }}>
+            <ProductImg src={p.img} alt={p.name} size={size} radius={0} />
+            <div style={{ padding: `${4 * size}px`, borderTop: `2px solid ${mt.text}` }}>
+              <div style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text, fontWeight: 700 }}>{p.price}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Bubbly (Blush) — pill shapes, soft shadow, playful tilt ──────────────────
+function BubblyPreview({ mt, size, products }) {
+  return (
+    <div style={{ background: mt.bg, borderRadius: `${20 * size}px`, padding: `${16 * size}px`, transition: 'background 0.25s ease' }}>
+      <div style={{ textAlign: 'center', marginBottom: `${12 * size}px` }}>
+        <span style={{
+          display: 'inline-block', fontFamily: mt.font, fontWeight: 700, fontSize: `${11 * size}px`, color: '#fff',
+          background: mt.accent, borderRadius: '100px', padding: `${4 * size}px ${14 * size}px`,
+          transform: 'rotate(-2deg)', boxShadow: `0 ${3 * size}px ${8 * size}px ${mt.accent}55`,
+        }}>{mt.label} ✦</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px` }}>
+        {products.map((p, i) => (
+          <div key={p.name} style={{
+            background: '#fff', borderRadius: `${16 * size}px`, padding: `${6 * size}px`, textAlign: 'center',
+            boxShadow: `0 ${4 * size}px ${10 * size}px rgba(0,0,0,0.08)`,
+            transform: `rotate(${i === 1 ? 0 : (i === 0 ? -3 : 3)}deg)`,
+          }}>
+            <div style={{ borderRadius: `${12 * size}px`, overflow: 'hidden', marginBottom: `${4 * size}px` }}>
+              <ProductImg src={p.img} alt={p.name} size={size} radius={0} />
+            </div>
+            <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${6.5 * size}px`, color: mt.accent }}>{p.price}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Minimal (Slate) — quiet grid, no borders, whitespace does the work ───────
+function MinimalPreview({ mt, size, products }) {
+  return (
+    <div style={{ background: mt.bg, padding: `${18 * size}px`, transition: 'background 0.25s ease' }}>
+      <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${10 * size}px`, color: mt.text, marginBottom: `${16 * size}px`, letterSpacing: '0.06em' }}>{mt.label.toUpperCase()}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${16 * size}px` }}>
+        {products.map(p => (
+          <div key={p.name}>
+            <ProductImg src={p.img} alt={p.name} size={size} radius={2} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: `${5 * size}px` }}>
+              <span style={{ fontFamily: mt.font, fontSize: `${6.5 * size}px`, color: mt.text }}>{p.price}</span>
+              <span style={{ fontFamily: mt.font, fontSize: `${6 * size}px`, color: mt.accent }}>+</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 // ── 7. workflow — clickable horizontal steps ────────────────────────────────────
 function MockupWorkflow({ theme, size }) {

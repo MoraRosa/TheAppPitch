@@ -87,12 +87,14 @@ export const EMBER_MOSS_FAQ = [
   { q: 'Can I return something?', a: '30-day returns on unopened items, no questions asked.' },
 ];
 
-// Storefront-theme swatches for the Storefront Customization slide. One of
+// Storefront-theme swatches for the Storefront Customization slide. Each has
+// a `style` key selecting a genuinely different layout skeleton in
+// MockupThemeSwitch — not just a recolor of the same card grid. One of
 // these is the real Ember & Moss palette; the other three are placeholder
 // "other tenants on the platform" to demonstrate multi-tenant theming.
 export const STOREFRONT_THEME_SWATCHES = [
-  { id: 'a', label: 'Ember & Moss', bg: '#1B3B2E', accent: '#C9A227', text: '#F5F1E4', font: "'Cormorant Garamond', serif" },
-  { id: 'b', label: 'Studio',       bg: '#111111', accent: '#F2E205', text: '#F5F5F5', font: "'Space Mono', monospace" },
-  { id: 'c', label: 'Blush',        bg: '#FCEFEF', accent: '#D6597A', text: '#402A2E', font: "'Quicksand', sans-serif" },
-  { id: 'd', label: 'Slate',        bg: '#F4F6F8', accent: '#3B5BDB', text: '#1B2430', font: "'Inter', sans-serif" },
+  { id: 'a', label: 'Ember & Moss', style: 'elegant',   bg: '#1B3B2E', accent: '#C9A227', text: '#F5F1E4', font: "'Cormorant Garamond', serif" },
+  { id: 'b', label: 'Studio',       style: 'brutalist', bg: '#111111', accent: '#F2E205', text: '#F5F5F5', font: "'Space Mono', monospace" },
+  { id: 'c', label: 'Blush',        style: 'bubbly',    bg: '#FCEFEF', accent: '#D6597A', text: '#402A2E', font: "'Quicksand', sans-serif" },
+  { id: 'd', label: 'Slate',        style: 'minimal',   bg: '#F4F6F8', accent: '#3B5BDB', text: '#1B2430', font: "'Inter', sans-serif" },
 ];
