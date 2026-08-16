@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
-import { Check } from 'lucide-react';
+import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles } from 'lucide-react';
 import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom } from 'react-icons/si';
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
@@ -213,6 +213,15 @@ function PeakMark({ size, color }) {
 function MockupProblem({ theme, size }) {
   const t = theme.colors;
   const [merged, setMerged] = useState(false);
+  // Infinite CSS animations set in the very first render can get stuck if the
+  // element mounts while the slide's own entrance transition is still
+  // playing (same issue fixed on the Merchant charts) — this delays turning
+  // the animations on by one tick, which reliably kicks them into motion.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setReady(true), 60);
+    return () => clearTimeout(id);
+  }, []);
 
   const tools = [
     { name: 'Shopify',    Icon: SiShopify,      color: '#95BF47' },
@@ -248,21 +257,22 @@ function MockupProblem({ theme, size }) {
         border: `1px dashed ${t.border}`, borderRadius: `${10 * size}px`,
         marginBottom: `${12 * size}px`, overflow: 'hidden',
       }}>
-        {/* BEFORE / AFTER badge — the instant-read takeaway */}
-        <div style={{
-          position: 'absolute', top: `${10 * size}px`, left: `${10 * size}px`, zIndex: 3,
-          display: 'flex', alignItems: 'center', gap: `${6 * size}px`,
-          padding: `${5 * size}px ${11 * size}px`, borderRadius: `${5 * size}px`,
-          background: merged ? t.accent : t.bgDeep || t.text,
-          transition: 'background 0.4s ease',
-        }}>
-          <span style={{
-            fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${9.5 * size}px`,
-            letterSpacing: '0.1em', color: merged ? (theme.isLight ? '#fff' : t.bg) : t.bg,
+        {/* AFTER badge only — the BEFORE one obstructed the Shopify tile and wasn't needed once the scene itself reads clearly */}
+        {merged && (
+          <div style={{
+            position: 'absolute', top: `${10 * size}px`, left: `${10 * size}px`, zIndex: 3,
+            display: 'flex', alignItems: 'center', gap: `${6 * size}px`,
+            padding: `${5 * size}px ${11 * size}px`, borderRadius: `${5 * size}px`,
+            background: t.accent,
           }}>
-            {merged ? 'AFTER — 1 platform' : 'BEFORE — 10 tools'}
-          </span>
-        </div>
+            <span style={{
+              fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${9.5 * size}px`,
+              letterSpacing: '0.1em', color: theme.isLight ? '#fff' : t.bg,
+            }}>
+              AFTER — 1 platform
+            </span>
+          </div>
+        )}
 
         {/* ── background: the business's own dashboard, buried under tools ── */}
         <div style={{
@@ -317,7 +327,7 @@ function MockupProblem({ theme, size }) {
             boxShadow: `0 ${6 * size}px ${16 * size}px rgba(0,0,0,0.14)`,
             opacity: merged ? 0 : 1,
             pointerEvents: merged ? 'none' : 'auto',
-            animation: merged ? 'none' : `jitter 2.8s ease-in-out ${i * 0.18}s infinite`,
+            animation: (merged || !ready) ? 'none' : `jitter 2.8s ease-in-out ${i * 0.18}s infinite`,
             transform: merged ? `translate(${flyTo[i].x * size}px, ${flyTo[i].y * size}px) scale(0.5) rotate(${flyTo[i].r}deg)` : 'none',
             transition: 'transform 0.55s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease',
           }}>
@@ -328,7 +338,7 @@ function MockupProblem({ theme, size }) {
                   position: 'absolute', top: `-${3 * size}px`, right: `-${3 * size}px`,
                   width: `${7 * size}px`, height: `${7 * size}px`, borderRadius: '50%',
                   background: t.negative || '#DB3521',
-                  animation: `pulseDot 1.6s ease-in-out ${i * 0.15}s infinite`,
+                  animation: ready ? `pulseDot 1.6s ease-in-out ${i * 0.15}s infinite` : 'none',
                 }} />
               </span>
               <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9.5 * size}px`, color: t.textMuted, whiteSpace: 'nowrap' }}>{tool.name}</span>
@@ -947,37 +957,214 @@ function MinimalPreview({ mt, size, products }) {
 function MockupWorkflow({ theme, size }) {
   const t = theme.colors;
   const steps = [
-    { l: 'Sign up', d: 'Merchant creates an account and picks a business type.' },
-    { l: 'Storefront', d: 'Theme selected, branding applied, storefront goes live.' },
-    { l: 'Products', d: 'Catalog and inventory added, ready to sell.' },
+    { l: 'Sign up',      d: 'Merchant creates an account and picks a business type.' },
+    { l: 'Storefront',   d: 'Theme selected, branding applied, storefront goes live.' },
+    { l: 'Products',     d: 'Catalog and inventory added, ready to sell.' },
     { l: 'Order placed', d: 'A customer discovers the store and checks out.' },
-    { l: 'Payment', d: 'Stripe or PayPal processes the transaction automatically.' },
-    { l: 'Fulfilled', d: 'Merchant ships it — the order closes the loop.' },
+    { l: 'Payment',      d: 'Stripe processes the transaction automatically.' },
+    { l: 'Fulfilled',    d: 'Merchant ships it — the order closes the loop, and the customer is notified.' },
   ];
   const [active, setActive] = useState(0);
+  const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
+
   return (
-    <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: `${14 * size}px` }}>
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* stepper */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: `${12 * size}px`, flexShrink: 0 }}>
         {steps.map((s, i) => (
           <div key={s.l} style={{ display: 'flex', alignItems: 'center', flex: i < steps.length - 1 ? 1 : 'none' }}>
             <button onClick={() => setActive(i)} style={{
-              width: `${18 * size}px`, height: `${18 * size}px`, borderRadius: '50%', flexShrink: 0,
+              width: `${24 * size}px`, height: `${24 * size}px`, borderRadius: '50%', flexShrink: 0,
               border: `2px solid ${t.accent}`, cursor: 'pointer',
-              background: active === i ? t.accent : 'transparent',
+              background: active === i ? t.accent : (i < active ? `${t.accent}22` : 'transparent'),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`,
+              fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, fontWeight: 600,
               color: active === i ? (theme.isLight ? '#fff' : t.bg) : t.accent,
+              transition: 'background 0.25s ease',
             }}>{i + 1}</button>
-            {i < steps.length - 1 && <div style={{ flex: 1, height: '1px', background: t.border }} />}
+            {i < steps.length - 1 && <div style={{ flex: 1, height: '2px', background: i < active ? t.accent : t.border, transition: 'background 0.25s ease' }} />}
           </div>
         ))}
       </div>
-      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: `${4 * size}px` }}>
-        {steps[active].l}
+
+      {/* caption */}
+      <div style={{ marginBottom: `${10 * size}px`, flexShrink: 0 }}>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: `${3 * size}px` }}>
+          Step {active + 1} · {steps[active].l}
+        </div>
+        <div style={{ fontFamily: theme.fonts.body, fontSize: `${10 * size}px`, color: t.textMuted }}>
+          {steps[active].d}
+        </div>
       </div>
-      <div style={{ fontFamily: theme.fonts.body, fontSize: `${9.5 * size}px`, color: t.textMuted }}>
-        {steps[active].d}
+
+      {/* the actual visual, per step */}
+      <div style={{ flex: '1 1 auto', minHeight: `${140 * size}px` }}>
+        {active === 0 && <WorkflowSignup theme={theme} size={size} />}
+        {active === 1 && <WorkflowStorefront theme={theme} size={size} />}
+        {active === 2 && <WorkflowProducts theme={theme} size={size} products={products} />}
+        {active === 3 && <WorkflowOrder theme={theme} size={size} products={products} />}
+        {active === 4 && <WorkflowPayment theme={theme} size={size} />}
+        {active === 5 && <WorkflowFulfilled theme={theme} size={size} />}
       </div>
+    </div>
+  );
+}
+
+// ── Step 1: Sign up — a real-looking signup form, email verifies itself ──────
+function WorkflowSignup({ theme, size }) {
+  const t = theme.colors;
+  const [verified, setVerified] = useState(false);
+  useEffect(() => { setVerified(false); const id = setTimeout(() => setVerified(true), 900); return () => clearTimeout(id); }, []);
+  return (
+    <DeviceFrame theme={theme} size={size} url="peakenterprise.ca/signup" fill>
+      <div style={{ maxWidth: '260px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, marginBottom: `${14 * size}px` }}>
+          <UserPlus size={16 * size} color={t.accent} />
+          <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${11 * size}px`, color: t.text }}>Create your account</span>
+        </div>
+        {['Business name', 'Email'].map(label => (
+          <div key={label} style={{ marginBottom: `${8 * size}px` }}>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: `${3 * size}px` }}>{label}</div>
+            <div style={{ border: `1px solid ${t.border}`, borderRadius: `${4 * size}px`, padding: `${7 * size}px ${9 * size}px`, background: t.bgAlt, fontFamily: theme.fonts.body, fontSize: `${8 * size}px`, color: t.textMuted }}>
+              {label === 'Business name' ? 'Ember & Moss' : 'hello@emberandmoss.shop'}
+            </div>
+          </div>
+        ))}
+        <button style={{ width: '100%', padding: `${8 * size}px`, border: 'none', borderRadius: `${4 * size}px`, background: t.accent, color: theme.isLight ? '#fff' : t.bg, fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, marginBottom: `${10 * size}px` }}>Create account</button>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: `${6 * size}px`, padding: `${7 * size}px ${9 * size}px`,
+          borderRadius: `${4 * size}px`, background: verified ? `${t.positive || t.accent}14` : t.bgAlt,
+          border: `1px solid ${verified ? (t.positive || t.accent) : t.border}`, transition: 'all 0.3s ease',
+        }}>
+          {verified ? <CheckCircle2 size={12 * size} color={t.positive || t.accent} /> : <Mail size={12 * size} color={t.textFaint} />}
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: verified ? (t.positive || t.accent) : t.textFaint }}>
+            {verified ? 'Email verified' : 'Verifying email…'}
+          </span>
+        </div>
+      </div>
+    </DeviceFrame>
+  );
+}
+
+// ── Step 2: Storefront — theme applied, storefront live ──────────────────────
+function WorkflowStorefront({ theme, size }) {
+  const t = theme.colors;
+  const mt = STOREFRONT_THEME_SWATCHES[0];
+  return (
+    <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill>
+      <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, marginBottom: `${10 * size}px` }}>
+        <Sparkles size={14 * size} color={t.accent} />
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Theme applied · Botanical</span>
+      </div>
+      <div style={{ background: mt.bg, borderRadius: `${6 * size}px`, overflow: 'hidden', border: `1px solid ${mt.accent}30` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: `${8 * size}px ${12 * size}px`, borderBottom: `1px solid ${mt.accent}30` }}>
+          <span style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${10 * size}px`, color: mt.text }}>{EMBER_MOSS_BRAND.name}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: `${3 * size}px`, fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.positive || t.accent }}>
+            <span style={{ width: `${5 * size}px`, height: `${5 * size}px`, borderRadius: '50%', background: t.positive || t.accent }} /> LIVE
+          </span>
+        </div>
+        <div style={{ padding: `${14 * size}px`, textAlign: 'center' }}>
+          <div style={{ fontFamily: mt.font, fontStyle: 'italic', fontSize: `${11 * size}px`, color: mt.text }}>{EMBER_MOSS_BRAND.tagline}</div>
+        </div>
+      </div>
+    </DeviceFrame>
+  );
+}
+
+// ── Step 3: Products — catalog added, ready to sell ──────────────────────────
+function WorkflowProducts({ theme, size, products }) {
+  const t = theme.colors;
+  return (
+    <DeviceFrame theme={theme} size={size} url={`${COMPANY.url}/merchant/products`} fill>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${10 * size}px` }}>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Catalog</span>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.positive || t.accent }}>{EMBER_MOSS_PRODUCTS.length} products · ready to sell</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px` }}>
+        {products.map(p => (
+          <div key={p.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${7 * size}px`, textAlign: 'center' }}>
+            <ProductImg src={p.img} alt={p.name} size={size} />
+            <div style={{ fontFamily: theme.fonts.body, fontSize: `${7 * size}px`, color: t.text, marginTop: `${5 * size}px` }}>{p.name}</div>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.accent }}>{p.price}</div>
+          </div>
+        ))}
+      </div>
+    </DeviceFrame>
+  );
+}
+
+// ── Step 4: Order placed — customer checks out ────────────────────────────────
+function WorkflowOrder({ theme, size, products }) {
+  const t = theme.colors;
+  const cartItems = products.slice(0, 2);
+  const subtotal = cartItems.reduce((s, p) => s + parseFloat(p.price.replace('$', '')), 0);
+  return (
+    <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/checkout`} fill>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${10 * size}px` }}>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Checkout</span>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent }}>Order #1049</span>
+      </div>
+      {cartItems.map(p => (
+        <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: `${8 * size}px`, padding: `${6 * size}px 0`, borderBottom: `1px solid ${t.border}` }}>
+          <div style={{ width: `${26 * size}px`, flexShrink: 0 }}><ProductImg src={p.img} alt={p.name} size={size} radius={4} /></div>
+          <span style={{ flex: 1, fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px`, color: t.text }}>{p.name}</span>
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8.5 * size}px`, color: t.accent }}>{p.price}</span>
+        </div>
+      ))}
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: `${8 * size}px 0`, marginTop: `${4 * size}px`, borderTop: `1px solid ${t.border}` }}>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Total</span>
+        <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${11 * size}px`, color: t.text }}>${subtotal.toFixed(2)}</span>
+      </div>
+    </DeviceFrame>
+  );
+}
+
+// ── Step 5: Payment — processed automatically ─────────────────────────────────
+function WorkflowPayment({ theme, size }) {
+  const t = theme.colors;
+  const [done, setDone] = useState(false);
+  useEffect(() => { setDone(false); const id = setTimeout(() => setDone(true), 800); return () => clearTimeout(id); }, []);
+  return (
+    <DeviceFrame theme={theme} size={size} url="checkout.stripe.com" fill>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: `${10 * size}px` }}>
+        <div style={{
+          width: `${44 * size}px`, height: `${44 * size}px`, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: done ? `${t.positive || t.accent}18` : t.bgAlt,
+          transition: 'background 0.3s ease',
+        }}>
+          {done ? <CheckCircle2 size={22 * size} color={t.positive || t.accent} /> : <CreditCard size={20 * size} color={t.textFaint} />}
+        </div>
+        <div style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${12 * size}px`, color: t.text }}>
+          {done ? 'Payment successful' : 'Processing payment…'}
+        </div>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint }}>$82.00 · •••• 4242</div>
+      </div>
+    </DeviceFrame>
+  );
+}
+
+// ── Step 6: Fulfilled — shipped, customer notified ────────────────────────────
+function WorkflowFulfilled({ theme, size }) {
+  const t = theme.colors;
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: `${10 * size}px`, height: '100%' }}>
+      <DeviceFrame theme={theme} size={size} url={`${COMPANY.url}/merchant/orders`}>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: `${8 * size}px` }}>Order #1049</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px` }}>
+          <Truck size={14 * size} color={t.accent} />
+          <span style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${9 * size}px`, color: t.text }}>Marked as Shipped</span>
+        </div>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, marginTop: `${6 * size}px` }}>Tracking added · carrier notified</div>
+      </DeviceFrame>
+      <DeviceFrame theme={theme} size={size} url="inbox">
+        <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, marginBottom: `${8 * size}px` }}>
+          <Mail size={13 * size} color={t.accent} />
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Customer inbox</span>
+        </div>
+        <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, color: t.text, marginBottom: `${4 * size}px` }}>Your order shipped!</div>
+        <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.5 }}>Order #1049 is on its way. Sent automatically — the merchant didn't lift a finger.</div>
+      </DeviceFrame>
     </div>
   );
 }
