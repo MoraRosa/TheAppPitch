@@ -21,7 +21,11 @@ export default function SlideRenderer({ slide, visuals = {}, isFullscreen = fals
 // ─── RIGHT-SIDE VISUAL SLOT ────────────────────────────────────────────────────
 
 function SlideVisual({ slideSlug, visuals, theme, isFullscreen }) {
-  const size = isFullscreen ? 1 : 0.6;
+  // Fullscreen visuals were sized for a smaller footprint than a real
+  // presentation actually gets — this one multiplier drives every mockup's
+  // font/icon/spacing sizes, so raising it fixes "too small on desktop"
+  // across the whole demo deck at once rather than slide by slide.
+  const size = isFullscreen ? 1.3 : 0.6;
   const Visual = visuals[slideSlug];
   if (!Visual) return null;
   return (

@@ -2,7 +2,7 @@
 // Fullscreen cinematic presenter. Keyboard nav. Auto-play mode.
 // ESC always exits. 'A' toggles auto-play.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import SlideRenderer from './SlideRenderer.jsx';
@@ -13,6 +13,27 @@ export default function PresentMode({ controls, deck }) {
   const SLIDES = deck.slides;
   const slide = SLIDES[controls.current];
   const [showHints, setShowHints] = useState(false);
+  const [chromeVisible, setChromeVisible] = useState(true);
+  const idleTimer = useRef(null);
+
+  // Auto-hide the toolbar/nav bars after a few seconds idle — standard
+  // presenter behavior (Keynote, fullscreen video players). Keyboard
+  // shortcuts keep working the whole time regardless of chrome visibility.
+  useEffect(() => {
+    const wake = () => {
+      setChromeVisible(true);
+      clearTimeout(idleTimer.current);
+      idleTimer.current = setTimeout(() => setChromeVisible(false), 2600);
+    };
+    wake();
+    window.addEventListener('mousemove', wake);
+    window.addEventListener('keydown', wake);
+    return () => {
+      window.removeEventListener('mousemove', wake);
+      window.removeEventListener('keydown', wake);
+      clearTimeout(idleTimer.current);
+    };
+  }, []);
 
   // Prevent body scroll while fullscreen
   useEffect(() => {
@@ -34,11 +55,15 @@ export default function PresentMode({ controls, deck }) {
     }}>
       {/* Presenter toolbar */}
       <div style={{
-        height: '48px', flexShrink: 0,
-        borderBottom: `1px solid ${t.border}`,
+        height: chromeVisible ? '48px' : '0px', flexShrink: 0,
+        borderBottom: chromeVisible ? `1px solid ${t.border}` : 'none',
         display: 'flex', alignItems: 'center',
-        padding: '0 24px', gap: '16px',
+        padding: chromeVisible ? '0 24px' : '0',
+        gap: '16px',
         background: t.bgAlt,
+        overflow: 'hidden',
+        opacity: chromeVisible ? 1 : 0,
+        transition: 'height 0.35s ease, opacity 0.25s ease, padding 0.35s ease',
       }}>
         {/* Progress bar */}
         <div style={{ flex: 1, height: '2px', background: t.border, borderRadius: '2px', overflow: 'hidden' }}>
@@ -103,11 +128,14 @@ export default function PresentMode({ controls, deck }) {
 
       {/* Bottom nav */}
       <div style={{
-        height: '56px', flexShrink: 0,
-        borderTop: `1px solid ${t.border}`,
+        height: chromeVisible ? '56px' : '0px', flexShrink: 0,
+        borderTop: chromeVisible ? `1px solid ${t.border}` : 'none',
         display: 'flex', alignItems: 'center',
         justifyContent: 'center', gap: '24px',
         background: t.bgAlt,
+        overflow: 'hidden',
+        opacity: chromeVisible ? 1 : 0,
+        transition: 'height 0.35s ease, opacity 0.25s ease',
       }}>
         <button onClick={controls.prev} disabled={controls.isFirst} style={{
           background: 'none', border: `1px solid ${controls.isFirst ? 'transparent' : t.border}`,
@@ -150,7 +178,11 @@ export default function PresentMode({ controls, deck }) {
       <div
         onMouseEnter={() => setShowHints(true)}
         onMouseLeave={() => setShowHints(false)}
-        style={{ position: 'absolute', bottom: '70px', right: '20px' }}
+        style={{
+          position: 'absolute', bottom: chromeVisible ? '70px' : '20px', right: '20px',
+          opacity: chromeVisible ? 1 : 0, pointerEvents: chromeVisible ? 'auto' : 'none',
+          transition: 'bottom 0.35s ease, opacity 0.25s ease',
+        }}
       >
         <div style={{
           width: '20px', height: '20px', borderRadius: '50%',

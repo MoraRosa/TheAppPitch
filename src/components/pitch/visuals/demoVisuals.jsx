@@ -213,13 +213,18 @@ function PeakMark({ size, color }) {
 function MockupProblem({ theme, size }) {
   const t = theme.colors;
   const [merged, setMerged] = useState(false);
-  // Infinite CSS animations set in the very first render can get stuck if the
-  // element mounts while the slide's own entrance transition is still
-  // playing (same issue fixed on the Merchant charts) — this delays turning
-  // the animations on by one tick, which reliably kicks them into motion.
-  const [ready, setReady] = useState(false);
+  // `mode="wait"` in PresentMode means this component mounts right as the
+  // slide's own entrance transition starts, and that transition runs up to
+  // 0.6s depending on theme. An infinite CSS keyframe animation inserted
+  // while an ancestor is mid-transform can get stuck at its first frame in
+  // some browsers — a plain state toggle doesn't reliably fix this because
+  // it can still land mid-transition. The robust fix: force a genuine DOM
+  // remount (via key) once the parent transition is guaranteed finished —
+  // fresh elements always start their animations correctly.
+  const [animKey, setAnimKey] = useState(0);
   useEffect(() => {
-    const id = setTimeout(() => setReady(true), 60);
+    setAnimKey(0);
+    const id = setTimeout(() => setAnimKey(k => k + 1), 650);
     return () => clearTimeout(id);
   }, []);
 
@@ -319,7 +324,7 @@ function MockupProblem({ theme, size }) {
 
         {/* ── foreground: the scattered tools burying it ── */}
         {tools.map((tool, i) => (
-          <div key={tool.name} style={{
+          <div key={`${tool.name}-${animKey}`} style={{
             position: 'absolute', ...positions[i], zIndex: 2,
             width: `${104 * size}px`,
             border: `1px solid ${t.border}`, borderRadius: `${7 * size}px`, overflow: 'hidden',
@@ -327,7 +332,7 @@ function MockupProblem({ theme, size }) {
             boxShadow: `0 ${6 * size}px ${16 * size}px rgba(0,0,0,0.14)`,
             opacity: merged ? 0 : 1,
             pointerEvents: merged ? 'none' : 'auto',
-            animation: (merged || !ready) ? 'none' : `jitter 2.8s ease-in-out ${i * 0.18}s infinite`,
+            animation: merged ? 'none' : `jitter 2.8s ease-in-out ${i * 0.18}s infinite`,
             transform: merged ? `translate(${flyTo[i].x * size}px, ${flyTo[i].y * size}px) scale(0.5) rotate(${flyTo[i].r}deg)` : 'none',
             transition: 'transform 0.55s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease',
           }}>
@@ -338,7 +343,7 @@ function MockupProblem({ theme, size }) {
                   position: 'absolute', top: `-${3 * size}px`, right: `-${3 * size}px`,
                   width: `${7 * size}px`, height: `${7 * size}px`, borderRadius: '50%',
                   background: t.negative || '#DB3521',
-                  animation: ready ? `pulseDot 1.6s ease-in-out ${i * 0.15}s infinite` : 'none',
+                  animation: `pulseDot 1.6s ease-in-out ${i * 0.15}s infinite`,
                 }} />
               </span>
               <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9.5 * size}px`, color: t.textMuted, whiteSpace: 'nowrap' }}>{tool.name}</span>
