@@ -6,7 +6,8 @@
 
 import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
-import { ShoppingBag, Mail, Table2, Calendar, Receipt, FileText, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom } from 'react-icons/si';
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
 import { ProductDetailView, BlogPostView, ContactView } from './storefrontViews.jsx';
@@ -202,63 +203,70 @@ function MockupProblem({ theme, size }) {
   const [merged, setMerged] = useState(false);
 
   const tools = [
-    { name: 'Shopify',    Icon: ShoppingBag, color: '#5A8A3A' },
-    { name: 'Mailchimp',  Icon: Mail,        color: '#B8860B' },
-    { name: 'Sheets',     Icon: Table2,      color: '#188038' },
-    { name: 'Calendly',   Icon: Calendar,    color: '#1A5FBF' },
-    { name: 'QuickBooks', Icon: Receipt,     color: '#1F8A3D' },
-    { name: 'Notion',     Icon: FileText,    color: t.textMuted },
+    { name: 'Shopify',    Icon: SiShopify,      color: '#95BF47' },
+    { name: 'Mailchimp',  Icon: SiMailchimp,    color: '#FFE01B' },
+    { name: 'Sheets',     Icon: SiGooglesheets, color: '#188038' },
+    { name: 'Calendly',   Icon: SiCalendly,     color: '#006BFF' },
+    { name: 'QuickBooks', Icon: SiQuickbooks,   color: '#2CA01C' },
+    { name: 'Notion',     Icon: SiNotion,       color: t.text },
+    { name: 'Trello',     Icon: SiTrello,       color: '#0052CC' },
+    { name: 'Stripe',     Icon: SiStripe,       color: '#635BFF' },
+    { name: 'Dropbox',    Icon: SiDropbox,      color: '#0061FF' },
+    { name: 'Zoom',       Icon: SiZoom,         color: '#2D8CFF' },
   ];
-  // Scattered start positions (foreground, burying the dashboard behind them)
+  // Scattered around the edges, leaving the center clear for the dashboard behind them
   const positions = [
-    { top: '2%',  left: '2%'  }, { top: '58%', left: '0%'  }, { top: '4%',  left: '70%' },
-    { top: '60%', left: '70%' }, { top: '30%', left: '4%'  }, { top: '32%', left: '68%' },
+    { top: '2%',  left: '2%'  }, { top: '2%',  left: '28%' }, { top: '2%',  left: '54%' }, { top: '2%',  left: '80%' },
+    { top: '40%', left: '0%'  },                                                            { top: '40%', left: '82%' },
+    { top: '76%', left: '2%'  }, { top: '76%', left: '28%' }, { top: '76%', left: '54%' }, { top: '76%', left: '80%' },
   ];
-  // Where each tile flies to when consolidated — outward, away from center
-  const flyTo = [
-    { x: -60, y: -50, r: -20 }, { x: -65, y: 55, r: 18 }, { x: 65, y: -55, r: 20 },
-    { x: 68, y: 55, r: -18 },   { x: -70, y: 5, r: -15 },  { x: 70, y: 5, r: 15 },
-  ];
-  const painPoints = ['6 logins a day', '~3 hrs/week stitching data', '$0 of it talking to each other'];
+  // Fly-away direction derived from each tile's position relative to center —
+  // scales to any tool count without hand-picking a direction per tile.
+  const flyTo = positions.map(p => {
+    const left = parseFloat(p.left), top = parseFloat(p.top);
+    const dx = (left - 46) * 2.4, dy = (top - 40) * 2.2;
+    return { x: dx, y: dy, r: dx > 0 ? 22 : -22 };
+  });
+  const painPoints = ['10 logins a day', '~5 hrs/week stitching data', '$0 of it talking to each other'];
 
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{
-        position: 'relative', height: `${168 * size}px`,
-        border: `1px dashed ${t.border}`, borderRadius: `${8 * size}px`,
-        marginBottom: `${10 * size}px`, overflow: 'hidden',
+        position: 'relative', flex: '1 1 auto', minHeight: `${260 * size}px`,
+        border: `1px dashed ${t.border}`, borderRadius: `${10 * size}px`,
+        marginBottom: `${12 * size}px`, overflow: 'hidden',
       }}>
         {/* ── background: the business's own dashboard, buried under tools ── */}
         <div style={{
           position: 'absolute', top: '50%', left: '50%', zIndex: 1,
-          width: '58%',
-          border: `1px solid ${t.border}`, borderRadius: `${6 * size}px`, overflow: 'hidden',
+          width: '64%',
+          border: `1px solid ${t.border}`, borderRadius: `${8 * size}px`, overflow: 'hidden',
           background: t.surface || t.bg,
-          boxShadow: `0 ${6 * size}px ${18 * size}px rgba(0,0,0,0.10)`,
+          boxShadow: `0 ${10 * size}px ${28 * size}px rgba(0,0,0,0.12)`,
           opacity: merged ? 1 : 0.4,
           filter: merged ? 'saturate(1)' : 'saturate(0.3)',
-          transform: merged ? 'translate(-50%, -50%) scale(1.08)' : 'translate(-50%, -50%) scale(1)',
+          transform: merged ? 'translate(-50%, -50%) scale(1.1)' : 'translate(-50%, -50%) scale(1)',
           transition: 'opacity 0.6s ease 0.3s, filter 0.6s ease 0.3s, transform 0.6s cubic-bezier(0.4,0,0.2,1) 0.3s',
         }}>
-          <div style={{ display: 'flex', gap: `${4 * size}px`, padding: `${5 * size}px ${8 * size}px`, background: t.bgAlt, borderBottom: `1px solid ${t.border}` }}>
-            {[0, 1, 2].map(i => <span key={i} style={{ width: `${4 * size}px`, height: `${4 * size}px`, borderRadius: '50%', background: t.border }} />)}
+          <div style={{ display: 'flex', gap: `${6 * size}px`, padding: `${8 * size}px ${12 * size}px`, background: t.bgAlt, borderBottom: `1px solid ${t.border}` }}>
+            {[0, 1, 2].map(i => <span key={i} style={{ width: `${6 * size}px`, height: `${6 * size}px`, borderRadius: '50%', background: t.border }} />)}
           </div>
-          <div style={{ padding: `${10 * size}px` }}>
+          <div style={{ padding: `${18 * size}px` }}>
             <div style={{
-              fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, letterSpacing: '0.06em', marginBottom: `${6 * size}px`,
+              fontFamily: theme.fonts.mono, fontSize: `${11 * size}px`, letterSpacing: '0.06em', marginBottom: `${10 * size}px`,
               color: merged ? t.accent : t.textFaint, transition: 'color 0.4s ease 0.5s',
             }}>
               {merged ? COMPANY.name.toUpperCase() : 'YOUR BUSINESS'}
             </div>
             {[72, 50, 62].map((w, i) => (
-              <div key={i} style={{ height: `${5 * size}px`, width: `${w}%`, borderRadius: `${2 * size}px`, background: t.bgAlt, marginBottom: `${4 * size}px` }} />
+              <div key={i} style={{ height: `${9 * size}px`, width: `${w}%`, borderRadius: `${3 * size}px`, background: t.bgAlt, marginBottom: `${7 * size}px` }} />
             ))}
             <div style={{
-              display: 'flex', alignItems: 'center', gap: `${4 * size}px`, marginTop: `${8 * size}px`,
-              fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.positive || t.accent,
+              display: 'flex', alignItems: 'center', gap: `${6 * size}px`, marginTop: `${12 * size}px`,
+              fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, color: t.positive || t.accent,
               opacity: merged ? 1 : 0, transition: 'opacity 0.4s ease 0.9s',
             }}>
-              <Check size={9 * size} strokeWidth={2.5} /> One dashboard. Everything visible.
+              <Check size={13 * size} strokeWidth={2.5} /> One dashboard. Everything visible.
             </div>
           </div>
         </div>
@@ -267,52 +275,52 @@ function MockupProblem({ theme, size }) {
         {tools.map((tool, i) => (
           <div key={tool.name} style={{
             position: 'absolute', ...positions[i], zIndex: 2,
-            width: `${62 * size}px`,
-            border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, overflow: 'hidden',
+            width: `${104 * size}px`,
+            border: `1px solid ${t.border}`, borderRadius: `${7 * size}px`, overflow: 'hidden',
             background: t.surface || t.bg,
-            boxShadow: `0 ${4 * size}px ${10 * size}px rgba(0,0,0,0.12)`,
+            boxShadow: `0 ${6 * size}px ${16 * size}px rgba(0,0,0,0.14)`,
             opacity: merged ? 0 : 1,
             pointerEvents: merged ? 'none' : 'auto',
-            animation: merged ? 'none' : `jitter 2.6s ease-in-out ${i * 0.22}s infinite`,
-            transform: merged ? `translate(${flyTo[i].x * size}px, ${flyTo[i].y * size}px) scale(0.55) rotate(${flyTo[i].r}deg)` : 'none',
+            animation: merged ? 'none' : `jitter 2.8s ease-in-out ${i * 0.18}s infinite`,
+            transform: merged ? `translate(${flyTo[i].x * size}px, ${flyTo[i].y * size}px) scale(0.5) rotate(${flyTo[i].r}deg)` : 'none',
             transition: 'transform 0.55s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: `${3 * size}px`, padding: `${4 * size}px ${6 * size}px`, borderBottom: `1px solid ${t.border}`, background: t.bgAlt }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, padding: `${7 * size}px ${9 * size}px`, borderBottom: `1px solid ${t.border}`, background: t.bgAlt }}>
               <span style={{ position: 'relative', display: 'flex' }}>
-                <tool.Icon size={9 * size} color={tool.color} strokeWidth={2.2} />
+                <tool.Icon size={17 * size} color={tool.color} />
                 <span style={{
-                  position: 'absolute', top: `-${2 * size}px`, right: `-${2 * size}px`,
-                  width: `${4 * size}px`, height: `${4 * size}px`, borderRadius: '50%',
+                  position: 'absolute', top: `-${3 * size}px`, right: `-${3 * size}px`,
+                  width: `${7 * size}px`, height: `${7 * size}px`, borderRadius: '50%',
                   background: t.negative || '#DB3521',
-                  animation: `pulseDot 1.6s ease-in-out ${i * 0.18}s infinite`,
+                  animation: `pulseDot 1.6s ease-in-out ${i * 0.15}s infinite`,
                 }} />
               </span>
-              <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6 * size}px`, color: t.textMuted, whiteSpace: 'nowrap' }}>{tool.name}</span>
+              <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9.5 * size}px`, color: t.textMuted, whiteSpace: 'nowrap' }}>{tool.name}</span>
             </div>
-            <div style={{ padding: `${5 * size}px ${6 * size}px` }}>
-              <div style={{ height: `${3 * size}px`, width: '80%', borderRadius: '2px', background: t.bgAlt, marginBottom: `${3 * size}px` }} />
-              <div style={{ height: `${3 * size}px`, width: '55%', borderRadius: '2px', background: t.bgAlt }} />
+            <div style={{ padding: `${8 * size}px ${9 * size}px` }}>
+              <div style={{ height: `${4 * size}px`, width: '80%', borderRadius: '2px', background: t.bgAlt, marginBottom: `${5 * size}px` }} />
+              <div style={{ height: `${4 * size}px`, width: '55%', borderRadius: '2px', background: t.bgAlt }} />
             </div>
           </div>
         ))}
       </div>
 
       <div style={{
-        display: 'flex', justifyContent: 'space-between', gap: `${6 * size}px`, marginBottom: `${10 * size}px`,
-        opacity: merged ? 0 : 1, maxHeight: merged ? 0 : `${20 * size}px`, overflow: 'hidden',
+        display: 'flex', justifyContent: 'space-between', gap: `${10 * size}px`, marginBottom: `${10 * size}px`, flexShrink: 0,
+        opacity: merged ? 0 : 1, maxHeight: merged ? 0 : `${28 * size}px`, overflow: 'hidden',
         transition: 'opacity 0.3s ease, max-height 0.3s ease',
       }}>
         {painPoints.map(pt => (
-          <span key={pt} style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{pt}</span>
+          <span key={pt} style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.textFaint, letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{pt}</span>
         ))}
       </div>
 
       <button onClick={() => setMerged(m => !m)} style={{
-        width: '100%', padding: `${8 * size}px`,
-        border: `1px solid ${t.accent}`, borderRadius: `${5 * size}px`,
+        width: '100%', padding: `${10 * size}px`, flexShrink: 0,
+        border: `1px solid ${t.accent}`, borderRadius: `${6 * size}px`,
         background: merged ? 'transparent' : t.accent,
         color: merged ? t.accent : (theme.isLight ? '#fff' : t.bg),
-        fontFamily: theme.fonts.mono, fontWeight: 600, fontSize: `${9 * size}px`,
+        fontFamily: theme.fonts.mono, fontWeight: 600, fontSize: `${11 * size}px`,
         letterSpacing: '0.06em', cursor: 'pointer',
       }}>
         {merged ? '↺ Show the tab chaos' : 'Consolidate →'}

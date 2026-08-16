@@ -2,7 +2,7 @@
 // Fullscreen cinematic presenter. Keyboard nav. Auto-play mode.
 // ESC always exits. 'A' toggles auto-play.
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import SlideRenderer from './SlideRenderer.jsx';
@@ -12,6 +12,7 @@ export default function PresentMode({ controls, deck }) {
   const t = theme.colors;
   const SLIDES = deck.slides;
   const slide = SLIDES[controls.current];
+  const [showHints, setShowHints] = useState(false);
 
   // Prevent body scroll while fullscreen
   useEffect(() => {
@@ -145,16 +146,29 @@ export default function PresentMode({ controls, deck }) {
         </button>
       </div>
 
-      {/* Keyboard hints */}
-      <div style={{
-        position: 'absolute', bottom: '70px', right: '20px',
-        fontFamily: theme.fonts.mono, fontSize: '8px',
-        color: t.textFaint, letterSpacing: '0.1em', lineHeight: 1.8,
-        textAlign: 'right', pointerEvents: 'none',
-      }}>
-        <div>← → NAVIGATE</div>
-        <div>A  AUTO-PLAY</div>
-        <div>ESC  EXIT</div>
+      {/* Keyboard hints — hidden by default, small "i" reveals them on hover */}
+      <div
+        onMouseEnter={() => setShowHints(true)}
+        onMouseLeave={() => setShowHints(false)}
+        style={{ position: 'absolute', bottom: '70px', right: '20px' }}
+      >
+        <div style={{
+          width: '20px', height: '20px', borderRadius: '50%',
+          border: `1px solid ${t.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: theme.fonts.mono, fontSize: '10px', color: t.textFaint,
+          cursor: 'default', marginLeft: 'auto',
+        }}>i</div>
+        {showHints && (
+          <div style={{
+            marginTop: '8px', fontFamily: theme.fonts.mono, fontSize: '8px',
+            color: t.textFaint, letterSpacing: '0.1em', lineHeight: 1.8,
+            textAlign: 'right', pointerEvents: 'none',
+          }}>
+            <div>← → NAVIGATE</div>
+            <div>A  AUTO-PLAY</div>
+            <div>ESC  EXIT</div>
+          </div>
+        )}
       </div>
     </div>
   );
