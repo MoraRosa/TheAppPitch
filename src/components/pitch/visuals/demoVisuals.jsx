@@ -198,6 +198,18 @@ function SectionLabel({ size, theme, children }) {
 
 
 // ── 2. problem — scattered tools consolidate on click ──────────────────────────
+// Placeholder mark for Peak — no real logo exists yet, so this is a simple
+// literal "summit" glyph (a peak, for Peak) in the theme's accent color.
+// Swap this out the day a real logo exists; nothing else references it.
+function PeakMark({ size, color }) {
+  return (
+    <svg width={44 * size} height={44 * size} viewBox="0 0 64 64" style={{ filter: `drop-shadow(0 0 ${10 * size}px ${color}55)` }}>
+      <path d="M32 6 L58 54 H6 Z" fill={color} />
+      <path d="M32 6 L41 23 L32 18 L23 23 Z" fill="#fff" fillOpacity="0.92" />
+    </svg>
+  );
+}
+
 function MockupProblem({ theme, size }) {
   const t = theme.colors;
   const [merged, setMerged] = useState(false);
@@ -236,6 +248,22 @@ function MockupProblem({ theme, size }) {
         border: `1px dashed ${t.border}`, borderRadius: `${10 * size}px`,
         marginBottom: `${12 * size}px`, overflow: 'hidden',
       }}>
+        {/* BEFORE / AFTER badge — the instant-read takeaway */}
+        <div style={{
+          position: 'absolute', top: `${10 * size}px`, left: `${10 * size}px`, zIndex: 3,
+          display: 'flex', alignItems: 'center', gap: `${6 * size}px`,
+          padding: `${5 * size}px ${11 * size}px`, borderRadius: `${5 * size}px`,
+          background: merged ? t.accent : t.bgDeep || t.text,
+          transition: 'background 0.4s ease',
+        }}>
+          <span style={{
+            fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${9.5 * size}px`,
+            letterSpacing: '0.1em', color: merged ? (theme.isLight ? '#fff' : t.bg) : t.bg,
+          }}>
+            {merged ? 'AFTER — 1 platform' : 'BEFORE — 10 tools'}
+          </span>
+        </div>
+
         {/* ── background: the business's own dashboard, buried under tools ── */}
         <div style={{
           position: 'absolute', top: '50%', left: '50%', zIndex: 1,
@@ -243,32 +271,40 @@ function MockupProblem({ theme, size }) {
           border: `1px solid ${t.border}`, borderRadius: `${8 * size}px`, overflow: 'hidden',
           background: t.surface || t.bg,
           boxShadow: `0 ${10 * size}px ${28 * size}px rgba(0,0,0,0.12)`,
-          opacity: merged ? 1 : 0.4,
-          filter: merged ? 'saturate(1)' : 'saturate(0.3)',
-          transform: merged ? 'translate(-50%, -50%) scale(1.1)' : 'translate(-50%, -50%) scale(1)',
-          transition: 'opacity 0.6s ease 0.3s, filter 0.6s ease 0.3s, transform 0.6s cubic-bezier(0.4,0,0.2,1) 0.3s',
+          opacity: merged ? 1 : 0.72,
+          transform: merged ? 'translate(-50%, -50%) scale(1.12)' : 'translate(-50%, -50%) scale(1)',
+          transition: 'opacity 0.6s ease 0.3s, transform 0.6s cubic-bezier(0.4,0,0.2,1) 0.3s',
         }}>
-          <div style={{ display: 'flex', gap: `${6 * size}px`, padding: `${8 * size}px ${12 * size}px`, background: t.bgAlt, borderBottom: `1px solid ${t.border}` }}>
-            {[0, 1, 2].map(i => <span key={i} style={{ width: `${6 * size}px`, height: `${6 * size}px`, borderRadius: '50%', background: t.border }} />)}
-          </div>
-          <div style={{ padding: `${18 * size}px` }}>
+          {!merged && (
+            <>
+              <div style={{ display: 'flex', gap: `${6 * size}px`, padding: `${8 * size}px ${12 * size}px`, background: t.bgAlt, borderBottom: `1px solid ${t.border}` }}>
+                {[0, 1, 2].map(i => <span key={i} style={{ width: `${6 * size}px`, height: `${6 * size}px`, borderRadius: '50%', background: t.border }} />)}
+              </div>
+              <div style={{ padding: `${18 * size}px` }}>
+                <div style={{ fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${12 * size}px`, letterSpacing: '0.06em', marginBottom: `${10 * size}px`, color: t.text }}>
+                  YOUR BUSINESS
+                </div>
+                {[72, 50, 62].map((w, i) => (
+                  <div key={i} style={{ height: `${9 * size}px`, width: `${w}%`, borderRadius: `${3 * size}px`, background: t.bgAlt, marginBottom: `${7 * size}px` }} />
+                ))}
+              </div>
+            </>
+          )}
+          {merged && (
             <div style={{
-              fontFamily: theme.fonts.mono, fontSize: `${11 * size}px`, letterSpacing: '0.06em', marginBottom: `${10 * size}px`,
-              color: merged ? t.accent : t.textFaint, transition: 'color 0.4s ease 0.5s',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              padding: `${28 * size}px ${18 * size}px`, gap: `${10 * size}px`,
+              animation: 'revealIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.35s both',
             }}>
-              {merged ? COMPANY.name.toUpperCase() : 'YOUR BUSINESS'}
+              <PeakMark size={size} color={t.accent} />
+              <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${18 * size}px`, color: t.text, letterSpacing: '0.02em' }}>
+                {COMPANY.name.toUpperCase()}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px`, fontFamily: theme.fonts.mono, fontSize: `${9.5 * size}px`, color: t.positive || t.accent }}>
+                <Check size={12 * size} strokeWidth={2.5} /> One dashboard. Everything visible.
+              </div>
             </div>
-            {[72, 50, 62].map((w, i) => (
-              <div key={i} style={{ height: `${9 * size}px`, width: `${w}%`, borderRadius: `${3 * size}px`, background: t.bgAlt, marginBottom: `${7 * size}px` }} />
-            ))}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: `${6 * size}px`, marginTop: `${12 * size}px`,
-              fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, color: t.positive || t.accent,
-              opacity: merged ? 1 : 0, transition: 'opacity 0.4s ease 0.9s',
-            }}>
-              <Check size={13 * size} strokeWidth={2.5} /> One dashboard. Everything visible.
-            </div>
-          </div>
+          )}
         </div>
 
         {/* ── foreground: the scattered tools burying it ── */}
@@ -311,7 +347,10 @@ function MockupProblem({ theme, size }) {
         transition: 'opacity 0.3s ease, max-height 0.3s ease',
       }}>
         {painPoints.map(pt => (
-          <span key={pt} style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.textFaint, letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{pt}</span>
+          <span key={pt} style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px`, fontFamily: theme.fonts.mono, fontWeight: 600, fontSize: `${9.5 * size}px`, color: t.text, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
+            <span style={{ width: `${5 * size}px`, height: `${5 * size}px`, borderRadius: '50%', background: t.negative || '#DB3521', flexShrink: 0 }} />
+            {pt}
+          </span>
         ))}
       </div>
 
@@ -328,6 +367,7 @@ function MockupProblem({ theme, size }) {
       <style>{`
         @keyframes jitter { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
         @keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }
+        @keyframes revealIn { from { opacity: 0; transform: scale(0.75); } to { opacity: 1; transform: scale(1); } }
       `}</style>
     </div>
   );
