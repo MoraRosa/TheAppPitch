@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
-import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles } from 'lucide-react';
+import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart } from 'lucide-react';
 import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom } from 'react-icons/si';
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
@@ -248,7 +248,7 @@ function MockupProblem({ theme, size }) {
     const dx = (left - 46) * 2.4, dy = (top - 40) * 2.2;
     return { x: dx, y: dy, r: dx > 0 ? 22 : -22 };
   });
-  const painPoints = ['10 logins a day', '~5 hrs/week stitching data', '$0 of it talking to each other'];
+  const painPoints = ['10 logins a day', '~5 hrs/week stitching data', '0% of it talking to each other'];
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -386,43 +386,99 @@ function MockupProblem({ theme, size }) {
 // ── 3. platform — module tour ────────────────────────────────────────────────────
 function MockupPlatform({ theme, size }) {
   const t = theme.colors;
-  const modules = [
-    { icon: '◈', name: 'Storefront', desc: 'Branded, theme-driven storefront pages.' },
-    { icon: '▤', name: 'Products', desc: 'Catalog, variants, and inventory in one place.' },
-    { icon: '◉', name: 'Orders', desc: 'From cart to fulfillment, tracked end to end.' },
-    { icon: '◆', name: 'Payments', desc: 'Stripe and PayPal, built in, no extra setup.' },
-    { icon: '△', name: 'Shipping', desc: 'Rates and fulfillment configured per business.' },
-    { icon: '●', name: 'Customers', desc: 'Accounts, order history, and reviews.' },
-    { icon: '□', name: 'Content', desc: 'Blog, FAQ, banners, and legal pages.' },
-    { icon: '◇', name: 'Costing', desc: 'Ingredients, suppliers, and batch cost, synced.' },
-  ];
-  const [active, setActive] = useState(0);
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const id = setTimeout(() => setReady(true), 60); return () => clearTimeout(id); }, []);
+
+  const journalPost = EMBER_MOSS_JOURNAL[0];
+  const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
+
+  const Tile = ({ icon: Icon, label, span = 1, children, delay = 0 }) => (
+    <div style={{
+      gridColumn: `span ${span}`,
+      border: `1px solid ${t.border}`, borderRadius: `${7 * size}px`,
+      padding: `${10 * size}px`, background: t.surface || t.bg,
+      boxShadow: `0 ${3 * size}px ${8 * size}px rgba(0,0,0,0.05)`,
+      opacity: ready ? 1 : 0, transform: ready ? 'translateY(0)' : 'translateY(6px)',
+      transition: `opacity 0.4s ease ${delay}s, transform 0.4s ease ${delay}s`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px`, marginBottom: `${8 * size}px` }}>
+        <Icon size={13 * size} color={t.accent} strokeWidth={2} />
+        <span style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, color: t.text }}>{label}</span>
+      </div>
+      {children}
+    </div>
+  );
+
   return (
-    <div style={{ width: '100%' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: `${6 * size}px`, marginBottom: `${10 * size}px` }}>
-        {modules.map((m, i) => (
-          <button key={m.name} onClick={() => setActive(i)} style={{
-            padding: `${8 * size}px ${4 * size}px`, textAlign: 'center',
-            border: `1px solid ${active === i ? t.accent : t.border}`,
-            background: active === i ? `${t.accent}12` : 'transparent',
-            borderRadius: `${5 * size}px`, cursor: 'pointer',
-          }}>
-            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${14 * size}px`, color: t.accent, marginBottom: '2px' }}>{m.icon}</div>
-            <div style={{ fontFamily: theme.fonts.body, fontWeight: 500, fontSize: `${7.5 * size}px`, color: t.text }}>{m.name}</div>
-          </button>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: `${8 * size}px`, width: '100%' }}>
+
+      <Tile icon={Store} label="Storefront" span={2} delay={0}>
+        <div style={{ background: '#1B3B2E', borderRadius: `${5 * size}px`, padding: `${9 * size}px ${12 * size}px` }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: `${11 * size}px`, color: '#F5F1E4' }}>{EMBER_MOSS_BRAND.name}</div>
+          <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: '#C9A227', letterSpacing: '0.06em', marginTop: '2px' }}>BOTANICAL THEME · LIVE</div>
+        </div>
+      </Tile>
+
+      <Tile icon={Package} label="Products" span={1} delay={0.06}>
+        <div style={{ display: 'flex', gap: `${4 * size}px`, marginBottom: `${5 * size}px` }}>
+          {products.map(p => <div key={p.name} style={{ flex: 1 }}><ProductImg src={p.img} alt={p.name} size={size} radius={3} /></div>)}
+        </div>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint }}>{EMBER_MOSS_PRODUCTS.length} products</div>
+      </Tile>
+
+      <Tile icon={CreditCard} label="Payments" span={1} delay={0.12}>
+        <div style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.text }}>$9,170</div>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint }}>via Stripe Connect</div>
+      </Tile>
+
+      <Tile icon={ShoppingCart} label="Orders" span={1} delay={0.18}>
+        {[{ id: '#1049', s: 'Shipped' }, { id: '#1048', s: 'Processing' }].map(o => (
+          <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, marginBottom: '3px' }}>
+            <span style={{ color: t.textMuted }}>{o.id}</span>
+            <span style={{ color: o.s === 'Shipped' ? (t.positive || t.accent) : t.textFaint }}>{o.s}</span>
+          </div>
         ))}
-      </div>
-      <div style={{
-        padding: `${10 * size}px ${12 * size}px`, borderRadius: `${5 * size}px`,
-        background: t.bgAlt, border: `1px solid ${t.border}`,
-        fontFamily: theme.fonts.body, fontSize: `${9.5 * size}px`, color: t.textMuted,
-        minHeight: `${28 * size}px`,
-      }}>
-        {modules[active].desc}
-      </div>
+      </Tile>
+
+      <Tile icon={FileText} label="Content" span={2} delay={0.24}>
+        <div style={{ display: 'flex', gap: `${8 * size}px`, alignItems: 'center' }}>
+          <div style={{ width: `${34 * size}px`, flexShrink: 0 }}><ProductImg src={journalPost.img} alt={journalPost.title} size={size} radius={3} fallbackIcon={journalPost.icon} /></div>
+          <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.4 }}>{journalPost.title}</div>
+        </div>
+      </Tile>
+
+      <Tile icon={Truck} label="Shipping" span={1} delay={0.3}>
+        <div style={{ fontFamily: theme.fonts.body, fontSize: `${8 * size}px`, color: t.text, marginBottom: '2px' }}>Rates configured</div>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint }}>Ships in 2–3 days</div>
+      </Tile>
+
+      <Tile icon={Users} label="Customers" span={1} delay={0.36}>
+        <div style={{ display: 'flex', marginBottom: `${5 * size}px` }}>
+          {['A', 'S', 'M', 'D'].map((initial, i) => (
+            <div key={i} style={{
+              width: `${16 * size}px`, height: `${16 * size}px`, borderRadius: '50%',
+              background: `${t.accent}${['22', '33', '22', '33'][i]}`, color: t.accent,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, fontWeight: 700,
+              marginLeft: i > 0 ? `-${5 * size}px` : 0, border: `1.5px solid ${t.surface || t.bg}`,
+            }}>{initial}</div>
+          ))}
+        </div>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint }}>1,204 customers</div>
+      </Tile>
+
+      <Tile icon={PieChart} label="Costing" span={1} delay={0.42}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: `${4 * size}px` }}>
+          <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.positive || t.accent }}>62%</span>
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint }}>margin</span>
+        </div>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, marginTop: '2px' }}>ingredients synced</div>
+      </Tile>
+
     </div>
   );
 }
+
 
 function MockupCustomer({ theme, size }) {
   const t = theme.colors;
