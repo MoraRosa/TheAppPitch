@@ -14,6 +14,7 @@ export function usePitchControls(slideCount, { defaultAutoSlideMs = 5000, useAud
   const [isFullscreen, setFS]     = useState(false);
   const [isAutoPlay, setAutoPlay] = useState(false);
   const [direction, setDirection] = useState(1);
+  const [barsHidden, setBarsHidden] = useState(false);
   const autoTimer  = useRef(null);
   const audioRef   = useRef(null);
 
@@ -50,7 +51,13 @@ export function usePitchControls(slideCount, { defaultAutoSlideMs = 5000, useAud
     cleanupAudio();
   }, [cleanupAudio]);
 
-  const toggleAutoPlay = useCallback(() => setAutoPlay(a => !a), []);
+  const togglePresentBars = useCallback(() => setBarsHidden(h => !h), []);
+
+  const toggleAutoPlay = useCallback(() => setAutoPlay(a => {
+    const turningOn = !a;
+    if (turningOn) setBarsHidden(true); // starting autoplay means you're presenting now
+    return turningOn;
+  }), []);
 
   // Keyboard nav
   useEffect(() => {
@@ -60,10 +67,11 @@ export function usePitchControls(slideCount, { defaultAutoSlideMs = 5000, useAud
       if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); prev(); }
       if (e.key === 'Escape') exitFullscreen();
       if (e.key === 'a' || e.key === 'A') toggleAutoPlay();
+      if (e.key === 'p' || e.key === 'P') togglePresentBars();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isFullscreen, next, prev, exitFullscreen, toggleAutoPlay]);
+  }, [isFullscreen, next, prev, exitFullscreen, toggleAutoPlay, togglePresentBars]);
 
   // Auto-play: audio-synced if this deck has audio enabled, timer-based otherwise
   useEffect(() => {
@@ -90,8 +98,8 @@ export function usePitchControls(slideCount, { defaultAutoSlideMs = 5000, useAud
   }, [isAutoPlay, isFullscreen, current, next, cleanupAudio, defaultAutoSlideMs, audioActive]);
 
   return {
-    current, direction, isFullscreen, isAutoPlay,
-    goTo, next, prev, enterFullscreen, exitFullscreen, toggleAutoPlay,
+    current, direction, isFullscreen, isAutoPlay, barsHidden,
+    goTo, next, prev, enterFullscreen, exitFullscreen, toggleAutoPlay, togglePresentBars,
     isFirst:  current === 0,
     isLast:   current === SLIDE_COUNT - 1,
     progress: SLIDE_COUNT ? ((current + 1) / SLIDE_COUNT) * 100 : 0,

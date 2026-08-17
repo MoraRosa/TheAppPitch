@@ -2,9 +2,10 @@
 // Fullscreen cinematic presenter. Keyboard nav. Auto-play mode.
 // ESC always exits. 'A' toggles auto-play.
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext.jsx';
+import { SlideTransitionContext } from '../../context/SlideTransitionContext.jsx';
 import SlideRenderer from './SlideRenderer.jsx';
 
 export default function PresentMode({ controls, deck }) {
@@ -13,27 +14,13 @@ export default function PresentMode({ controls, deck }) {
   const SLIDES = deck.slides;
   const slide = SLIDES[controls.current];
   const [showHints, setShowHints] = useState(false);
-  const [chromeVisible, setChromeVisible] = useState(true);
-  const idleTimer = useRef(null);
-
-  // Auto-hide the toolbar/nav bars after a few seconds idle — standard
-  // presenter behavior (Keynote, fullscreen video players). Keyboard
-  // shortcuts keep working the whole time regardless of chrome visibility.
-  useEffect(() => {
-    const wake = () => {
-      setChromeVisible(true);
-      clearTimeout(idleTimer.current);
-      idleTimer.current = setTimeout(() => setChromeVisible(false), 2600);
-    };
-    wake();
-    window.addEventListener('mousemove', wake);
-    window.addEventListener('keydown', wake);
-    return () => {
-      window.removeEventListener('mousemove', wake);
-      window.removeEventListener('keydown', wake);
-      clearTimeout(idleTimer.current);
-    };
-  }, []);
+  const chromeVisible = !controls.barsHidden;
+  // True once THIS slide's own entrance transition has actually finished —
+  // driven by Framer Motion's real onAnimationComplete event below, reset
+  // whenever the slide changes. Mockups read this via useSlideEntered()
+  // instead of guessing with their own timer.
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { setEntered(false); }, [slide.id]);
 
   // Prevent body scroll while fullscreen
   useEffect(() => {
@@ -119,9 +106,12 @@ export default function PresentMode({ controls, deck }) {
             animate="center"
             exit="exit"
             transition={{ duration: parseFloat(theme.motion.enter), ease: [0.16, 1, 0.3, 1] }}
+            onAnimationComplete={(definition) => { if (definition === 'center') setEntered(true); }}
             style={{ position: 'absolute', inset: 0 }}
           >
-            <SlideRenderer slide={slide} visuals={deck.visuals} isFullscreen />
+            <SlideTransitionContext.Provider value={entered}>
+              <SlideRenderer slide={slide} visuals={deck.visuals} isFullscreen />
+            </SlideTransitionContext.Provider>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -198,6 +188,7 @@ export default function PresentMode({ controls, deck }) {
           }}>
             <div>← → NAVIGATE</div>
             <div>A  AUTO-PLAY</div>
+            <div>P  HIDE/SHOW BARS</div>
             <div>ESC  EXIT</div>
           </div>
         )}

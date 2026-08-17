@@ -11,6 +11,7 @@ import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNot
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
 import { ProductDetailView, BlogPostView, ContactView } from './storefrontViews.jsx';
+import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
 import { COMPANY } from '../../../data/config.js';
 import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, EMBER_MOSS_JOURNAL, EMBER_MOSS_TESTIMONIALS, EMBER_MOSS_FAQ, STOREFRONT_THEME_SWATCHES } from '../../../data/decks/emberMoss.js';
 
@@ -213,20 +214,17 @@ function PeakMark({ size, color }) {
 function MockupProblem({ theme, size }) {
   const t = theme.colors;
   const [merged, setMerged] = useState(false);
-  // `mode="wait"` in PresentMode means this component mounts right as the
-  // slide's own entrance transition starts, and that transition runs up to
-  // 0.6s depending on theme. An infinite CSS keyframe animation inserted
-  // while an ancestor is mid-transform can get stuck at its first frame in
-  // some browsers — a plain state toggle doesn't reliably fix this because
-  // it can still land mid-transition. The robust fix: force a genuine DOM
-  // remount (via key) once the parent transition is guaranteed finished —
-  // fresh elements always start their animations correctly.
+  // Infinite CSS keyframe animations inserted while an ancestor is
+  // mid-transform can get stuck at their first frame in some browsers.
+  // slideEntered comes from PresentMode's real onAnimationComplete event —
+  // not a guessed duration — so remounting the tiles (via key) the instant
+  // it flips true reliably starts the animation exactly when it's safe to,
+  // whether that's 300ms or 600ms depending on the active theme.
+  const slideEntered = useSlideEntered();
   const [animKey, setAnimKey] = useState(0);
   useEffect(() => {
-    setAnimKey(0);
-    const id = setTimeout(() => setAnimKey(k => k + 1), 650);
-    return () => clearTimeout(id);
-  }, []);
+    if (slideEntered) setAnimKey(k => k + 1);
+  }, [slideEntered]);
 
   const tools = [
     { name: 'Shopify',    Icon: SiShopify,      color: '#95BF47' },
