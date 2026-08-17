@@ -2,11 +2,25 @@
 // Fullscreen cinematic presenter. Keyboard nav. Auto-play mode.
 // ESC always exits. 'A' toggles auto-play.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { SlideTransitionContext } from '../../context/SlideTransitionContext.jsx';
 import SlideRenderer from './SlideRenderer.jsx';
+
+// Fully static — direction-awareness lives in the function arguments (dir),
+// not in any prop or state, so this never needs to be recreated. Hoisted out
+// of the component entirely: passing a fresh object reference to a motion.div
+// on every render (this was previously defined inline in the component body)
+// can cause Framer Motion to glitch/re-evaluate an in-progress animation,
+// which is very likely what caused the "slide 5 got glitchy" symptom the
+// moment this component started re-rendering more (from the new entrance
+// tracking below) — the bug was already latent, this just made it visible.
+const SLIDE_VARIANTS = {
+  enter:  (dir) => ({ opacity: 0, y: dir > 0 ? 40  : -40 }),
+  center: { opacity: 1, y: 0 },
+  exit:   (dir) => ({ opacity: 0, y: dir > 0 ? -40 :  40 }),
+};
 
 export default function PresentMode({ controls, deck }) {
   const { theme } = useTheme();
@@ -28,11 +42,13 @@ export default function PresentMode({ controls, deck }) {
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-  const variants = {
-    enter:  (dir) => ({ opacity: 0, y: dir > 0 ? 40  : -40 }),
-    center: { opacity: 1, y: 0 },
-    exit:   (dir) => ({ opacity: 0, y: dir > 0 ? -40 :  40 }),
-  };
+  // Same reasoning as SLIDE_VARIANTS above — stable reference, recomputed
+  // only when the actual duration value changes (theme switch), not on
+  // every render.
+  const slideTransition = useMemo(
+    () => ({ duration: parseFloat(theme.motion.enter), ease: [0.16, 1, 0.3, 1] }),
+    [theme.motion.enter]
+  );
 
   return (
     <div style={{
@@ -101,11 +117,11 @@ export default function PresentMode({ controls, deck }) {
           <motion.div
             key={slide.id}
             custom={controls.direction}
-            variants={variants}
+            variants={SLIDE_VARIANTS}
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: parseFloat(theme.motion.enter), ease: [0.16, 1, 0.3, 1] }}
+            transition={slideTransition}
             onAnimationComplete={(definition) => { if (definition === 'center') setEntered(true); }}
             style={{ position: 'absolute', inset: 0 }}
           >
