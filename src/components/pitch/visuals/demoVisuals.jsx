@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
-import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart } from 'lucide-react';
+import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart, Calendar } from 'lucide-react';
 import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom, SiHubspot } from 'react-icons/si';
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
@@ -16,24 +16,7 @@ import { COMPANY, PRICING } from '../../../data/config.js';
 import { COMPETITOR_COST_STACK } from '../../../data/financials.js';
 import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, EMBER_MOSS_JOURNAL, EMBER_MOSS_TESTIMONIALS, EMBER_MOSS_FAQ, STOREFRONT_THEME_SWATCHES } from '../../../data/decks/emberMoss.js';
 
-// ── shared bits ────────────────────────────────────────────────────────────────
-function Chip({ label, active, onClick, theme, size }) {
-  const t = theme.colors;
-  return (
-    <button onClick={onClick} style={{
-      padding: `${5 * size}px ${10 * size}px`,
-      borderRadius: '100px',
-      border: `1px solid ${active ? t.accent : t.border}`,
-      background: active ? t.accent : 'transparent',
-      color: active ? (theme.isLight ? '#fff' : t.bg) : t.textMuted,
-      fontFamily: theme.fonts.body, fontWeight: 500,
-      fontSize: `${9.5 * size}px`, cursor: 'pointer',
-      transition: 'all 0.15s ease',
-    }}>
-      {label}
-    </button>
-  );
-}
+
 
 // ── 1. welcome — hero storefront frame ──────────────────────────────────────────
 // Ember & Moss is the example brand shown throughout the storefront-facing
@@ -1319,29 +1302,45 @@ function MockupPortal({ theme, size }) {
 function MockupWhy({ theme, size }) {
   const t = theme.colors;
   const audiences = [
-    { id: 'makers', label: 'Makers', line: 'Ingredients, suppliers, and batch cost — no more spreadsheets.' },
-    { id: 'service', label: 'Service businesses', line: 'Bookings, customers, and invoicing without five different logins.' },
-    { id: 'retail', label: 'Retailers', line: 'A storefront and back office that actually share the same data.' },
+    { Icon: Package,  label: 'Makers',            line: 'Ingredients, suppliers, and batch cost — no more spreadsheets.', detail: 'Costing built into every product' },
+    { Icon: Calendar, label: 'Service businesses', line: 'Bookings, customers, and invoicing without five different logins.', detail: 'Book online, get paid automatically' },
+    { Icon: Store,    label: 'Retailers',          line: 'A storefront and back office that actually share the same data.', detail: 'One inventory, every channel' },
   ];
-  const [active, setActive] = useState('makers');
-  const current = audiences.find(a => a.id === active);
+
   return (
-    <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', gap: `${6 * size}px`, marginBottom: `${12 * size}px`, flexWrap: 'wrap' }}>
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px`, flex: '1 1 auto', minHeight: `${140 * size}px`, marginBottom: `${12 * size}px` }}>
         {audiences.map(a => (
-          <Chip key={a.id} label={a.label} active={active === a.id} onClick={() => setActive(a.id)} theme={theme} size={size} />
+          <div key={a.label} style={{
+            border: `1px solid ${t.border}`, borderRadius: `${7 * size}px`, padding: `${12 * size}px`,
+            display: 'flex', flexDirection: 'column', background: t.surface || t.bg,
+            boxShadow: `0 ${3 * size}px ${8 * size}px rgba(0,0,0,0.05)`,
+          }}>
+            <a.Icon size={18 * size} color={t.accent} strokeWidth={1.8} />
+            <div style={{ fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${9.5 * size}px`, color: t.text, marginTop: `${8 * size}px`, marginBottom: `${5 * size}px` }}>{a.label}</div>
+            <div style={{ fontFamily: theme.fonts.body, fontSize: `${8 * size}px`, color: t.textMuted, lineHeight: 1.55, flex: 1 }}>{a.line}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: `${4 * size}px`, marginTop: `${8 * size}px`, paddingTop: `${8 * size}px`, borderTop: `1px solid ${t.border}` }}>
+              <Check size={9 * size} color={t.positive || t.accent} strokeWidth={2.5} />
+              <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.positive || t.accent }}>{a.detail}</span>
+            </div>
+          </div>
         ))}
       </div>
+
       <div style={{
-        padding: `${12 * size}px`, borderRadius: `${6 * size}px`, background: t.bgAlt,
-        border: `1px solid ${t.border}`, fontFamily: theme.fonts.body,
-        fontSize: `${10 * size}px`, color: t.text, minHeight: `${30 * size}px`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${12 * size}px`,
+        padding: `${14 * size}px`, borderRadius: `${8 * size}px`, background: t.bgAlt, flexShrink: 0,
       }}>
-        {current.line}
+        <PeakMark size={size * 0.7} color={t.accent} />
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${11 * size}px`, color: t.text }}>Not another website builder.</div>
+          <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint }}>The infrastructure behind the storefront, too.</div>
+        </div>
       </div>
     </div>
   );
 }
+
 
 // ── 10. live-demo — minimal cue card ─────────────────────────────────────────────
 function MockupLiveDemo({ theme, size }) {
