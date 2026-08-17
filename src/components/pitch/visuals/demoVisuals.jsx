@@ -7,12 +7,13 @@
 import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart } from 'lucide-react';
-import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom } from 'react-icons/si';
+import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom, SiHubspot } from 'react-icons/si';
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
 import { ProductDetailView, BlogPostView, ContactView } from './storefrontViews.jsx';
 import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
-import { COMPANY } from '../../../data/config.js';
+import { COMPANY, PRICING } from '../../../data/config.js';
+import { COMPETITOR_COST_STACK } from '../../../data/financials.js';
 import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, EMBER_MOSS_JOURNAL, EMBER_MOSS_TESTIMONIALS, EMBER_MOSS_FAQ, STOREFRONT_THEME_SWATCHES } from '../../../data/decks/emberMoss.js';
 
 // ── shared bits ────────────────────────────────────────────────────────────────
@@ -1232,49 +1233,87 @@ function WorkflowFulfilled({ theme, size }) {
 function MockupPortal({ theme, size }) {
   const t = theme.colors;
   const [after, setAfter] = useState(false);
-  const scattered = ['Storefront', 'CRM', 'Orders', 'Payments', 'Content', 'Shipping'];
+
+  const SUBS = [
+    { name: 'Shopify',    Icon: SiShopify,   color: '#95BF47', min: 30 },
+    { name: 'Mailchimp',  Icon: SiMailchimp, color: '#FFE01B', min: 20 },
+    { name: 'HubSpot',    Icon: SiHubspot,   color: '#FF7A59', min: 50 },
+    { name: 'Calendly',   Icon: SiCalendly,  color: '#006BFF', min: 20 },
+    { name: 'QuickBooks', Icon: SiQuickbooks,color: '#2CA01C', min: 25 },
+    { name: 'Notion',     Icon: SiNotion,    color: t.text,    min: 15 },
+  ];
+  const total = SUBS.reduce((s, x) => s + x.min, 0);
+  const peakLow = parseInt(PRICING.starter.replace(/[^0-9–-]/g, '').split(/[–-]/)[0], 10);
+  const savings = total - peakLow;
+
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{
-        border: `1px solid ${t.border}`, borderRadius: `${6 * size}px`, padding: `${14 * size}px`,
-        minHeight: `${110 * size}px`, marginBottom: `${10 * size}px`, position: 'relative', overflow: 'hidden',
+        flex: '1 1 auto', minHeight: `${220 * size}px`,
+        border: `1px solid ${t.border}`, borderRadius: `${8 * size}px`, padding: `${16 * size}px`,
+        marginBottom: `${10 * size}px`, position: 'relative', overflow: 'hidden',
       }}>
         {!after ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: `${8 * size}px` }}>
-            {scattered.map(s => (
-              <div key={s} style={{
-                padding: `${8 * size}px`, textAlign: 'center', borderRadius: `${4 * size}px`,
-                border: `1px dashed ${t.border}`, fontFamily: theme.fonts.mono,
-                fontSize: `${7.5 * size}px`, color: t.textFaint,
-              }}>{s}</div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ animation: 'fadeSlideIn 0.3s ease both', display: 'flex', gap: `${10 * size}px` }}>
-            <div style={{ width: `${60 * size}px`, borderRight: `1px solid ${t.border}`, paddingRight: `${10 * size}px` }}>
-              <div style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${10 * size}px`, color: t.accent, marginBottom: `${8 * size}px` }}>{COMPANY.name}</div>
-              {scattered.slice(0, 4).map(s => (
-                <div key={s} style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textMuted, marginBottom: `${5 * size}px` }}>{s}</div>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: `${10 * size}px` }}>
+              What you're paying for today
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px`, flex: 1 }}>
+              {SUBS.map(s => (
+                <div key={s.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${6 * size}px`, padding: `${10 * size}px`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <s.Icon size={16 * size} color={s.color} />
+                  <div>
+                    <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, color: t.text, marginTop: `${6 * size}px` }}>{s.name}</div>
+                    <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint }}>${s.min}+/mo</div>
+                  </div>
+                </div>
               ))}
             </div>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: t.textMuted, textAlign: 'center' }}>
-              One nav.<br />Everything connected.
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: `${10 * size}px`, marginTop: `${10 * size}px`, borderTop: `1px solid ${t.border}` }}>
+              <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Starting at</span>
+              <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${16 * size}px`, color: t.negative || t.text }}>${total}/mo</span>
+            </div>
+          </div>
+        ) : (
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', animation: 'fadeSlideIn 0.35s ease both' }}>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: `${10 * size}px` }}>
+              One subscription
+            </div>
+            <div style={{ border: `1px solid ${t.accent}`, borderRadius: `${7 * size}px`, padding: `${16 * size}px`, flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: `${12 * size}px` }}>
+                <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${14 * size}px`, color: t.text }}>{COMPANY.name}</span>
+                <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${14 * size}px`, color: t.accent }}>{PRICING.starter}/mo</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, flex: 1 }}>
+                {SUBS.map(s => (
+                  <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px` }}>
+                    <Check size={11 * size} color={t.positive || t.accent} strokeWidth={2.5} />
+                    <s.Icon size={12 * size} color={s.color} />
+                    <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textMuted }}>{s.name}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: `${10 * size}px`, marginTop: `${10 * size}px`, borderTop: `1px solid ${t.border}` }}>
+                <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>You save</span>
+                <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${16 * size}px`, color: t.positive || t.accent }}>~${savings}/mo</span>
+              </div>
             </div>
           </div>
         )}
       </div>
       <button onClick={() => setAfter(a => !a)} style={{
-        width: '100%', padding: `${8 * size}px`, border: `1px solid ${t.accent}`,
+        width: '100%', padding: `${9 * size}px`, border: `1px solid ${t.accent}`,
         borderRadius: `${5 * size}px`, background: after ? 'transparent' : t.accent,
         color: after ? t.accent : (theme.isLight ? '#fff' : t.bg),
-        fontFamily: theme.fonts.mono, fontWeight: 600, fontSize: `${9 * size}px`, letterSpacing: '0.06em', cursor: 'pointer',
+        fontFamily: theme.fonts.mono, fontWeight: 600, fontSize: `${9.5 * size}px`, letterSpacing: '0.06em', cursor: 'pointer', flexShrink: 0,
       }}>
-        {after ? '← Show Before' : 'Show After →'}
+        {after ? '← Show what you pay today' : 'Show one subscription →'}
       </button>
       <style>{`@keyframes fadeSlideIn { from { opacity:0; } to { opacity:1; } }`}</style>
     </div>
   );
 }
+
 
 // ── 9. why — audience chips ──────────────────────────────────────────────────────
 function MockupWhy({ theme, size }) {
