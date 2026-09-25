@@ -4,7 +4,7 @@
 // something to a cart, swap a theme. They use theme.colors so they repaint
 // automatically with the presenter's active theme (including Showroom).
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart, Calendar } from 'lucide-react';
 import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom, SiHubspot } from 'react-icons/si';
@@ -12,7 +12,7 @@ import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
 import { ProductDetailView, BlogPostView, ContactView } from './storefrontViews.jsx';
 import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
-import { ScrollReveal, CountUp } from '../motion.jsx';
+import { ScrollReveal, CountUp, Reveal } from '../motion.jsx';
 import { COMPANY, PRICING } from '../../../data/config.js';
 import { COMPETITOR_COST_STACK } from '../../../data/financials.js';
 import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, EMBER_MOSS_JOURNAL, EMBER_MOSS_TESTIMONIALS, EMBER_MOSS_FAQ, STOREFRONT_THEME_SWATCHES } from '../../../data/decks/emberMoss.js';
@@ -843,6 +843,24 @@ function MockupThemeSwitch({ theme, size }) {
   const t = theme.colors;
   const [mt, setMt] = useState(STOREFRONT_THEME_SWATCHES[0]);
   const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
+  const slideEntered = useSlideEntered();
+
+  // Motion-graphics beat: cycle once through every swatch a beat after the
+  // slide opens, so the storefront visibly repaints itself unprompted —
+  // this IS the "watch it repaint live" moment from the speaker note.
+  const userTouchedRef = useRef(false);
+  useEffect(() => {
+    if (!slideEntered) return;
+    userTouchedRef.current = false;
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      if (i >= STOREFRONT_THEME_SWATCHES.length) { clearInterval(id); return; }
+      if (!userTouchedRef.current) setMt(STOREFRONT_THEME_SWATCHES[i]);
+    }, 1300);
+    return () => clearInterval(id);
+  }, [slideEntered]);
+  const pickTheme = (candidate) => { userTouchedRef.current = true; setMt(candidate); };
 
   const Preview = {
     elegant: ElegantPreview,
@@ -860,7 +878,7 @@ function MockupThemeSwitch({ theme, size }) {
       </div>
       <div style={{ display: 'flex', gap: `${6 * size}px`, flexWrap: 'wrap', flexShrink: 0 }}>
         {STOREFRONT_THEME_SWATCHES.map(candidate => (
-          <button key={candidate.id} onClick={() => setMt(candidate)} style={{
+          <button key={candidate.id} onClick={() => pickTheme(candidate)} style={{
             display: 'flex', alignItems: 'center', gap: `${5 * size}px`,
             padding: `${5 * size}px ${9 * size}px`, borderRadius: '100px',
             border: `1px solid ${mt.id === candidate.id ? t.accent : t.border}`,
@@ -1027,6 +1045,25 @@ function MockupWorkflow({ theme, size }) {
   ];
   const [active, setActive] = useState(0);
   const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
+  const slideEntered = useSlideEntered();
+
+  // Motion-graphics beat: walk through all six steps automatically once the
+  // slide opens, ~1.1s apart, so the "one continuous path" reads as motion
+  // rather than a static diagram. Clicking a dot takes over immediately.
+  const autoRef = useRef(false);
+  useEffect(() => {
+    if (!slideEntered) return;
+    setActive(0);
+    autoRef.current = true;
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      if (i >= steps.length) { clearInterval(id); return; }
+      if (autoRef.current) setActive(i);
+    }, 1100);
+    return () => clearInterval(id);
+  }, [slideEntered]);
+  const goToStep = (i) => { autoRef.current = false; setActive(i); };
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -1034,7 +1071,7 @@ function MockupWorkflow({ theme, size }) {
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: `${12 * size}px`, flexShrink: 0 }}>
         {steps.map((s, i) => (
           <div key={s.l} style={{ display: 'flex', alignItems: 'center', flex: i < steps.length - 1 ? 1 : 'none' }}>
-            <button onClick={() => setActive(i)} style={{
+            <button onClick={() => goToStep(i)} style={{
               width: `${24 * size}px`, height: `${24 * size}px`, borderRadius: '50%', flexShrink: 0,
               border: `2px solid ${t.accent}`, cursor: 'pointer',
               background: active === i ? t.accent : (i < active ? `${t.accent}22` : 'transparent'),
@@ -1234,6 +1271,16 @@ function WorkflowFulfilled({ theme, size }) {
 function MockupPortal({ theme, size }) {
   const t = theme.colors;
   const [after, setAfter] = useState(false);
+  const slideEntered = useSlideEntered();
+
+  // Motion-graphics beat: the "before" cost stack gives way to "one
+  // subscription" on its own, a beat after the slide opens.
+  useEffect(() => {
+    if (!slideEntered) return;
+    setAfter(false);
+    const t = setTimeout(() => setAfter(true), 2100);
+    return () => clearTimeout(t);
+  }, [slideEntered]);
 
   const SUBS = [
     { name: 'Shopify',    Icon: SiShopify,   color: '#95BF47', min: 30 },
@@ -1328,8 +1375,8 @@ function MockupWhy({ theme, size }) {
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px`, flex: '1 1 auto', minHeight: `${140 * size}px`, marginBottom: `${12 * size}px` }}>
-        {audiences.map(a => (
-          <div key={a.label} style={{
+        {audiences.map((a, i) => (
+          <Reveal key={a.label} delay={i * 0.12} y={16} style={{
             border: `1px solid ${t.border}`, borderRadius: `${7 * size}px`, padding: `${12 * size}px`,
             display: 'flex', flexDirection: 'column', background: t.surface || t.bg,
             boxShadow: `0 ${3 * size}px ${8 * size}px rgba(0,0,0,0.05)`,
@@ -1341,11 +1388,11 @@ function MockupWhy({ theme, size }) {
               <Check size={9 * size} color={t.positive || t.accent} strokeWidth={2.5} />
               <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.positive || t.accent }}>{a.detail}</span>
             </div>
-          </div>
+          </Reveal>
         ))}
       </div>
 
-      <div style={{
+      <Reveal delay={0.45} y={10} style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${12 * size}px`,
         padding: `${14 * size}px`, borderRadius: `${8 * size}px`, background: t.bgAlt, flexShrink: 0,
       }}>
@@ -1354,7 +1401,7 @@ function MockupWhy({ theme, size }) {
           <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${11 * size}px`, color: t.text }}>Not another website builder.</div>
           <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint }}>The infrastructure behind the storefront, too.</div>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }
@@ -1377,13 +1424,13 @@ function MockupLiveDemo({ theme, size }) {
       </a>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${4 * size}px`, flexWrap: 'wrap', marginBottom: `${20 * size}px` }}>
         {flow.map((step, i) => (
-          <span key={step} style={{ display: 'flex', alignItems: 'center', gap: `${4 * size}px` }}>
+          <Reveal key={step} delay={0.2 + i * 0.1} x={-8} y={0} as="span" style={{ display: 'flex', alignItems: 'center', gap: `${4 * size}px` }}>
             <span style={{
               fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textMuted,
               border: `1px solid ${t.border}`, borderRadius: '100px', padding: `${4 * size}px ${8 * size}px`,
             }}>{step}</span>
             {i < flow.length - 1 && <span style={{ color: t.textFaint, fontSize: `${9 * size}px` }}>→</span>}
-          </span>
+          </Reveal>
         ))}
       </div>
       <div style={{
