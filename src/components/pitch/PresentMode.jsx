@@ -126,7 +126,7 @@ export default function PresentMode({ controls, deck }) {
             style={{ position: 'absolute', inset: 0 }}
           >
             <SlideTransitionContext.Provider value={entered}>
-              <SlideRenderer slide={slide} visuals={deck.visuals} isFullscreen />
+              <SlideRenderer slide={slide} visuals={deck.visuals} isFullscreen animated={!!deck.animated} total={SLIDES.length} />
             </SlideTransitionContext.Provider>
           </motion.div>
         </AnimatePresence>

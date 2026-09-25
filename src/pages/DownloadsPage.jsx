@@ -3,6 +3,8 @@ import { useIsMobile } from '../hooks/useIsMobile.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { generateBusinessPlanPDF, generatePitchDeckPDF, generateFinancialsPDF } from '../utils/generatePDF.js';
 import { generatePitchDeckPPTX } from '../utils/generatePPTX.js';
+import { downloadDeckPDF, downloadDeckPPTX } from '../utils/deckExport.js';
+import { DECK_LIST } from '../data/decks/index.js';
 
 const IconDocument = ({ size = 18, color = 'currentColor' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -60,22 +62,39 @@ const IconSpinner = ({ size = 13, color = 'currentColor' }) => (
   </svg>
 );
 
+// ─── DOWNLOAD REGISTRY ─────────────────────────────────────────────────────────
+// Deck downloads are generated FROM the deck registry (data/decks/index.js), so
+// adding a deck there adds its PDF + PPTX here with no edits to this page.
+// A deck can opt into bespoke exporters below; everything else uses the generic
+// slide-data exporter in utils/deckExport.js.
+const CUSTOM_DECK_EXPORTERS = {
+  investor: { pdf: generatePitchDeckPDF, pptx: generatePitchDeckPPTX },
+};
+
+const deckDownloads = DECK_LIST.flatMap((deck) => {
+  const custom = CUSTOM_DECK_EXPORTERS[deck.id];
+  const n = deck.slides.length;
+  return [
+    {
+      id: `${deck.id}-pdf`, title: deck.name, format: 'PDF', Icon: IconPresentation,
+      desc: `${n}-slide deck for ${deck.audience.toLowerCase()}. Landscape.`,
+      action: (theme) => (custom ? custom.pdf(theme) : downloadDeckPDF(theme, deck)),
+    },
+    {
+      id: `${deck.id}-pptx`, title: deck.name, format: 'PPTX', Icon: IconSlides,
+      desc: 'Editable PowerPoint with presenter notes. Uses active theme colours.',
+      action: (theme) => (custom ? custom.pptx(theme) : downloadDeckPPTX(theme, deck)),
+    },
+  ];
+});
+
 const DOWNLOADS = [
   {
     id: 'plan-pdf', title: 'Business Plan', format: 'PDF', Icon: IconDocument,
     desc: 'Full 10-section business plan. Generated from live content.',
     action: (theme) => generateBusinessPlanPDF(theme),
   },
-  {
-    id: 'pitch-pdf', title: 'Pitch Deck', format: 'PDF', Icon: IconPresentation,
-    desc: '10-slide investor pitch deck. Landscape format.',
-    action: (theme) => generatePitchDeckPDF(theme),
-  },
-  {
-    id: 'pitch-pptx', title: 'Pitch Deck', format: 'PPTX', Icon: IconSlides,
-    desc: 'Editable PowerPoint for offline presenting. Uses active theme colours.',
-    action: (theme) => generatePitchDeckPPTX(theme),
-  },
+  ...deckDownloads,
   {
     id: 'financials-pdf', title: 'Financial Projections', format: 'PDF', Icon: IconChart,
     desc: 'Unit economics, 3-year milestones, funding breakdown.',

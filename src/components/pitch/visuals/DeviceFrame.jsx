@@ -10,8 +10,12 @@
 // etc.) so they stay compact and vertically centered like before — forcing
 // those to stretch would just add empty space inside the frame.
 
+import { useRef } from 'react';
+import { ScrollRootContext } from '../motion.jsx';
+
 export default function DeviceFrame({ theme, url, size = 1, children, minHeight, fill = false }) {
   const t = theme.colors;
+  const scrollRef = useRef(null);
   return (
     <div style={{
       width: '100%',
@@ -46,12 +50,15 @@ export default function DeviceFrame({ theme, url, size = 1, children, minHeight,
           </div>
         )}
       </div>
-      <div style={{
+      <div ref={scrollRef} style={{
         padding: `${12 * size}px`,
         minHeight: minHeight ? `${minHeight * size}px` : undefined,
         ...(fill ? { flex: '1 1 auto', minHeight: 0, overflowY: 'auto' } : {}),
       }}>
-        {children}
+        {/* Lets <ScrollReveal> inside the mockup trigger as THIS frame scrolls */}
+        <ScrollRootContext.Provider value={fill ? scrollRef : null}>
+          {children}
+        </ScrollRootContext.Provider>
       </div>
     </div>
   );

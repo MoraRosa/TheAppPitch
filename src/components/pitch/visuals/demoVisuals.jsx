@@ -12,6 +12,7 @@ import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
 import { ProductDetailView, BlogPostView, ContactView } from './storefrontViews.jsx';
 import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
+import { ScrollReveal, CountUp } from '../motion.jsx';
 import { COMPANY, PRICING } from '../../../data/config.js';
 import { COMPETITOR_COST_STACK } from '../../../data/financials.js';
 import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, EMBER_MOSS_JOURNAL, EMBER_MOSS_TESTIMONIALS, EMBER_MOSS_FAQ, STOREFRONT_THEME_SWATCHES } from '../../../data/decks/emberMoss.js';
@@ -209,6 +210,17 @@ function MockupProblem({ theme, size }) {
   useEffect(() => {
     if (slideEntered) setAnimKey(k => k + 1);
   }, [slideEntered]);
+
+  // Motion-graphics beat: the tab chaos plays itself out automatically a
+  // moment after the slide opens — jitter, then the tools fly away and the
+  // dashboard resolves underneath — instead of waiting on a click. The
+  // button still lets the audience replay it on demand.
+  useEffect(() => {
+    if (!slideEntered) return;
+    setMerged(false);
+    const t = setTimeout(() => setMerged(true), 1900);
+    return () => clearTimeout(t);
+  }, [slideEntered, animKey]);
 
   const tools = [
     { name: 'Shopify',    Icon: SiShopify,      color: '#95BF47' },
@@ -505,10 +517,10 @@ function MockupCustomer({ theme, size }) {
           display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: `${8 * size}px`,
           paddingRight: '2px',
         }}>
-          {products.map(p => {
+          {products.map((p, i) => {
             const qty = cart[p.name] || 0;
             return (
-              <div key={p.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px`, textAlign: 'center' }}>
+              <ScrollReveal key={p.name} delay={(i % 4) * 0.06} y={16} amount={0.4} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px`, textAlign: 'center' }}>
                 <button onClick={() => setView(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'center', font: 'inherit' }}>
                   <div style={{ marginBottom: `${6 * size}px` }}>
                     <ProductImg src={p.img} alt={p.name} size={size} />
@@ -529,7 +541,7 @@ function MockupCustomer({ theme, size }) {
                     <button onClick={() => setQty(p.name, qty + 1)} style={{ flex: 1, border: 'none', background: 'transparent', color: t.accent, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, cursor: 'pointer', padding: `${4 * size}px 0` }}>+</button>
                   </div>
                 )}
-              </div>
+              </ScrollReveal>
             );
           })}
         </div>
@@ -734,12 +746,18 @@ function MockupMerchant({ theme, size }) {
       {tab === 0 && (
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${12 * size}px` }}>
-            {[{ l: 'Revenue', v: '$9,170', d: '+18%' }, { l: 'Orders', v: String(ORDERS.length * 4), d: '+6%' }, { l: 'Visitors', v: '1,204', d: '+11%' }].map(k => (
-              <div key={k.l} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px` }}>
+            {[
+              { l: 'Revenue', to: 9170, prefix: '$', d: '+18%' },
+              { l: 'Orders', to: ORDERS.length * 4, d: '+6%' },
+              { l: 'Visitors', to: 1204, d: '+11%' },
+            ].map((k, i) => (
+              <ScrollReveal key={k.l} delay={i * 0.1} y={14} amount={0.5} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px` }}>
                 <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{k.l}</div>
-                <div style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${14 * size}px`, color: t.text }}>{k.v}</div>
+                <div style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${14 * size}px`, color: t.text }}>
+                  <CountUp to={k.to} prefix={k.prefix || ''} duration={1} delay={i * 0.1} />
+                </div>
                 <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.positive }}>{k.d} ↑</div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
 

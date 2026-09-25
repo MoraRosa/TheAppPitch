@@ -1,15 +1,19 @@
 // ─── PITCH CONTROLS HOOK ──────────────────────────────────────────────────────
 // Manages slide index, fullscreen, auto-play, and ElevenLabs audio sync.
-// Audio is opt-in per deck — the recorded voiceover is investor-deck-specific
-// narration, so `useAudio` must be passed explicitly true only for that deck.
-// Any other deck (demo, and future ones) falls back to plain timer autoplay.
+// Audio is configured per deck in data/audio.js (DECK_AUDIO). A deck with a
+// config tries its narration clip for each slide and advances on the clip's
+// real `ended` event; if a clip is missing or fails, that slide falls back to a
+// timer so auto-play never stalls. Decks with no config use plain timers.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { AUDIO_ENABLED, getAudioFile, getAudioDuration } from '../data/audio.js';
+import { deckHasAudio, getSlideAudioUrl, getFallbackMs } from '../data/audio.js';
 
-export function usePitchControls(slideCount, { defaultAutoSlideMs = 5000, useAudio = false } = {}) {
+export function usePitchControls(slideCount, { deckId, defaultAutoSlideMs = 5000, slideMs } = {}) {
   const SLIDE_COUNT = slideCount;
-  const audioActive = useAudio && AUDIO_ENABLED;
+  const audioActive = deckHasAudio(deckId);
+  // Latest per-slide timer overrides without making them an effect dependency.
+  const slideMsRef = useRef(slideMs);
+  slideMsRef.current = slideMs;
   const [current, setCurrent]     = useState(0);
   const [isFullscreen, setFS]     = useState(false);
   const [isAutoPlay, setAutoPlay] = useState(false);
@@ -73,29 +77,36 @@ export function usePitchControls(slideCount, { defaultAutoSlideMs = 5000, useAud
     return () => window.removeEventListener('keydown', handler);
   }, [isFullscreen, next, prev, exitFullscreen, toggleAutoPlay, togglePresentBars]);
 
-  // Auto-play: audio-synced if this deck has audio enabled, timer-based otherwise
+  // Auto-play: narration-driven when the deck has audio, timer otherwise.
   useEffect(() => {
     if (!isAutoPlay || !isFullscreen) { cleanupAudio(); return; }
 
-    if (audioActive) {
-      // Audio-driven: advance when audio ends
-      const file = getAudioFile(current);
-      if (file) {
-        const audio = new Audio(file);
-        audioRef.current = audio;
-        audio.play().catch(console.error);
-        audio.onended = () => next();
-      } else {
-        // File not yet available, fall back to timer
-        autoTimer.current = setTimeout(next, getAudioDuration(current, defaultAutoSlideMs));
-      }
-    } else {
-      // Pure timer mode — use per-slide duration or default
-      autoTimer.current = setTimeout(next, getAudioDuration(current, defaultAutoSlideMs));
+    const fallbackMs =
+      slideMsRef.current?.[current] ??
+      getFallbackMs(deckId, current, defaultAutoSlideMs);
+    const url = audioActive ? getSlideAudioUrl(deckId, current) : null;
+
+    if (!url) {
+      autoTimer.current = setTimeout(next, fallbackMs);
+      return cleanupAudio;
     }
 
-    return cleanupAudio;
-  }, [isAutoPlay, isFullscreen, current, next, cleanupAudio, defaultAutoSlideMs, audioActive]);
+    let finished = false; // guards late events fired while tearing down
+    const advance = () => { if (!finished) { finished = true; next(); } };
+    const useTimer = () => {
+      if (finished) return;
+      clearTimeout(autoTimer.current);
+      autoTimer.current = setTimeout(advance, fallbackMs);
+    };
+
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    audio.addEventListener('ended', advance);
+    audio.addEventListener('error', useTimer); // missing / undecodable clip
+    audio.play().catch(useTimer);              // autoplay blocked, etc.
+
+    return () => { finished = true; cleanupAudio(); };
+  }, [isAutoPlay, isFullscreen, current, next, cleanupAudio, defaultAutoSlideMs, audioActive, deckId]);
 
   return {
     current, direction, isFullscreen, isAutoPlay, barsHidden,

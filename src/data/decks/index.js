@@ -25,6 +25,7 @@ export const DECKS = {
     slides: DEMO_SLIDES,
     visuals: DEMO_VISUALS,
     suggestedTheme: 'showroom',
+    animated: true, // slide-open reveals + ambient backdrop (see components/pitch/motion.jsx)
   },
 };
 

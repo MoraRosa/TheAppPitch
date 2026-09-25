@@ -1,38 +1,41 @@
-// ─── ELEVENLABS AUDIO CONFIG ─────────────────────────────────────────────────
-// Drop your audio files into /public/audio/ and fill in the durations.
-// Format: { slideId: number, file: string, duration: number (ms) }
+// ─── DECK AUDIO CONFIG ────────────────────────────────────────────────────────
+// Narration is configured PER DECK. Adding audio to a deck = drop the MP3s in
+// its folder and (optionally) list it here. No durations required: auto-play
+// advances on the audio's real `ended` event. `fallbackMs` is only used when
+// a clip is missing or fails to load, so a deck never gets stuck.
 //
-// HOW TO USE:
-// 1. Generate one MP3 per slide in ElevenLabs
-// 2. Name them: slide-01.mp3, slide-02.mp3 ... slide-10.mp3
-// 3. Drop into /public/downloads/audio/
-// 4. Fill in each duration below (listen to each clip, note length in ms)
-// 5. Set AUDIO_ENABLED = true
-// Auto-play will advance each slide exactly when its audio ends.
+// Folder layout (files named slide-01.mp3 … slide-NN.mp3, in slide order):
+//   public/downloads/audio/        → investor deck (existing)
+//   public/downloads/audio/demo/   → product demo deck (drop files here)
 
-export const AUDIO_ENABLED = true; // ← flip to true when files are ready
+export const AUDIO_ENABLED = true;
 
-export const SLIDE_AUDIO = [
-  { slideId: 1,  file: 'slide-01.mp3', duration: 32000 }, // ← replace null with ms e.g. 14000
-  { slideId: 2,  file: 'slide-02.mp3', duration: 31000 },
-  { slideId: 3,  file: 'slide-03.mp3', duration: 34000 },
-  { slideId: 4,  file: 'slide-04.mp3', duration: 42000 },
-  { slideId: 5,  file: 'slide-05.mp3', duration: 32000 },
-  { slideId: 6,  file: 'slide-06.mp3', duration: 26000 },
-  { slideId: 7,  file: 'slide-07.mp3', duration: 25000 },
-  { slideId: 8,  file: 'slide-08.mp3', duration: 21000 },
-  { slideId: 9,  file: 'slide-09.mp3', duration: 21000 },
-  { slideId: 10, file: 'slide-10.mp3', duration: 21000 },
-];
+const BASE = import.meta.env.BASE_URL || './';
 
-// Returns duration for a given slide index (0-based), falls back to defaultMs
-export function getAudioDuration(slideIndex, defaultMs = 5000) {
-  const entry = SLIDE_AUDIO[slideIndex];
-  return entry?.duration ?? defaultMs;
+export const DECK_AUDIO = {
+  investor: {
+    dir: 'downloads/audio',
+    // Existing clip lengths — used only as the timer fallback if a file fails.
+    fallbackMs: [32000, 31000, 34000, 42000, 32000, 26000, 25000, 21000, 21000, 21000],
+  },
+  demo: {
+    dir: 'downloads/audio/demo',
+    fallbackMs: null, // uses each slide's `autoMs`, else the theme default
+  },
+};
+
+export const deckHasAudio = (deckId) => AUDIO_ENABLED && !!DECK_AUDIO[deckId];
+
+// URL of the narration clip for a slide (0-based index), or null.
+export function getSlideAudioUrl(deckId, slideIndex) {
+  const cfg = DECK_AUDIO[deckId];
+  if (!AUDIO_ENABLED || !cfg) return null;
+  const file = `slide-${String(slideIndex + 1).padStart(2, '0')}.mp3`;
+  return `${BASE}${cfg.dir}/${file}`;
 }
 
-export function getAudioFile(slideIndex) {
-  const entry = SLIDE_AUDIO[slideIndex];
-  if (!entry || !AUDIO_ENABLED) return null;
-  return `/TheAppPitch/downloads/audio/${entry.file}`;
+// Timer used when there is no audio (or the clip failed). Never falls back to
+// another deck's durations.
+export function getFallbackMs(deckId, slideIndex, defaultMs = 5000) {
+  return DECK_AUDIO[deckId]?.fallbackMs?.[slideIndex] ?? defaultMs;
 }

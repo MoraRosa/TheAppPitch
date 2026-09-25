@@ -5,7 +5,7 @@
 
 import { COMPANY } from '../config.js';
 
-export const DEMO_SLIDES = [
+const BASE_SLIDES = [
   {
     id: 1,
     slug: 'welcome',
@@ -97,5 +97,25 @@ export const DEMO_SLIDES = [
     tag: '10',
   },
 ];
+
+// ─── NARRATION SCRIPT (ElevenLabs) ────────────────────────────────────────────
+// One paragraph per slide, written to be SPOKEN over the on-screen animation
+// (not read off it). Generate each with ElevenLabs and save as
+// public/downloads/audio/demo/slide-01.mp3 … slide-10.mp3 — auto-play picks
+// them up with no other changes. Aim for 15–25s each.
+export const DEMO_NARRATION = {
+  welcome: `Meet ${COMPANY.name}. It's the complete business platform for small brands and makers. A beautiful branded storefront for your customers, a dashboard for you, and everything behind it, all in one place. Here's Ember and Moss, a real example brand, running on the platform. Let's see how it all fits together.`,
+  problem: `Right now, most small businesses live in ten different tabs. A storefront tool, a spreadsheet for inventory, a separate CRM, an email platform, a costing sheet. None of them talk to each other, and every morning, you're the one stitching them together. Watch what happens when they collapse into one.`,
+  platform: `Here's everything the platform does. Storefront, products and inventory, orders, payments, shipping, customers, content, and production costing. Every module is built in and connected, nothing is bolted on. Think of this as the map for the rest of the demo.`,
+  customer: `This is what your customers see. They browse the collection, open a product, choose a variant, add it to the cart, and check out. It feels custom-built for your brand, because it is. No generic template look, just a storefront that's unmistakably yours.`,
+  merchant: `And this is what you see. One dashboard for products, orders, customers, and production costing. Switch between tabs and notice that nothing sends you to another tool. It's built for the person running the business, not the person who built the software.`,
+  'storefront-theme': `Every business gets its own look, on the same reliable platform underneath. Watch the whole storefront repaint as the theme changes. Two businesses on ${COMPANY.name} can look nothing alike, and both are running on exactly the same core. This is the real differentiator.`,
+  workflow: `From sign-up to fulfilled order, it's one continuous path. A merchant sets up their storefront, adds products, and turns on payments and shipping. A customer discovers, orders, and pays. The merchant fulfills. Nothing falls through the gap between tools, because there are no gaps.`,
+  portal: `Now compare before and after. Before: six subscriptions that don't know about each other. After: one connected workflow, from business to storefront to customer to order to payment to fulfillment. Stop paying for the seams between your tools.`,
+  why: `So why does this matter? Because this isn't another website builder. It gives small businesses the infrastructure to operate online, from launching a storefront to running everything behind it, without piecing together a dozen systems. Whoever you are, it's built for you.`,
+  'live-demo': `That's the picture. Now let's look at the real thing. We'll go from business to storefront, to a customer, through checkout, into the merchant dashboard, and finish with the order. One continuous story, in the actual app.`,
+};
+
+export const DEMO_SLIDES = BASE_SLIDES.map(s => ({ ...s, narration: DEMO_NARRATION[s.slug] }));
 
 export const DEMO_SLIDE_COUNT = DEMO_SLIDES.length;

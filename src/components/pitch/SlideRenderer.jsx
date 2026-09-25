@@ -6,21 +6,22 @@
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { COMPANY } from '../../data/config.js';
+import { Reveal, AmbientBackdrop } from './motion.jsx';
 
-export default function SlideRenderer({ slide, visuals = {}, isFullscreen = false }) {
+export default function SlideRenderer({ slide, visuals = {}, isFullscreen = false, animated = false, total }) {
   const { theme } = useTheme();
   const id = theme.id;
   if (id === 'manuscript') return <ManuscriptSlide slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} />;
   if (id === 'brutalist')  return <BrutalistSlide  slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} />;
   if (id === 'editorial')  return <EditorialSlide  slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} />;
   if (id === 'canadian')   return <CanadianSlide   slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} />;
-  if (id === 'showroom')   return <ShowroomSlide   slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} />;
+  if (id === 'showroom')   return <ShowroomSlide   slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} animated={animated} total={total} />;
   return null;
 }
 
 // ─── RIGHT-SIDE VISUAL SLOT ────────────────────────────────────────────────────
 
-function SlideVisual({ slideSlug, visuals, theme, isFullscreen }) {
+function SlideVisual({ slideSlug, visuals, theme, isFullscreen, animated }) {
   // Fullscreen visuals were sized for a smaller footprint than a real
   // presentation actually gets — this one multiplier drives every mockup's
   // font/icon/spacing sizes, so raising it fixes "too small on desktop"
@@ -28,18 +29,25 @@ function SlideVisual({ slideSlug, visuals, theme, isFullscreen }) {
   const size = isFullscreen ? 1.3 : 0.6;
   const Visual = visuals[slideSlug];
   if (!Visual) return null;
-  return (
-    <div style={{
-      flex: '1 1 auto', minHeight: 0, width: '100%',
-      display: 'flex', flexDirection: 'column', justifyContent: 'center',
-    }}>
-      <Visual theme={theme} size={size} isFullscreen={isFullscreen} />
-    </div>
-  );
+  const wrapStyle = {
+    flex: '1 1 auto', minHeight: 0, width: '100%',
+    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+    position: 'relative', zIndex: 1,
+  };
+  const visual = <Visual theme={theme} size={size} isFullscreen={isFullscreen} />;
+  if (!animated) return <div style={wrapStyle}>{visual}</div>;
+  return <Reveal delay={0.25} y={28} scale={0.97} duration={0.8} style={wrapStyle}>{visual}</Reveal>;
+}
+
+// Renders `as` with a slide-open reveal when `animated`, else a plain element.
+// Defined at module level so its identity is stable across renders.
+function Rv({ animated, delay = 0, as: Tag = 'div', style, children }) {
+  if (!animated) return <Tag style={style}>{children}</Tag>;
+  return <Reveal as={Tag} delay={delay} style={style}>{children}</Reveal>;
 }
 
 // ─── SHARED CONTENT COLUMN ────────────────────────────────────────────────────
-function SlideLeft({ slide, theme, isFullscreen, isMobile }) {
+function SlideLeft({ slide, theme, isFullscreen, isMobile, animated }) {
   const t = theme.colors;
 
   const headlineSize = isFullscreen
@@ -66,7 +74,7 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile }) {
       overflow: 'hidden',
     }}>
       <div>
-        <p style={{
+        <Rv animated={animated} delay={0.05} as="p" style={{
           fontFamily: theme.fonts.mono,
           fontSize: isFullscreen ? theme.type.monoSize : (isMobile ? '7px' : theme.type.monoSize),
           letterSpacing: theme.type.monoTracking, color: t.accent,
@@ -74,9 +82,9 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile }) {
           marginBottom: eyebrowMargin,
         }}>
           {slide.eyebrow}
-        </p>
+        </Rv>
 
-        <h2 style={{
+        <Rv animated={animated} delay={0.15} as="h2" style={{
           fontFamily: theme.fonts.display,
           fontSize: headlineSize,
           fontWeight: theme.type.displayWeight, fontStyle: theme.type.displayStyle,
@@ -84,22 +92,23 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile }) {
           marginBottom: headlineMargin,
         }}>
           {slide.headline}
-        </h2>
+        </Rv>
 
         {(!isMobile || isFullscreen) && (
           <>
-            <div style={{
+            <Rv animated={animated} delay={0.3} style={{
               width: isFullscreen ? '36px' : '28px', height: '1px',
               background: t.accent,
               margin: ruleMargin,
+              transformOrigin: 'left',
             }} />
-            <p style={{
+            <Rv animated={animated} delay={0.4} as="p" style={{
               fontFamily: theme.fonts.body,
               fontSize: bodySize,
               fontWeight: theme.type.bodyWeight, color: t.textMuted, lineHeight: 1.75,
             }}>
               {slide.body}
-            </p>
+            </Rv>
           </>
         )}
       </div>
@@ -117,7 +126,7 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile }) {
 }
 
 // ─── SHARED TWO-COLUMN / STACKED LAYOUT ───────────────────────────────────────
-function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBar, leftBorder, columns = '55% 45%' }) {
+function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBar, leftBorder, columns = '55% 45%', animated = false, rightBackdrop = null }) {
   const t = theme.colors;
   const isMobile = useIsMobile();
 
@@ -152,7 +161,7 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
         {leftBorder && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: t.accent }} />}
 
         <div style={{ flex: '0 0 50%', borderBottom: `1px solid ${t.border}`, overflow: 'hidden' }}>
-          <SlideLeft slide={slide} theme={theme} isFullscreen={true} isMobile={true} />
+          <SlideLeft slide={slide} theme={theme} isFullscreen={true} isMobile={true} animated={animated} />
         </div>
 
         <div style={{
@@ -169,7 +178,7 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
           }}>
             {slide.tag}
           </div>
-          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} />
+          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} animated={animated} />
         </div>
       </div>
     );
@@ -184,7 +193,7 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
 
       <div style={{ borderRight: `1px solid ${t.border}`, position: 'relative', overflow: 'hidden' }}>
         {leftBorder && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: t.accent }} />}
-        <SlideLeft slide={slide} theme={theme} isFullscreen={isFullscreen} isMobile={false} />
+        <SlideLeft slide={slide} theme={theme} isFullscreen={isFullscreen} isMobile={false} animated={animated} />
       </div>
 
       <div style={{
@@ -195,6 +204,7 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
         display: 'flex', flexDirection: 'column',
         position: 'relative', overflow: 'hidden',
       }}>
+        {rightBackdrop}
         <div style={{
           position: 'absolute', bottom: isFullscreen ? '20px' : '10px',
           right: isFullscreen ? '28px' : '14px',
@@ -204,7 +214,7 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
         }}>
           {slide.tag}
         </div>
-        <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} />
+        <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} animated={animated} />
       </div>
     </div>
   );
@@ -255,7 +265,7 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
         </div>
         <div style={{ flex: '1 1 50%', padding: '14px 18px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', bottom: '8px', right: '12px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: '40px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
-          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} />
+          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} animated={animated} />
         </div>
       </div>
     );
@@ -277,7 +287,7 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
         </div>
         <div style={{ padding: isFullscreen ? '40px 48px' : '24px 24px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', bottom: '12px', right: '16px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: isFullscreen ? '72px' : '44px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
-          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} />
+          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} animated={animated} />
         </div>
       </div>
     </div>
@@ -310,7 +320,7 @@ function CanadianSlide({ slide, theme, visuals, isFullscreen }) {
 // Visual-forward ratio (42/58) — the mockup is the point of this deck, so it
 // gets more room than the copy. A live-dot badge replaces the sharp accent
 // bars the investor themes use.
-function ShowroomSlide({ slide, theme, visuals, isFullscreen }) {
+function ShowroomSlide({ slide, theme, visuals, isFullscreen, animated = false, total }) {
   const t = theme.colors;
   const isMobile = useIsMobile();
 
@@ -327,17 +337,19 @@ function ShowroomSlide({ slide, theme, visuals, isFullscreen }) {
               boxShadow: `0 0 0 3px ${t.positive}22`,
             }} />
             <span style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              {slide.tag} / 10
+              {slide.tag} / {total ? String(total).padStart(2, '0') : '10'}
             </span>
           </div>
         )}
         <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen}
           leftBg={t.bg} rightBg={t.bgAlt}
           columns={isMobile ? undefined : '42% 58%'}
+          animated={animated && isFullscreen}
+          rightBackdrop={animated && isFullscreen ? <AmbientBackdrop theme={theme} /> : null}
         />
       </div>
     );
   }
 
-  return <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} leftBg={t.bg} rightBg={t.bgAlt} />;
+  return <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} leftBg={t.bg} rightBg={t.bgAlt} animated={animated && isFullscreen} />;
 }

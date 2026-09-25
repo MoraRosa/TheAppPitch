@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DECKS } from '../data/decks/index.js';
@@ -14,16 +15,18 @@ export default function PitchDeckPage() {
 
   if (!deck) return <Navigate to="/pitch" replace />;
 
-  return <PitchDeckPageInner deck={deck} />;
+  return <PitchDeckPageInner key={deck.id} deck={deck} />;
 }
 
 function PitchDeckPageInner({ deck }) {
   const { theme } = useTheme();
   const t = theme.colors;
   const isMobile = useIsMobile();
+  const slideMs = useMemo(() => deck.slides.map(s => s.autoMs), [deck]);
   const controls = usePitchControls(deck.slides.length, {
+    deckId: deck.id,
     defaultAutoSlideMs: theme.motion.autoSlide,
-    useAudio: deck.id === 'investor',
+    slideMs,
   });
   const pad = isMobile ? '16px' : theme.space.pagePadding;
 
@@ -102,7 +105,7 @@ function PitchDeckPageInner({ deck }) {
               onMouseEnter={e => !isMobile && (e.currentTarget.style.borderColor = t.accent)}
               onMouseLeave={e => !isMobile && (e.currentTarget.style.borderColor = t.border)}
             >
-              <SlideRenderer slide={slide} visuals={deck.visuals} isFullscreen={false} />
+              <SlideRenderer slide={slide} visuals={deck.visuals} isFullscreen={false} total={deck.slides.length} />
             </motion.button>
           ))}
         </div>
