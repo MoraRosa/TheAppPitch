@@ -34,7 +34,7 @@ function SlideVisual({ slideSlug, visuals, theme, isFullscreen, animated }) {
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
     position: 'relative', zIndex: 1,
   };
-  const visual = <Visual theme={theme} size={size} isFullscreen={isFullscreen} />;
+  const visual = <Visual theme={theme} size={size} isFullscreen={isFullscreen} autoDemo={!!animated} />;
   if (!animated) return <div style={wrapStyle}>{visual}</div>;
   return <Reveal delay={0.25} y={28} scale={0.97} duration={0.8} style={wrapStyle}>{visual}</Reveal>;
 }

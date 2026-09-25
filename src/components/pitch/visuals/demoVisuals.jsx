@@ -479,27 +479,56 @@ function MockupPlatform({ theme, size }) {
 }
 
 
-function MockupCustomer({ theme, size }) {
+function MockupCustomer({ theme, size, autoDemo = false }) {
   const t = theme.colors;
   const products = EMBER_MOSS_PRODUCTS;
   const [cart, setCart] = useState({});          // { productName: qty }
   const [view, setView] = useState('shop');      // 'shop' | 'cart' | product object
+  const slideEntered = useSlideEntered();
+  const frameRef = useRef(null);
 
   const setQty = (name, qty) => setCart(c => {
     if (qty <= 0) { const { [name]: _, ...rest } = c; return rest; }
     return { ...c, [name]: qty };
   });
   const addOne = (p) => setQty(p.name, (cart[p.name] || 0) + 1);
+
+  // Motion-graphics beat: when this slide is auto-playing in presentation
+  // mode, the storefront demos ITSELF — scroll the grid, open a product,
+  // add it to the cart, then open the cart — instead of sitting static
+  // waiting for a click. Any real click from the audience cancels the
+  // script immediately and hands control back.
+  const liveRef = useRef(true);
+  const cancelAuto = () => { liveRef.current = false; };
+  useEffect(() => {
+    if (!autoDemo || !slideEntered) return;
+    liveRef.current = true;
+    setView('shop'); setCart({});
+    const timers = [];
+    const at = (ms, fn) => timers.push(setTimeout(() => { if (liveRef.current) fn(); }, ms));
+    const scroll = (top) => frameRef.current?.scrollTo({ top, behavior: 'smooth' });
+
+    at(1300, () => scroll(220));                                    // browse down the grid
+    at(2900, () => scroll(0));                                      // back to top
+    at(3500, () => setView(products[2]));                           // open a product (Dragon Mint Tea)
+    at(5200, () => addOne(products[2]));                            // add it to the cart
+    at(5800, () => setView('shop'));                                // back to shop
+    at(6400, () => scroll(220));                                    // one more browse pass
+    at(7600, () => setView('cart'));                                // land on the cart, script ends here
+
+    return () => { liveRef.current = false; timers.forEach(clearTimeout); };
+  }, [autoDemo, slideEntered]);
+
   const cartEntries = Object.entries(cart).map(([name, qty]) => ({ ...products.find(p => p.name === name), qty }));
   const cartCount = cartEntries.reduce((s, e) => s + e.qty, 0);
   const subtotal = cartEntries.reduce((s, e) => s + parseFloat(e.price.replace('$', '')) * e.qty, 0);
   const isProductView = typeof view === 'object';
 
   return (
-    <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/shop`} fill>
+    <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/shop`} fill scrollRef={frameRef}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${10 * size}px` }}>
-        <button onClick={() => setView('shop')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</button>
-        <button onClick={() => setView(view === 'cart' ? 'shop' : 'cart')} style={{
+        <button onClick={() => { cancelAuto(); setView('shop'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</button>
+        <button onClick={() => { cancelAuto(); setView(view === 'cart' ? 'shop' : 'cart'); }} style={{
           position: 'relative', border: `1px solid ${t.border}`, borderRadius: '100px',
           padding: `${4 * size}px ${9 * size}px`, background: 'transparent', cursor: 'pointer',
           fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.text,
@@ -509,7 +538,7 @@ function MockupCustomer({ theme, size }) {
       </div>
 
       {isProductView && (
-        <ProductDetailView theme={theme} size={size} product={view} onBack={() => setView('shop')} onAddToCart={addOne} cartQty={cart[view.name] || 0} />
+        <ProductDetailView theme={theme} size={size} product={view} onBack={() => { cancelAuto(); setView('shop'); }} onAddToCart={(p) => { cancelAuto(); addOne(p); }} cartQty={cart[view.name] || 0} />
       )}
 
       {view === 'shop' && (
@@ -521,7 +550,7 @@ function MockupCustomer({ theme, size }) {
             const qty = cart[p.name] || 0;
             return (
               <ScrollReveal key={p.name} delay={(i % 4) * 0.06} y={16} amount={0.4} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px`, textAlign: 'center' }}>
-                <button onClick={() => setView(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'center', font: 'inherit' }}>
+                <button onClick={() => { cancelAuto(); setView(p); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'center', font: 'inherit' }}>
                   <div style={{ marginBottom: `${6 * size}px` }}>
                     <ProductImg src={p.img} alt={p.name} size={size} />
                   </div>
@@ -529,16 +558,16 @@ function MockupCustomer({ theme, size }) {
                 </button>
                 <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, marginBottom: `${6 * size}px` }}>{p.price}</div>
                 {qty === 0 ? (
-                  <button onClick={() => setQty(p.name, 1)} style={{
+                  <button onClick={() => { cancelAuto(); setQty(p.name, 1); }} style={{
                     width: '100%', padding: `${5 * size}px`, border: 'none', borderRadius: `${4 * size}px`,
                     background: t.accent, color: theme.isLight ? '#fff' : t.bg,
                     fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${7.5 * size}px`, cursor: 'pointer',
                   }}>Add to cart</button>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${t.accent}`, borderRadius: `${4 * size}px`, overflow: 'hidden' }}>
-                    <button onClick={() => setQty(p.name, qty - 1)} style={{ flex: 1, border: 'none', background: 'transparent', color: t.accent, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, cursor: 'pointer', padding: `${4 * size}px 0` }}>−</button>
+                    <button onClick={() => { cancelAuto(); setQty(p.name, qty - 1); }} style={{ flex: 1, border: 'none', background: 'transparent', color: t.accent, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, cursor: 'pointer', padding: `${4 * size}px 0` }}>−</button>
                     <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.text, minWidth: `${16 * size}px` }}>{qty}</span>
-                    <button onClick={() => setQty(p.name, qty + 1)} style={{ flex: 1, border: 'none', background: 'transparent', color: t.accent, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, cursor: 'pointer', padding: `${4 * size}px 0` }}>+</button>
+                    <button onClick={() => { cancelAuto(); setQty(p.name, qty + 1); }} style={{ flex: 1, border: 'none', background: 'transparent', color: t.accent, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, cursor: 'pointer', padding: `${4 * size}px 0` }}>+</button>
                   </div>
                 )}
               </ScrollReveal>

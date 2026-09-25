@@ -13,9 +13,10 @@
 import { useRef } from 'react';
 import { ScrollRootContext } from '../motion.jsx';
 
-export default function DeviceFrame({ theme, url, size = 1, children, minHeight, fill = false }) {
+export default function DeviceFrame({ theme, url, size = 1, children, minHeight, fill = false, scrollRef: externalRef = null }) {
   const t = theme.colors;
-  const scrollRef = useRef(null);
+  const ownRef = useRef(null);
+  const scrollRef = externalRef || ownRef; // let a parent drive scrollTo() for auto-demo sequences
   return (
     <div style={{
       width: '100%',

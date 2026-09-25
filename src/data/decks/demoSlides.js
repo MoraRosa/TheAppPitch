@@ -9,6 +9,7 @@ const BASE_SLIDES = [
   {
     id: 1,
     slug: 'welcome',
+    autoMs: 5000,
     eyebrow: 'Welcome',
     headline: 'One platform. Every operation.',
     body: `${COMPANY.name} is the complete business platform for small brands and makers — a branded storefront, a merchant dashboard, and everything behind it, in one place.`,
@@ -18,6 +19,7 @@ const BASE_SLIDES = [
   {
     id: 2,
     slug: 'problem',
+    autoMs: 6500,
     eyebrow: 'The Problem',
     headline: 'Right now, your business lives in ten different tabs.',
     body: 'A storefront tool. A spreadsheet for inventory. A CRM. An email platform. A separate costing sheet. None of them talk to each other, and you\u2019re the one stitching it together every morning.',
@@ -27,6 +29,7 @@ const BASE_SLIDES = [
   {
     id: 3,
     slug: 'platform',
+    autoMs: 5500,
     eyebrow: 'What You Can Do',
     headline: 'Everything a business needs to operate online, under one login.',
     body: 'Storefront, products and inventory, orders, payments, shipping, customers, content, and production costing \u2014 all built in, all connected, nothing bolted on.',
@@ -36,6 +39,7 @@ const BASE_SLIDES = [
   {
     id: 4,
     slug: 'customer',
+    autoMs: 9000,
     eyebrow: 'Customer Experience',
     headline: 'Browse, buy, and check out in a storefront that feels custom-built.',
     body: 'Every business gets its own branded storefront \u2014 product pages, variants, cart, checkout, and order history \u2014 with none of the generic template feel.',
@@ -45,6 +49,7 @@ const BASE_SLIDES = [
   {
     id: 5,
     slug: 'merchant',
+    autoMs: 5500,
     eyebrow: 'Merchant Experience',
     headline: 'Run the business from a single dashboard.',
     body: 'Products, orders, customers, and production costing in one merchant view \u2014 built for the person running the business, not the person who built the software.',
@@ -54,6 +59,7 @@ const BASE_SLIDES = [
   {
     id: 6,
     slug: 'storefront-theme',
+    autoMs: 7500,
     eyebrow: 'Storefront Customization',
     headline: 'Every business gets its own look. Same platform underneath.',
     body: `Tenant-specific storefronts, dynamic themes, and full branding control \u2014 two businesses on ${COMPANY.name} can look nothing alike, and both are running on the same reliable core.`,
@@ -63,6 +69,7 @@ const BASE_SLIDES = [
   {
     id: 7,
     slug: 'workflow',
+    autoMs: 8000,
     eyebrow: 'Operations & Workflow',
     headline: 'From sign-up to fulfilled order, one continuous path.',
     body: 'A merchant sets up their storefront, adds products, and configures payments and shipping. A customer discovers, orders, and pays. The merchant fulfills. Nothing falls through a gap between tools.',
@@ -72,6 +79,7 @@ const BASE_SLIDES = [
   {
     id: 8,
     slug: 'portal',
+    autoMs: 5500,
     eyebrow: 'One-Stop-Shop Portal',
     headline: 'Stop paying for the seams between your tools.',
     body: 'Business, storefront, customer, order, payment, and fulfillment \u2014 one connected workflow instead of six subscriptions that don\u2019t know about each other.',
@@ -81,6 +89,7 @@ const BASE_SLIDES = [
   {
     id: 9,
     slug: 'why',
+    autoMs: 5500,
     eyebrow: 'Why This Matters',
     headline: 'This isn\u2019t another website builder.',
     body: `${COMPANY.name} gives small businesses the infrastructure to operate online without piecing together a dozen systems \u2014 from launching a storefront to running the business behind it.`,
@@ -90,6 +99,7 @@ const BASE_SLIDES = [
   {
     id: 10,
     slug: 'live-demo',
+    autoMs: 5000,
     eyebrow: 'Live Demo',
     headline: 'Let\u2019s look at the real thing.',
     body: 'Business \u2192 storefront \u2192 customer \u2192 checkout \u2192 merchant dashboard \u2192 order. One continuous story, in the actual app.',
