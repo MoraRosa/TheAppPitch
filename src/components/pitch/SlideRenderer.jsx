@@ -265,7 +265,7 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
         </div>
         <div style={{ flex: '1 1 50%', padding: '14px 18px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', bottom: '8px', right: '12px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: '40px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
-          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} animated={animated} />
+          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} />
         </div>
       </div>
     );
@@ -287,7 +287,7 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
         </div>
         <div style={{ padding: isFullscreen ? '40px 48px' : '24px 24px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', bottom: '12px', right: '16px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: isFullscreen ? '72px' : '44px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
-          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} animated={animated} />
+          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} />
         </div>
       </div>
     </div>
