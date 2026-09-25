@@ -71,9 +71,9 @@ export const EMBER_MOSS_CONTACT = {
 // falls back to the icon on a soft placeholder until real photos exist (see
 // blog-* filenames below). Drop files into /public/demo-assets/ember-moss/journal/.
 export const EMBER_MOSS_JOURNAL = [
-  { icon: '🍵', title: "A Dragon's Guide to Brewing the Perfect Cup of Tea", excerpt: 'Bramble walks through water temperature, steep time, and why he insists on glass.', img: `${ASSET_PATH}/journal/blog-tea-guide.jpg` },
-  { icon: '🌿', title: 'Seven Herbs We Gather Before Sunrise', excerpt: 'The dawn harvest ritual behind every batch of Dragon Mint Tea.', img: `${ASSET_PATH}/journal/blog-herb-harvest.jpg` },
-  { icon: '🕯️', title: 'Why Our Candle Makers Insist on Crackling Wood Wicks', excerpt: 'A small obsession with sound, and what it does for the whole ritual.', img: `${ASSET_PATH}/journal/blog-candle-wicks.jpg` },
+  { icon: '🍵', title: "A Dragon's Guide to Brewing the Perfect Cup of Tea", excerpt: 'Bramble walks through water temperature, steep time, and why he insists on glass.', img: `${ASSET_PATH}/blog-tea-guide.jpg` },
+  { icon: '🌿', title: 'Seven Herbs We Gather Before Sunrise', excerpt: 'The dawn harvest ritual behind every batch of Dragon Mint Tea.', img: `${ASSET_PATH}/blog-herb-harvest.jpg` },
+  { icon: '🕯️', title: 'Why Our Candle Makers Insist on Crackling Wood Wicks', excerpt: 'A small obsession with sound, and what it does for the whole ritual.', img: `${ASSET_PATH}/blog-candle-wicks.jpg` },
 ];
 
 export const EMBER_MOSS_TESTIMONIALS = [
