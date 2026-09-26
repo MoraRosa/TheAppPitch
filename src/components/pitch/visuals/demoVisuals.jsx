@@ -5,6 +5,7 @@
 // automatically with the presenter's active theme (including Showroom).
 
 import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import QRCode from 'react-qr-code';
 import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart, Calendar } from 'lucide-react';
 import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom, SiHubspot } from 'react-icons/si';
@@ -1315,11 +1316,42 @@ function WorkflowFulfilled({ theme, size }) {
     { time: '6:12 PM',  label: 'Delivered',                  Icon: CheckCircle2 },
   ];
   const n = events.length;
+
+  const emails = [
+    { from: 'Ember & Moss', subject: 'Welcome! Here\u2019s 10% off', time: '9:15 AM', body: 'Thanks for creating an account. Use code WELCOME10 on your first order.' },
+    { from: 'Ember & Moss', subject: 'Your order shipped!', time: '6:14 PM', body: 'Order #1049 is on its way. Sent automatically \u2014 the merchant didn\u2019t lift a finger.' },
+    { from: 'Ember & Moss', subject: 'New arrivals this week', time: 'Yesterday', body: 'Three new scents just landed \u2014 including a Dragon Mint Tea restock.' },
+  ];
+  const targetIndex = 1; // the "shipped" email the auto-sequence clicks into
+  const ROW_H = 34; // px at size=1 — kept fixed so the fake cursor's target position is predictable
+
+  // Motion-graphics beat: after the tracking timeline settles, a fake
+  // cursor drifts down to the "shipped" email and clicks it open — the
+  // customer's actual experience, not just a static preview. Any real
+  // click on any email cancels the script and opens that email instead.
+  const [stage, setStage] = useState('list'); // 'list' | 'clicking' | 'open'
+  const [openIndex, setOpenIndex] = useState(targetIndex);
+  const liveRef = useRef(true);
+  useEffect(() => {
+    liveRef.current = true;
+    setStage('list');
+    setOpenIndex(targetIndex);
+    const base = 0.15 * n * 1000;
+    const t1 = setTimeout(() => { if (liveRef.current) setStage('clicking'); }, base + 1400);
+    const t2 = setTimeout(() => { if (liveRef.current) setStage('open'); }, base + 2300);
+    return () => { liveRef.current = false; clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+  const openEmail = (i) => { liveRef.current = false; setOpenIndex(i); setStage('open'); };
+  const backToList = () => { liveRef.current = false; setStage('list'); };
+
+  const cursorTop = (ROW_H * targetIndex + ROW_H / 2) * size;
+
   // Motion-graphics beat: a UPS/FedEx-style tracking timeline that draws
   // itself in top-to-bottom the moment this step becomes active — the dot
-  // and connecting line for each stop land in sequence, the last one
-  // (Delivered) lands in the brand accent colour, and the customer's inbox
-  // email arrives right after, as if the "Delivered" event triggered it.
+  // and connecting line for each stop land in sequence. Completed stops
+  // turn positive-green (progress/success), the final "Delivered" stop
+  // lands in the theme's accent colour instead, so the eye reads it as the
+  // milestone rather than just one more checkmark.
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: `${10 * size}px`, height: '100%' }}>
       <DeviceFrame theme={theme} size={size} url={`${COMPANY.url}/merchant/orders`}>
@@ -1327,24 +1359,24 @@ function WorkflowFulfilled({ theme, size }) {
         <div style={{ position: 'relative', paddingLeft: `${4 * size}px` }}>
           {events.map((ev, i) => {
             const isLast = i === n - 1;
+            const dotColor = isLast ? t.accent : (t.positive || '#22c55e');
             return (
               <div key={ev.label} style={{ display: 'flex', gap: `${10 * size}px`, position: 'relative' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: `${18 * size}px`, flexShrink: 0 }}>
                   <Reveal delay={0.15 * i} scale={0.4} duration={0.4} style={{
                     width: `${18 * size}px`, height: `${18 * size}px`, borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    background: isLast ? t.accent : t.bgAlt,
-                    border: `1.5px solid ${isLast ? t.accent : t.border}`,
+                    background: dotColor, border: `1.5px solid ${dotColor}`,
                   }}>
-                    <ev.Icon size={9 * size} color={isLast ? (theme.isLight ? '#fff' : t.bg) : t.textMuted} strokeWidth={2.2} />
+                    <ev.Icon size={9 * size} color={theme.isLight ? '#fff' : t.bg} strokeWidth={2.2} />
                   </Reveal>
                   {!isLast && (
                     <Reveal delay={0.15 * i + 0.1} as="div" y={0} scale={1} duration={0.35}
-                      style={{ width: '2px', flex: 1, minHeight: `${16 * size}px`, background: t.border, transformOrigin: 'top' }} />
+                      style={{ width: '2px', flex: 1, minHeight: `${16 * size}px`, background: t.positive || '#22c55e', opacity: 0.35, transformOrigin: 'top' }} />
                   )}
                 </div>
                 <Reveal delay={0.15 * i + 0.05} y={4} duration={0.4} style={{ paddingBottom: `${14 * size}px` }}>
-                  <div style={{ fontFamily: theme.fonts.body, fontWeight: isLast ? 700 : 500, fontSize: `${8.5 * size}px`, color: isLast ? t.accent : t.text }}>{ev.label}</div>
+                  <div style={{ fontFamily: theme.fonts.body, fontWeight: isLast ? 700 : 500, fontSize: `${8.5 * size}px`, color: isLast ? t.accent : (t.positive || '#22c55e') }}>{ev.label}</div>
                   <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint }}>{ev.time}</div>
                 </Reveal>
               </div>
@@ -1353,14 +1385,57 @@ function WorkflowFulfilled({ theme, size }) {
         </div>
       </DeviceFrame>
       <DeviceFrame theme={theme} size={size} url="inbox">
-        <Reveal delay={0.15 * n + 0.2} y={10} duration={0.45}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, marginBottom: `${8 * size}px` }}>
-            <Mail size={13 * size} color={t.accent} />
-            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Customer inbox</span>
-          </div>
-          <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, color: t.text, marginBottom: `${4 * size}px` }}>Your order shipped!</div>
-          <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.5 }}>Order #1049 is on its way. Sent automatically — the merchant didn't lift a finger.</div>
+        <Reveal delay={0.15 * n + 0.2} y={10} duration={0.45} style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, marginBottom: `${8 * size}px` }}>
+          <Mail size={13 * size} color={t.accent} />
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Customer inbox</span>
         </Reveal>
+
+        {stage !== 'open' ? (
+          <div style={{ position: 'relative' }}>
+            {emails.map((e, i) => (
+              <Reveal key={e.subject} delay={0.15 * n + 0.35 + i * 0.12} y={8} duration={0.35}
+                onClick={() => openEmail(i)}
+                style={{
+                  display: 'flex', flexDirection: 'column', gap: `${2 * size}px`, cursor: 'pointer',
+                  padding: `${7 * size}px ${6 * size}px`, minHeight: `${ROW_H * size}px`, boxSizing: 'border-box',
+                  borderBottom: `1px solid ${t.border}`,
+                  background: i === targetIndex && stage === 'clicking' ? `${t.accent}14` : 'transparent',
+                  transition: 'background 0.3s ease',
+                }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${7.5 * size}px`, color: t.text }}>{e.from}</span>
+                  <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6 * size}px`, color: t.textFaint }}>{e.time}</span>
+                </div>
+                <span style={{ fontFamily: theme.fonts.body, fontSize: `${7 * size}px`, color: t.textMuted }}>{e.subject}</span>
+              </Reveal>
+            ))}
+            <motion.div
+              initial={false}
+              animate={{
+                opacity: stage === 'clicking' ? 1 : 0,
+                x: stage === 'clicking' ? 8 * size : 40 * size,
+                y: stage === 'clicking' ? cursorTop : -10 * size,
+                scale: stage === 'clicking' ? [1, 0.75, 1] : 1,
+              }}
+              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                position: 'absolute', top: 0, left: 0, width: `${9 * size}px`, height: `${9 * size}px`,
+                borderRadius: '50%', background: t.accent, boxShadow: `0 0 0 ${4 * size}px ${t.accent}33`,
+                pointerEvents: 'none',
+              }}
+            />
+          </div>
+        ) : (
+          <Reveal y={8} duration={0.4}>
+            <button onClick={backToList} style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: `${8 * size}px`,
+              fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint,
+            }}>&larr; Inbox</button>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, marginBottom: `${4 * size}px` }}>{emails[openIndex].from} · {emails[openIndex].time}</div>
+            <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, color: t.text, marginBottom: `${6 * size}px` }}>{emails[openIndex].subject}</div>
+            <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.5 }}>{emails[openIndex].body}</div>
+          </Reveal>
+        )}
       </DeviceFrame>
     </div>
   );
