@@ -26,7 +26,7 @@ function SlideVisual({ slideSlug, visuals, theme, isFullscreen, animated }) {
   // presentation actually gets — this one multiplier drives every mockup's
   // font/icon/spacing sizes, so raising it fixes "too small on desktop"
   // across the whole demo deck at once rather than slide by slide.
-  const size = isFullscreen ? 1.3 : 0.6;
+  const size = isFullscreen ? 1.45 : 0.6;
   const Visual = visuals[slideSlug];
   if (!Visual) return null;
   const wrapStyle = {
@@ -51,11 +51,11 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile, animated }) {
   const t = theme.colors;
 
   const headlineSize = isFullscreen
-    ? (isMobile ? 'clamp(18px, 4.5vw, 28px)' : 'clamp(22px, 2.8vw, 36px)')
+    ? (isMobile ? 'clamp(18px, 4.5vw, 28px)' : 'clamp(28px, 3.6vw, 58px)')
     : (isMobile ? 'clamp(12px, 3.2vw, 16px)' : 'clamp(16px, 2.4vw, 26px)');
 
   const bodySize = isFullscreen
-    ? (isMobile ? '13px' : 'clamp(12px, 1.3vw, 15px)')
+    ? (isMobile ? '13px' : 'clamp(13px, 1.5vw, 17px)')
     : 'clamp(10px, 1.2vw, 13px)';
 
   const pad = isFullscreen
@@ -97,15 +97,15 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile, animated }) {
         {(!isMobile || isFullscreen) && (
           <>
             <Rv animated={animated} delay={0.3} style={{
-              width: isFullscreen ? '36px' : '28px', height: '1px',
+              width: isFullscreen ? '48px' : '28px', height: isFullscreen ? '2px' : '1px',
               background: t.accent,
               margin: ruleMargin,
               transformOrigin: 'left',
             }} />
             <Rv animated={animated} delay={0.4} as="p" style={{
               fontFamily: theme.fonts.body,
-              fontSize: bodySize,
-              fontWeight: theme.type.bodyWeight, color: t.textMuted, lineHeight: 1.75,
+              fontSize: bodySize, maxWidth: isFullscreen ? '46ch' : undefined,
+              fontWeight: theme.type.bodyWeight, color: t.textMuted, lineHeight: 1.65,
             }}>
               {slide.body}
             </Rv>
