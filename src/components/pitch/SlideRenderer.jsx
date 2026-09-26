@@ -6,7 +6,7 @@
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { COMPANY } from '../../data/config.js';
-import { Reveal, AmbientBackdrop } from './motion.jsx';
+import { Reveal, AmbientBackdrop, useSlidePace } from './motion.jsx';
 
 export default function SlideRenderer({ slide, visuals = {}, isFullscreen = false, animated = false, total }) {
   const { theme } = useTheme();
@@ -21,20 +21,21 @@ export default function SlideRenderer({ slide, visuals = {}, isFullscreen = fals
 
 // ─── RIGHT-SIDE VISUAL SLOT ────────────────────────────────────────────────────
 
-function SlideVisual({ slideSlug, visuals, theme, isFullscreen, animated }) {
+function SlideVisual({ slideSlug, visuals, theme, isFullscreen, animated, slideId, autoMs }) {
   // Fullscreen visuals were sized for a smaller footprint than a real
   // presentation actually gets — this one multiplier drives every mockup's
   // font/icon/spacing sizes, so raising it fixes "too small on desktop"
   // across the whole demo deck at once rather than slide by slide.
   const size = isFullscreen ? 1.45 : 0.6;
   const Visual = visuals[slideSlug];
+  const paceMs = useSlidePace(slideId, autoMs);
   if (!Visual) return null;
   const wrapStyle = {
     flex: '1 1 auto', minHeight: 0, width: '100%',
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
     position: 'relative', zIndex: 1,
   };
-  const visual = <Visual theme={theme} size={size} isFullscreen={isFullscreen} autoDemo={!!animated} />;
+  const visual = <Visual theme={theme} size={size} isFullscreen={isFullscreen} autoDemo={!!animated} paceMs={paceMs} />;
   if (!animated) return <div style={wrapStyle}>{visual}</div>;
   return <Reveal delay={0.25} y={28} scale={0.97} duration={0.8} style={wrapStyle}>{visual}</Reveal>;
 }
@@ -178,7 +179,7 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
           }}>
             {slide.tag}
           </div>
-          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} animated={animated} />
+          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} animated={animated} slideId={slide.id} autoMs={slide.autoMs} />
         </div>
       </div>
     );
@@ -214,7 +215,7 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
         }}>
           {slide.tag}
         </div>
-        <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} animated={animated} />
+        <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} animated={animated} slideId={slide.id} autoMs={slide.autoMs} />
       </div>
     </div>
   );

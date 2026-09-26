@@ -196,7 +196,7 @@ function PeakMark({ size, color }) {
   );
 }
 
-function MockupProblem({ theme, size }) {
+function MockupProblem({ theme, size, paceMs = 18000 }) {
   const t = theme.colors;
   const [merged, setMerged] = useState(false);
   // Infinite CSS keyframe animations inserted while an ancestor is
@@ -214,13 +214,16 @@ function MockupProblem({ theme, size }) {
   // Motion-graphics beat: the tab chaos plays itself out automatically a
   // moment after the slide opens — jitter, then the tools fly away and the
   // dashboard resolves underneath — instead of waiting on a click. The
-  // button still lets the audience replay it on demand.
+  // button still lets the audience replay it on demand. Timed to a quarter
+  // of the slide's pace (real narration length once recorded, else autoMs)
+  // so it doesn't fire and finish while the presenter is still on the
+  // eyebrow line.
   useEffect(() => {
     if (!slideEntered) return;
     setMerged(false);
-    const t = setTimeout(() => setMerged(true), 1900);
+    const t = setTimeout(() => setMerged(true), Math.max(1400, paceMs * 0.28));
     return () => clearTimeout(t);
-  }, [slideEntered, animKey]);
+  }, [slideEntered, animKey, paceMs]);
 
   const tools = [
     { name: 'Shopify',    Icon: SiShopify,      color: '#95BF47' },
@@ -479,7 +482,7 @@ function MockupPlatform({ theme, size }) {
 }
 
 
-function MockupCustomer({ theme, size, autoDemo = false }) {
+function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
   const t = theme.colors;
   const products = EMBER_MOSS_PRODUCTS;
   const [cart, setCart] = useState({});          // { productName: qty }
@@ -505,7 +508,12 @@ function MockupCustomer({ theme, size, autoDemo = false }) {
     liveRef.current = true;
     setView('shop'); setCart({});
     const timers = [];
-    const at = (ms, fn) => timers.push(setTimeout(() => { if (liveRef.current) fn(); }, ms));
+    // Original beats were timed against a 7.6s script — scale that whole
+    // timeline against however long this slide actually gets (real
+    // narration length once recorded, else autoMs), so a longer stay means
+    // a more leisurely browse, not everything crammed into the first 7.6s.
+    const k = paceMs / 7600;
+    const at = (ms, fn) => timers.push(setTimeout(() => { if (liveRef.current) fn(); }, ms * k));
     const scroll = (top) => frameRef.current?.scrollTo({ top, behavior: 'smooth' });
 
     at(1300, () => scroll(220));                                    // browse down the grid
@@ -517,7 +525,7 @@ function MockupCustomer({ theme, size, autoDemo = false }) {
     at(7600, () => setView('cart'));                                // land on the cart, script ends here
 
     return () => { liveRef.current = false; timers.forEach(clearTimeout); };
-  }, [autoDemo, slideEntered]);
+  }, [autoDemo, slideEntered, paceMs]);
 
   const cartEntries = Object.entries(cart).map(([name, qty]) => ({ ...products.find(p => p.name === name), qty }));
   const cartCount = cartEntries.reduce((s, e) => s + e.qty, 0);
@@ -722,10 +730,31 @@ function VisitorsLineChart({ theme, size, data }) {
   );
 }
 
-function MockupMerchant({ theme, size }) {
+function MockupMerchant({ theme, size, paceMs = 18000 }) {
   const t = theme.colors;
   const tabs = ['Overview', 'Orders', 'Products', 'Customers'];
   const [tab, setTab] = useState(0);
+  const slideEntered = useSlideEntered();
+
+  // Motion-graphics beat: walk through every tab automatically once the
+  // slide opens — this was the one dashboard slide still sitting static on
+  // "Overview" while every other slide moved. Spread across most of the
+  // slide's pace; a real click takes over immediately.
+  const autoRef = useRef(false);
+  useEffect(() => {
+    if (!slideEntered) return;
+    setTab(0);
+    autoRef.current = true;
+    const gap = Math.max(1100, (paceMs * 0.75) / Math.max(tabs.length - 1, 1));
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      if (i >= tabs.length) { clearInterval(id); return; }
+      if (autoRef.current) setTab(i);
+    }, gap);
+    return () => clearInterval(id);
+  }, [slideEntered, paceMs]);
+  const goToTab = (i) => { autoRef.current = false; setTab(i); };
 
   const REVENUE_7D = [820, 1140, 960, 1480, 1290, 1860, 1620];
   const maxRev = Math.max(...REVENUE_7D);
@@ -763,7 +792,7 @@ function MockupMerchant({ theme, size }) {
     <DeviceFrame theme={theme} size={size} url={`${COMPANY.url}/merchant`} fill>
       <div style={{ display: 'flex', gap: `${4 * size}px`, marginBottom: `${10 * size}px`, borderBottom: `1px solid ${t.border}`, paddingBottom: `${6 * size}px` }}>
         {tabs.map((label, i) => (
-          <button key={label} onClick={() => setTab(i)} style={{
+          <button key={label} onClick={() => goToTab(i)} style={{
             padding: `${5 * size}px ${9 * size}px`, border: 'none', borderRadius: `${4 * size}px`,
             background: tab === i ? t.accent : 'transparent',
             color: tab === i ? (theme.isLight ? '#fff' : t.bg) : t.textMuted,
@@ -868,7 +897,7 @@ function MockupMerchant({ theme, size }) {
 }
 
 // ── 6. storefront-theme — live theme switch ──────────────────────────────────────
-function MockupThemeSwitch({ theme, size }) {
+function MockupThemeSwitch({ theme, size, paceMs = 18000 }) {
   const t = theme.colors;
   const [mt, setMt] = useState(STOREFRONT_THEME_SWATCHES[0]);
   const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
@@ -877,18 +906,21 @@ function MockupThemeSwitch({ theme, size }) {
   // Motion-graphics beat: cycle once through every swatch a beat after the
   // slide opens, so the storefront visibly repaints itself unprompted —
   // this IS the "watch it repaint live" moment from the speaker note.
+  // Spread evenly across most of the slide's pace, not a quick fixed burst.
   const userTouchedRef = useRef(false);
   useEffect(() => {
     if (!slideEntered) return;
     userTouchedRef.current = false;
+    const steps = STOREFRONT_THEME_SWATCHES.length - 1;
+    const gap = Math.max(900, (paceMs * 0.7) / Math.max(steps, 1));
     let i = 0;
     const id = setInterval(() => {
       i += 1;
       if (i >= STOREFRONT_THEME_SWATCHES.length) { clearInterval(id); return; }
       if (!userTouchedRef.current) setMt(STOREFRONT_THEME_SWATCHES[i]);
-    }, 1300);
+    }, gap);
     return () => clearInterval(id);
-  }, [slideEntered]);
+  }, [slideEntered, paceMs]);
   const pickTheme = (candidate) => { userTouchedRef.current = true; setMt(candidate); };
 
   const Preview = {
@@ -1062,7 +1094,7 @@ function MinimalPreview({ mt, size, products }) {
 
 
 // ── 7. workflow — clickable horizontal steps ────────────────────────────────────
-function MockupWorkflow({ theme, size }) {
+function MockupWorkflow({ theme, size, paceMs = 20000 }) {
   const t = theme.colors;
   const steps = [
     { l: 'Sign up',      d: 'Merchant creates an account and picks a business type.' },
@@ -1084,14 +1116,15 @@ function MockupWorkflow({ theme, size }) {
     if (!slideEntered) return;
     setActive(0);
     autoRef.current = true;
+    const gap = Math.max(800, (paceMs * 0.82) / Math.max(steps.length - 1, 1));
     let i = 0;
     const id = setInterval(() => {
       i += 1;
       if (i >= steps.length) { clearInterval(id); return; }
       if (autoRef.current) setActive(i);
-    }, 1100);
+    }, gap);
     return () => clearInterval(id);
-  }, [slideEntered]);
+  }, [slideEntered, paceMs]);
   const goToStep = (i) => { autoRef.current = false; setActive(i); };
 
   return (
@@ -1274,30 +1307,67 @@ function WorkflowPayment({ theme, size }) {
 // ── Step 6: Fulfilled — shipped, customer notified ────────────────────────────
 function WorkflowFulfilled({ theme, size }) {
   const t = theme.colors;
+  const events = [
+    { time: '9:02 AM',  label: 'Label created',              Icon: FileText },
+    { time: '11:40 AM', label: 'Picked up by carrier',       Icon: Package },
+    { time: '2:15 PM',  label: 'In transit — Calgary, AB',   Icon: Truck },
+    { time: '4:50 PM',  label: 'Out for delivery',           Icon: Truck },
+    { time: '6:12 PM',  label: 'Delivered',                  Icon: CheckCircle2 },
+  ];
+  const n = events.length;
+  // Motion-graphics beat: a UPS/FedEx-style tracking timeline that draws
+  // itself in top-to-bottom the moment this step becomes active — the dot
+  // and connecting line for each stop land in sequence, the last one
+  // (Delivered) lands in the brand accent colour, and the customer's inbox
+  // email arrives right after, as if the "Delivered" event triggered it.
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: `${10 * size}px`, height: '100%' }}>
       <DeviceFrame theme={theme} size={size} url={`${COMPANY.url}/merchant/orders`}>
-        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: `${8 * size}px` }}>Order #1049</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px` }}>
-          <Truck size={14 * size} color={t.accent} />
-          <span style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${9 * size}px`, color: t.text }}>Marked as Shipped</span>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: `${10 * size}px` }}>Order #1049 · Tracking</div>
+        <div style={{ position: 'relative', paddingLeft: `${4 * size}px` }}>
+          {events.map((ev, i) => {
+            const isLast = i === n - 1;
+            return (
+              <div key={ev.label} style={{ display: 'flex', gap: `${10 * size}px`, position: 'relative' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: `${18 * size}px`, flexShrink: 0 }}>
+                  <Reveal delay={0.15 * i} scale={0.4} duration={0.4} style={{
+                    width: `${18 * size}px`, height: `${18 * size}px`, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    background: isLast ? t.accent : t.bgAlt,
+                    border: `1.5px solid ${isLast ? t.accent : t.border}`,
+                  }}>
+                    <ev.Icon size={9 * size} color={isLast ? (theme.isLight ? '#fff' : t.bg) : t.textMuted} strokeWidth={2.2} />
+                  </Reveal>
+                  {!isLast && (
+                    <Reveal delay={0.15 * i + 0.1} as="div" y={0} scale={1} duration={0.35}
+                      style={{ width: '2px', flex: 1, minHeight: `${16 * size}px`, background: t.border, transformOrigin: 'top' }} />
+                  )}
+                </div>
+                <Reveal delay={0.15 * i + 0.05} y={4} duration={0.4} style={{ paddingBottom: `${14 * size}px` }}>
+                  <div style={{ fontFamily: theme.fonts.body, fontWeight: isLast ? 700 : 500, fontSize: `${8.5 * size}px`, color: isLast ? t.accent : t.text }}>{ev.label}</div>
+                  <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint }}>{ev.time}</div>
+                </Reveal>
+              </div>
+            );
+          })}
         </div>
-        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, marginTop: `${6 * size}px` }}>Tracking added · carrier notified</div>
       </DeviceFrame>
       <DeviceFrame theme={theme} size={size} url="inbox">
-        <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, marginBottom: `${8 * size}px` }}>
-          <Mail size={13 * size} color={t.accent} />
-          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Customer inbox</span>
-        </div>
-        <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, color: t.text, marginBottom: `${4 * size}px` }}>Your order shipped!</div>
-        <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.5 }}>Order #1049 is on its way. Sent automatically — the merchant didn't lift a finger.</div>
+        <Reveal delay={0.15 * n + 0.2} y={10} duration={0.45}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, marginBottom: `${8 * size}px` }}>
+            <Mail size={13 * size} color={t.accent} />
+            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Customer inbox</span>
+          </div>
+          <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, color: t.text, marginBottom: `${4 * size}px` }}>Your order shipped!</div>
+          <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.5 }}>Order #1049 is on its way. Sent automatically — the merchant didn't lift a finger.</div>
+        </Reveal>
       </DeviceFrame>
     </div>
   );
 }
 
 // ── 8. portal — before / after toggle ────────────────────────────────────────────
-function MockupPortal({ theme, size }) {
+function MockupPortal({ theme, size, paceMs = 18000 }) {
   const t = theme.colors;
   const [after, setAfter] = useState(false);
   const slideEntered = useSlideEntered();
@@ -1307,9 +1377,9 @@ function MockupPortal({ theme, size }) {
   useEffect(() => {
     if (!slideEntered) return;
     setAfter(false);
-    const t = setTimeout(() => setAfter(true), 2100);
+    const t = setTimeout(() => setAfter(true), Math.max(1400, paceMs * 0.32));
     return () => clearTimeout(t);
-  }, [slideEntered]);
+  }, [slideEntered, paceMs]);
 
   const SUBS = [
     { name: 'Shopify',    Icon: SiShopify,   color: '#95BF47', min: 30 },
@@ -1393,22 +1463,42 @@ function MockupPortal({ theme, size }) {
 
 
 // ── 9. why — audience chips ──────────────────────────────────────────────────────
-function MockupWhy({ theme, size }) {
+function MockupWhy({ theme, size, paceMs = 19000 }) {
   const t = theme.colors;
   const audiences = [
     { Icon: Package,  label: 'Makers',            line: 'Ingredients, suppliers, and batch cost — no more spreadsheets.', detail: 'Costing built into every product' },
     { Icon: Calendar, label: 'Service businesses', line: 'Bookings, customers, and invoicing without five different logins.', detail: 'Book online, get paid automatically' },
     { Icon: Store,    label: 'Retailers',          line: 'A storefront and back office that actually share the same data.', detail: 'One inventory, every channel' },
   ];
+  const slideEntered = useSlideEntered();
+
+  // Motion-graphics beat: a soft spotlight visits each audience card in
+  // turn (scale + accent border), like a presenter pointing at one at a
+  // time, instead of all three sitting inert after their entrance stagger.
+  const [spot, setSpot] = useState(-1);
+  useEffect(() => {
+    if (!slideEntered) return;
+    setSpot(-1);
+    const startDelay = 900;
+    const gap = Math.max(1400, (paceMs * 0.55) / audiences.length);
+    const timers = [];
+    audiences.forEach((_, i) => {
+      timers.push(setTimeout(() => setSpot(i), startDelay + i * gap));
+    });
+    timers.push(setTimeout(() => setSpot(-1), startDelay + audiences.length * gap));
+    return () => timers.forEach(clearTimeout);
+  }, [slideEntered, paceMs]);
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px`, flex: '1 1 auto', minHeight: `${140 * size}px`, marginBottom: `${12 * size}px` }}>
         {audiences.map((a, i) => (
           <Reveal key={a.label} delay={i * 0.12} y={16} style={{
-            border: `1px solid ${t.border}`, borderRadius: `${7 * size}px`, padding: `${12 * size}px`,
+            border: `1px solid ${spot === i ? t.accent : t.border}`, borderRadius: `${7 * size}px`, padding: `${12 * size}px`,
             display: 'flex', flexDirection: 'column', background: t.surface || t.bg,
-            boxShadow: `0 ${3 * size}px ${8 * size}px rgba(0,0,0,0.05)`,
+            boxShadow: spot === i ? `0 ${6 * size}px ${16 * size}px ${t.accent}22` : `0 ${3 * size}px ${8 * size}px rgba(0,0,0,0.05)`,
+            transform: spot === i ? 'translateY(-2px) scale(1.02)' : 'none',
+            transition: 'border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease',
           }}>
             <a.Icon size={18 * size} color={t.accent} strokeWidth={1.8} />
             <div style={{ fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${9.5 * size}px`, color: t.text, marginTop: `${8 * size}px`, marginBottom: `${5 * size}px` }}>{a.label}</div>

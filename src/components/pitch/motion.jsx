@@ -12,6 +12,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { motion, animate, useReducedMotion, useInView } from 'framer-motion';
 import { useSlideEntered } from '../../context/SlideTransitionContext.jsx';
+import { deckHasAudio, getSlideAudioUrl } from '../../data/audio.js';
 
 export const EASE = [0.16, 1, 0.3, 1];
 
@@ -124,4 +125,37 @@ export function AmbientBackdrop({ theme }) {
       </Float>
     </div>
   );
+}
+
+// The demo deck is currently the only deck with auto-play choreography
+// (Reveal beats, tab-walks, etc.) — kept as a constant rather than threaded
+// through every mockup's props purely to save a lot of prop-drilling.
+const DEMO_DECK_ID = 'demo';
+
+// How long a slide's own choreography (tab-walks, cycles, auto-demo scripts)
+// should take to play out. Prefers the REAL narration clip's length once one
+// exists for this slide — so beats naturally spread across however long the
+// presenter is actually talking — and falls back to `fallbackMs` (each
+// slide's `autoMs` in data/decks/demoSlides.js) until then. This runs
+// whenever a slide opens, whether or not deck auto-play/auto-advance is on.
+export function useSlidePace(slideId, fallbackMs = 18000) {
+  const [ms, setMs] = useState(fallbackMs);
+  useEffect(() => {
+    setMs(fallbackMs);
+    if (!slideId || !deckHasAudio(DEMO_DECK_ID)) return;
+    const url = getSlideAudioUrl(DEMO_DECK_ID, slideId - 1);
+    if (!url) return;
+    let cancelled = false;
+    const audio = new Audio();
+    audio.preload = 'metadata';
+    const onLoaded = () => {
+      if (!cancelled && isFinite(audio.duration) && audio.duration > 0) {
+        setMs(audio.duration * 1000);
+      }
+    };
+    audio.addEventListener('loadedmetadata', onLoaded);
+    audio.src = url; // errors (clip not recorded yet) just leave us on fallbackMs
+    return () => { cancelled = true; audio.removeEventListener('loadedmetadata', onLoaded); audio.src = ''; };
+  }, [slideId, fallbackMs]);
+  return ms;
 }
