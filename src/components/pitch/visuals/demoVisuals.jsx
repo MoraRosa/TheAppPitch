@@ -189,10 +189,30 @@ function SectionLabel({ size, theme, children }) {
 // literal "summit" glyph (a peak, for Peak) in the theme's accent color.
 // Swap this out the day a real logo exists; nothing else references it.
 function PeakMark({ size, color }) {
+  // Unique gradient id per instance — this renders twice on the page
+  // (Problem slide + Portal slide) and SVG gradient ids are global, so a
+  // fixed id would make the second instance silently reuse the first's glow.
+  const [gid] = useState(() => `pk${Math.random().toString(36).slice(2, 8)}`);
   return (
-    <svg width={44 * size} height={44 * size} viewBox="0 0 64 64" style={{ filter: `drop-shadow(0 0 ${10 * size}px ${color}55)` }}>
+    <svg width={54 * size} height={54 * size} viewBox="-14 -18 92 88" style={{ overflow: 'visible', filter: `drop-shadow(0 0 ${8 * size}px ${color}40)` }}>
+      <defs>
+        <radialGradient id={`${gid}-glow`} cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.5" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* soft summit glow, drawn first so every peak sits on top of it */}
+      <circle cx="32" cy="22" r="34" fill={`url(#${gid}-glow)`} />
+      {/* two lower, translucent peaks give the main peak depth/scale */}
+      <path d="M2 54 L18 24 L34 54 Z" fill={color} opacity="0.28" />
+      <path d="M30 54 L48 20 L66 54 Z" fill={color} opacity="0.4" />
+      {/* main peak */}
       <path d="M32 6 L58 54 H6 Z" fill={color} />
+      {/* snow cap */}
       <path d="M32 6 L41 23 L32 18 L23 23 Z" fill="#fff" fillOpacity="0.92" />
+      {/* summit flag — the "goal reached" beat */}
+      <line x1="32" y1="6" x2="32" y2="-11" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M32 -11 L45 -6.5 L32 -2 Z" fill={color} />
     </svg>
   );
 }
