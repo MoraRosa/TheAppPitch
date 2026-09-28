@@ -24,7 +24,7 @@ import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, EMBER_MOSS_JOURNAL, EMBER_MOSS_T
 // Ember & Moss is the example brand shown throughout the storefront-facing
 // slides — drop the real photos into /public/demo-assets/ember-moss/ (see
 // build notes) and this repaints itself automatically, no code changes.
-function MockupWelcome({ theme, size, isFullscreen }) {
+function MockupWelcome({ theme, size, isFullscreen, autoDemo = false, paceMs = 20000 }) {
   const t = theme.colors;
   const [heroFailed, setHeroFailed] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
@@ -32,31 +32,110 @@ function MockupWelcome({ theme, size, isFullscreen }) {
   const [cart, setCart] = useState({});
   const featured = EMBER_MOSS_PRODUCTS.slice(0, 3);
   const cartCount = Object.values(cart).reduce((s, q) => s + q, 0);
+  const slideEntered = useSlideEntered();
+  const frameRef = useRef(null);
 
   const goHome = () => setView({ type: 'home' });
+  const openShop = () => setView({ type: 'shop' });
   const openProduct = (p) => setView({ type: 'product', product: p });
   const openPost = (post) => setView({ type: 'post', post });
   const addToCart = (p) => setCart(c => ({ ...c, [p.name]: (c[p.name] || 0) + 1 }));
+  const setQty = (name, qty) => setCart(c => {
+    if (qty <= 0) { const { [name]: _, ...rest } = c; return rest; }
+    return { ...c, [name]: qty };
+  });
+
+  // Motion-graphics beat: this is the audience's very first look at the
+  // storefront, so it gets a real guided tour — scroll the whole landing
+  // page to the bottom (not a shallow peek), open a featured product, add
+  // it to the cart, then visit the real Shop page (all products, not just
+  // "Featured") and scroll that too. A real click anywhere hands control
+  // straight back.
+  const liveRef = useRef(true);
+  const cancelAuto = () => { liveRef.current = false; };
+  const scrollToBottom = () => {
+    const el = frameRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  };
+  const scrollToTop = () => frameRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+
+  useEffect(() => {
+    if (!autoDemo || !slideEntered) return;
+    liveRef.current = true;
+    setView({ type: 'home' }); setCart({});
+    const timers = [];
+    const k = paceMs / 20000; // baseline tour was timed against a 20s slide
+    const at = (ms, fn) => timers.push(setTimeout(() => { if (liveRef.current) fn(); }, ms * k));
+
+    at(1200, scrollToBottom);                                  // read all the way down the homepage
+    at(4200, scrollToTop);                                     // back to top
+    at(5200, () => openProduct(featured[1]));                  // open a featured product
+    at(7200, () => addToCart(featured[1]));                    // add it to the cart
+    at(7900, goHome);
+    at(8600, openShop);                                        // visit the REAL shop page (all products)
+    at(9800, scrollToBottom);                                  // scroll the full catalog
+    at(12200, scrollToTop);
+
+    return () => { liveRef.current = false; timers.forEach(clearTimeout); };
+  }, [autoDemo, slideEntered, paceMs]);
 
   return (
-    <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill>
+    <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill scrollRef={frameRef}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${12 * size}px` }}>
-        <button onClick={goHome} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.text }}>Ember &amp; Moss</button>
+        <button onClick={() => { cancelAuto(); goHome(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.text }}>Ember &amp; Moss</button>
         <div style={{ display: 'flex', gap: `${10 * size}px`, alignItems: 'center' }}>
-          <button onClick={goHome} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Shop</button>
-          <button onClick={() => setView({ type: 'contact' })} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Contact</button>
+          <button onClick={() => { cancelAuto(); openShop(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Shop</button>
+          <button onClick={() => { cancelAuto(); setView({ type: 'contact' }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Contact</button>
           <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Cart{cartCount > 0 ? ` (${cartCount})` : ''}</span>
         </div>
       </div>
 
       {view.type === 'product' && (
-        <ProductDetailView theme={theme} size={size} product={view.product} onBack={goHome} onAddToCart={addToCart} cartQty={cart[view.product.name] || 0} />
+        <ProductDetailView theme={theme} size={size} product={view.product} onBack={() => { cancelAuto(); goHome(); }} onAddToCart={(p) => { cancelAuto(); addToCart(p); }} cartQty={cart[view.product.name] || 0} />
       )}
       {view.type === 'post' && (
-        <BlogPostView theme={theme} size={size} post={view.post} onBack={goHome} />
+        <BlogPostView theme={theme} size={size} post={view.post} onBack={() => { cancelAuto(); goHome(); }} />
       )}
       {view.type === 'contact' && (
-        <ContactView theme={theme} size={size} onBack={goHome} />
+        <ContactView theme={theme} size={size} onBack={() => { cancelAuto(); goHome(); }} />
+      )}
+
+      {view.type === 'shop' && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${14 * size}px` }}>
+            <SectionLabel size={size} theme={theme}>All Products</SectionLabel>
+            <button onClick={() => { cancelAuto(); goHome(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint }}>&larr; Home</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px` }}>
+            {EMBER_MOSS_PRODUCTS.map(p => {
+              const qty = cart[p.name] || 0;
+              return (
+                <ScrollReveal key={p.name} y={16} amount={0.4} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px`, textAlign: 'center' }}>
+                  <button onClick={() => { cancelAuto(); openProduct(p); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'center', font: 'inherit' }}>
+                    <div style={{ marginBottom: `${6 * size}px` }}>
+                      <ProductImg src={p.img} alt={p.name} size={size} />
+                    </div>
+                    <div style={{ fontFamily: theme.fonts.body, fontWeight: 500, fontSize: `${7.5 * size}px`, color: t.text, marginBottom: `${3 * size}px` }}>{p.name}</div>
+                  </button>
+                  <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, marginBottom: `${6 * size}px` }}>{p.price}</div>
+                  {qty === 0 ? (
+                    <button onClick={() => { cancelAuto(); setQty(p.name, 1); }} style={{
+                      width: '100%', padding: `${5 * size}px`, border: 'none', borderRadius: `${4 * size}px`,
+                      background: t.accent, color: theme.isLight ? '#fff' : t.bg,
+                      fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${7.5 * size}px`, cursor: 'pointer',
+                    }}>Add to cart</button>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${t.accent}`, borderRadius: `${4 * size}px`, overflow: 'hidden' }}>
+                      <button onClick={() => { cancelAuto(); setQty(p.name, qty - 1); }} style={{ flex: 1, border: 'none', background: 'transparent', color: t.accent, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, cursor: 'pointer', padding: `${4 * size}px 0` }}>\u2212</button>
+                      <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.text, minWidth: `${16 * size}px` }}>{qty}</span>
+                      <button onClick={() => { cancelAuto(); setQty(p.name, qty + 1); }} style={{ flex: 1, border: 'none', background: 'transparent', color: t.accent, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, cursor: 'pointer', padding: `${4 * size}px 0` }}>+</button>
+                    </div>
+                  )}
+                </ScrollReveal>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {view.type === 'home' && (
@@ -81,12 +160,12 @@ function MockupWelcome({ theme, size, isFullscreen }) {
               <div style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: heroFailed ? t.textMuted : '#E7DFC8', marginBottom: `${10 * size}px`, maxWidth: '85%' }}>
                 One login runs the storefront, the shop, and everything behind it.
               </div>
-              <span style={{
-                display: 'inline-block', padding: `${6 * size}px ${13 * size}px`,
+              <button onClick={() => { cancelAuto(); openShop(); }} style={{
+                display: 'inline-block', padding: `${6 * size}px ${13 * size}px`, border: 'none', cursor: 'pointer',
                 background: t.accent, color: theme.isLight ? '#fff' : t.bg,
                 borderRadius: theme.space.radius === '0px' ? '0px' : `${5 * size}px`,
                 fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`,
-              }}>Shop the collection</span>
+              }}>Shop the collection</button>
             </div>
           </div>
 
@@ -94,7 +173,7 @@ function MockupWelcome({ theme, size, isFullscreen }) {
           <SectionLabel size={size} theme={theme}>Featured</SectionLabel>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
             {featured.map(p => (
-              <button key={p.name} onClick={() => openProduct(p)} style={{
+              <button key={p.name} onClick={() => { cancelAuto(); openProduct(p); }} style={{
                 border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${7 * size}px`, textAlign: 'center',
                 background: 'none', cursor: 'pointer', font: 'inherit',
               }}>
@@ -111,7 +190,7 @@ function MockupWelcome({ theme, size, isFullscreen }) {
           <SectionLabel size={size} theme={theme}>From the Journal</SectionLabel>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
             {EMBER_MOSS_JOURNAL.map(post => (
-              <button key={post.title} onClick={() => openPost(post)} style={{
+              <button key={post.title} onClick={() => { cancelAuto(); openPost(post); }} style={{
                 border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, overflow: 'hidden',
                 background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', font: 'inherit',
               }}>
@@ -129,7 +208,7 @@ function MockupWelcome({ theme, size, isFullscreen }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
             {EMBER_MOSS_TESTIMONIALS.map(rev => (
               <div key={rev.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px`, background: t.bgAlt }}>
-                <div style={{ color: t.accent, fontSize: `${8 * size}px`, marginBottom: `${4 * size}px`, letterSpacing: '1px' }}>{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</div>
+                <div style={{ color: t.accent, fontSize: `${8 * size}px`, marginBottom: `${4 * size}px`, letterSpacing: '1px' }}>{'\u2605'.repeat(rev.rating)}{'\u2606'.repeat(5 - rev.rating)}</div>
                 <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.5, marginBottom: `${5 * size}px`, fontStyle: 'italic' }}>&ldquo;{rev.quote}&rdquo;</div>
                 <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{rev.name}</div>
               </div>
@@ -141,7 +220,7 @@ function MockupWelcome({ theme, size, isFullscreen }) {
           <div style={{ marginBottom: `${18 * size}px` }}>
             {EMBER_MOSS_FAQ.map((item, i) => (
               <div key={item.q} style={{ borderBottom: `1px solid ${t.border}` }}>
-                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{
+                <button onClick={() => { cancelAuto(); setOpenFaq(openFaq === i ? null : i); }} style={{
                   width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   padding: `${8 * size}px 0`, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
                 }}>
@@ -161,7 +240,7 @@ function MockupWelcome({ theme, size, isFullscreen }) {
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: `${6 * size}px`,
           }}>
             <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${9 * size}px`, color: t.textFaint }}>Ember &amp; Moss</span>
-            <button onClick={() => setView({ type: 'contact' })} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textDecoration: 'underline' }}>Contact</button>
+            <button onClick={() => { cancelAuto(); setView({ type: 'contact' }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textDecoration: 'underline' }}>Contact</button>
             <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.06em' }}>&copy; 2026 · emberandmoss.shop</span>
           </div>
         </>
@@ -529,21 +608,22 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
     liveRef.current = true;
     setView('shop'); setCart({});
     const timers = [];
-    // Original beats were timed against a 7.6s script — scale that whole
+    // Original beats were timed against an 8.6s script — scale that whole
     // timeline against however long this slide actually gets (real
     // narration length once recorded, else autoMs), so a longer stay means
-    // a more leisurely browse, not everything crammed into the first 7.6s.
-    const k = paceMs / 7600;
+    // a more leisurely browse, not everything crammed into the first 8.6s.
+    const k = paceMs / 8600;
     const at = (ms, fn) => timers.push(setTimeout(() => { if (liveRef.current) fn(); }, ms * k));
     const scroll = (top) => frameRef.current?.scrollTo({ top, behavior: 'smooth' });
+    const scrollToBottom = () => { const el = frameRef.current; if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); };
 
-    at(1300, () => scroll(220));                                    // browse down the grid
-    at(2900, () => scroll(0));                                      // back to top
-    at(3500, () => setView(products[2]));                           // open a product (Dragon Mint Tea)
-    at(5200, () => addOne(products[2]));                            // add it to the cart
-    at(5800, () => setView('shop'));                                // back to shop
-    at(6400, () => scroll(220));                                    // one more browse pass
-    at(7600, () => setView('cart'));                                // land on the cart, script ends here
+    at(1300, scrollToBottom);                                       // browse all the way down the full grid
+    at(3400, () => scroll(0));                                      // back to top
+    at(4000, () => setView(products[2]));                           // open a product (Dragon Mint Tea)
+    at(5700, () => addOne(products[2]));                            // add it to the cart
+    at(6300, () => setView('shop'));                                // back to shop
+    at(6900, scrollToBottom);                                       // one more full browse pass
+    at(8600, () => setView('cart'));                                // land on the cart, script ends here
 
     return () => { liveRef.current = false; timers.forEach(clearTimeout); };
   }, [autoDemo, slideEntered, paceMs]);
