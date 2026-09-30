@@ -45,7 +45,7 @@ export function ProductDetailView({ theme, size, product, onBack, onAddToCart, c
               ))}
             </ul>
           )}
-          <button onClick={() => onAddToCart?.(product)} style={{
+          <button data-demo="add-to-cart" onClick={() => onAddToCart?.(product)} style={{
             padding: `${7 * size}px ${16 * size}px`, border: 'none', borderRadius: `${5 * size}px`,
             background: t.accent, color: theme.isLight ? '#fff' : t.bg,
             fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, cursor: 'pointer',

@@ -13,7 +13,7 @@
 import { useRef } from 'react';
 import { ScrollRootContext } from '../motion.jsx';
 
-export default function DeviceFrame({ theme, url, size = 1, children, minHeight, fill = false, scrollRef: externalRef = null }) {
+export default function DeviceFrame({ theme, url, size = 1, children, minHeight, fill = false, scrollRef: externalRef = null, overlay = null }) {
   const t = theme.colors;
   const ownRef = useRef(null);
   const scrollRef = externalRef || ownRef; // let a parent drive scrollTo() for auto-demo sequences
@@ -23,6 +23,7 @@ export default function DeviceFrame({ theme, url, size = 1, children, minHeight,
       border: `1px solid ${t.border}`,
       borderRadius: `${8 * size}px`,
       overflow: 'hidden',
+      position: 'relative', // anchors `overlay` (e.g. the demo cursor)
       background: t.surface || t.bg,
       boxShadow: `0 ${8 * size}px ${24 * size}px -12px rgba(0,0,0,0.18)`,
       ...(fill ? { height: '100%', display: 'flex', flexDirection: 'column' } : {}),
@@ -61,6 +62,7 @@ export default function DeviceFrame({ theme, url, size = 1, children, minHeight,
           {children}
         </ScrollRootContext.Provider>
       </div>
+      {overlay}
     </div>
   );
 }

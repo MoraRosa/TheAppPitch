@@ -11,6 +11,8 @@ import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkl
 import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom, SiHubspot } from 'react-icons/si';
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
+import AutoCursor from './AutoCursor.jsx';
+import { sleep, glide, pointAndClick } from '../../../utils/demoScript.js';
 import { ProductDetailView, BlogPostView, ContactView } from './storefrontViews.jsx';
 import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
 import { ScrollReveal, CountUp, Reveal } from '../motion.jsx';
@@ -46,46 +48,63 @@ function MockupWelcome({ theme, size, isFullscreen, autoDemo = false, paceMs = 2
   });
 
   // Motion-graphics beat: this is the audience's very first look at the
-  // storefront, so it gets a real guided tour — scroll the whole landing
-  // page to the bottom (not a shallow peek), open a featured product, add
-  // it to the cart, then visit the real Shop page (all products, not just
-  // "Featured") and scroll that too. A real click anywhere hands control
-  // straight back.
+  // storefront, so it gets a guided tour with a visible cursor: read down the
+  // landing page, click a featured product, add it to the cart, click Shop,
+  // browse the full catalog, then click Contact. A real click, wheel or touch
+  // anywhere hands control straight back.
   const liveRef = useRef(true);
-  const cancelAuto = () => { liveRef.current = false; };
-  const scrollToBottom = () => {
-    const el = frameRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-  };
-  const scrollToTop = () => frameRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  const cursorRef = useRef(null);
+  const cancelAuto = () => { liveRef.current = false; cursorRef.current?.hide(); };
 
   useEffect(() => {
     if (!autoDemo || !slideEntered) return;
     liveRef.current = true;
     setView({ type: 'home' }); setCart({});
-    const timers = [];
+    const frame = frameRef.current;
+    const isLive = () => liveRef.current;
     const k = paceMs / 20000; // baseline tour was timed against a 20s slide
-    const at = (ms, fn) => timers.push(setTimeout(() => { if (liveRef.current) fn(); }, ms * k));
+    const wait = (ms) => sleep(ms * k);
+    const glideTo = (to, ms) => glide(frameRef.current, to, Math.max(900, ms * k), isLive);
+    const click = (selector, onClick) => pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs: Math.max(500, 800 * k), onClick });
+    const stop = () => cancelAuto();
+    frame?.addEventListener('wheel', stop, { passive: true });
+    frame?.addEventListener('touchstart', stop, { passive: true });
 
-    at(1200, scrollToBottom);                                  // read all the way down the homepage
-    at(4200, scrollToTop);                                     // back to top
-    at(5200, () => openProduct(featured[1]));                  // open a featured product
-    at(7200, () => addToCart(featured[1]));                    // add it to the cart
-    at(7900, goHome);
-    at(8600, openShop);                                        // visit the REAL shop page (all products)
-    at(9800, scrollToBottom);                                  // scroll the full catalog
-    at(12200, scrollToTop);
+    (async () => {
+      await wait(700);
+      await glideTo('bottom', 3400);                 // read all the way down the homepage
+      await wait(500);
+      await glideTo(0, 1800);                        // ...and back up
+      await wait(300);
+      if (!(await click('[data-demo="featured-1"]', () => openProduct(featured[1])))) return;
+      await wait(700);
+      if (!(await click('[data-demo="add-to-cart"]', () => addToCart(featured[1])))) return;
+      await wait(700);
+      if (!(await click('[data-demo="nav-shop"]', openShop))) return;   // the REAL shop page
+      await wait(800);
+      await glideTo('bottom', 3000);                 // scroll the full catalog
+      await wait(400);
+      await glideTo(0, 1500);
+      await wait(300);
+      if (!(await click('[data-demo="nav-contact"]', () => setView({ type: 'contact' })))) return;
+      await wait(1500);                              // let the contact page land
+      cursorRef.current?.hide();
+    })();
 
-    return () => { liveRef.current = false; timers.forEach(clearTimeout); };
+    return () => {
+      liveRef.current = false;
+      frame?.removeEventListener('wheel', stop);
+      frame?.removeEventListener('touchstart', stop);
+    };
   }, [autoDemo, slideEntered, paceMs]);
 
   return (
-    <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill scrollRef={frameRef}>
+    <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill scrollRef={frameRef} overlay={<AutoCursor ref={cursorRef} theme={theme} size={size} />}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${12 * size}px` }}>
         <button onClick={() => { cancelAuto(); goHome(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.text }}>Ember &amp; Moss</button>
         <div style={{ display: 'flex', gap: `${10 * size}px`, alignItems: 'center' }}>
-          <button onClick={() => { cancelAuto(); openShop(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Shop</button>
-          <button onClick={() => { cancelAuto(); setView({ type: 'contact' }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Contact</button>
+          <button data-demo="nav-shop" onClick={() => { cancelAuto(); openShop(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Shop</button>
+          <button data-demo="nav-contact" onClick={() => { cancelAuto(); setView({ type: 'contact' }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Contact</button>
           <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Cart{cartCount > 0 ? ` (${cartCount})` : ''}</span>
         </div>
       </div>
@@ -126,7 +145,7 @@ function MockupWelcome({ theme, size, isFullscreen, autoDemo = false, paceMs = 2
                     }}>Add to cart</button>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${t.accent}`, borderRadius: `${4 * size}px`, overflow: 'hidden' }}>
-                      <button onClick={() => { cancelAuto(); setQty(p.name, qty - 1); }} style={{ flex: 1, border: 'none', background: 'transparent', color: t.accent, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, cursor: 'pointer', padding: `${4 * size}px 0` }}>\u2212</button>
+                      <button onClick={() => { cancelAuto(); setQty(p.name, qty - 1); }} style={{ flex: 1, border: 'none', background: 'transparent', color: t.accent, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, cursor: 'pointer', padding: `${4 * size}px 0` }}>−</button>
                       <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.text, minWidth: `${16 * size}px` }}>{qty}</span>
                       <button onClick={() => { cancelAuto(); setQty(p.name, qty + 1); }} style={{ flex: 1, border: 'none', background: 'transparent', color: t.accent, fontFamily: theme.fonts.mono, fontSize: `${10 * size}px`, cursor: 'pointer', padding: `${4 * size}px 0` }}>+</button>
                     </div>
@@ -172,8 +191,8 @@ function MockupWelcome({ theme, size, isFullscreen, autoDemo = false, paceMs = 2
           {/* ── Featured products ── */}
           <SectionLabel size={size} theme={theme}>Featured</SectionLabel>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${22 * size}px` }}>
-            {featured.map(p => (
-              <button key={p.name} onClick={() => { cancelAuto(); openProduct(p); }} style={{
+            {featured.map((p, i) => (
+              <button key={p.name} data-demo={`featured-${i}`} onClick={() => { cancelAuto(); openProduct(p); }} style={{
                 border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${7 * size}px`, textAlign: 'center',
                 background: 'none', cursor: 'pointer', font: 'inherit',
               }}>
@@ -596,36 +615,57 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
   });
   const addOne = (p) => setQty(p.name, (cart[p.name] || 0) + 1);
 
-  // Motion-graphics beat: when this slide is auto-playing in presentation
-  // mode, the storefront demos ITSELF — scroll the grid, open a product,
-  // add it to the cart, then open the cart — instead of sitting static
-  // waiting for a click. Any real click from the audience cancels the
-  // script immediately and hands control back.
+  // Motion-graphics beat: in presentation mode the storefront demos ITSELF
+  // with a visible cursor — read down the grid, click a product, add it to
+  // the cart, go back to the shop, browse once more, then open the cart and
+  // hover Checkout. Any real click, wheel or touch hands control back.
   const liveRef = useRef(true);
-  const cancelAuto = () => { liveRef.current = false; };
+  const cursorRef = useRef(null);
+  const cancelAuto = () => { liveRef.current = false; cursorRef.current?.hide(); };
   useEffect(() => {
     if (!autoDemo || !slideEntered) return;
     liveRef.current = true;
     setView('shop'); setCart({});
-    const timers = [];
-    // Original beats were timed against an 8.6s script — scale that whole
-    // timeline against however long this slide actually gets (real
-    // narration length once recorded, else autoMs), so a longer stay means
-    // a more leisurely browse, not everything crammed into the first 8.6s.
-    const k = paceMs / 8600;
-    const at = (ms, fn) => timers.push(setTimeout(() => { if (liveRef.current) fn(); }, ms * k));
-    const scroll = (top) => frameRef.current?.scrollTo({ top, behavior: 'smooth' });
-    const scrollToBottom = () => { const el = frameRef.current; if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); };
+    const frame = frameRef.current;
+    const isLive = () => liveRef.current;
+    // Baseline script is ~20s; stretch/shrink it to however long this slide
+    // actually gets (real narration length once recorded, else autoMs).
+    const k = paceMs / 20000;
+    const wait = (ms) => sleep(ms * k);
+    const glideTo = (to, ms) => glide(frameRef.current, to, Math.max(900, ms * k), isLive);
+    const click = (selector, onClick) => pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs: Math.max(500, 800 * k), onClick });
+    const stop = () => cancelAuto();
+    frame?.addEventListener('wheel', stop, { passive: true });
+    frame?.addEventListener('touchstart', stop, { passive: true });
 
-    at(1300, scrollToBottom);                                       // browse all the way down the full grid
-    at(3400, () => scroll(0));                                      // back to top
-    at(4000, () => setView(products[2]));                           // open a product (Dragon Mint Tea)
-    at(5700, () => addOne(products[2]));                            // add it to the cart
-    at(6300, () => setView('shop'));                                // back to shop
-    at(6900, scrollToBottom);                                       // one more full browse pass
-    at(8600, () => setView('cart'));                                // land on the cart, script ends here
+    (async () => {
+      await wait(700);
+      await glideTo('bottom', 3400);                 // browse all the way down the grid
+      await wait(400);
+      await glideTo(0, 1800);
+      await wait(300);
+      if (!(await click('[data-demo="product-2"]', () => setView(products[2])))) return;   // Dragon Mint Tea
+      await wait(700);
+      if (!(await click('[data-demo="add-to-cart"]', () => addOne(products[2])))) return;
+      await wait(700);
+      if (!(await click('[data-demo="nav-shop"]', () => setView('shop')))) return;
+      await wait(600);
+      await glideTo('bottom', 2800);                 // one more browse pass
+      await wait(300);
+      await glideTo(0, 1400);
+      await wait(300);
+      if (!(await click('[data-demo="nav-cart"]', () => setView('cart')))) return;
+      await wait(500);
+      if (!(await click('[data-demo="checkout"]', null))) return;   // point at Checkout, script ends
+      await wait(800);
+      cursorRef.current?.hide();
+    })();
 
-    return () => { liveRef.current = false; timers.forEach(clearTimeout); };
+    return () => {
+      liveRef.current = false;
+      frame?.removeEventListener('wheel', stop);
+      frame?.removeEventListener('touchstart', stop);
+    };
   }, [autoDemo, slideEntered, paceMs]);
 
   const cartEntries = Object.entries(cart).map(([name, qty]) => ({ ...products.find(p => p.name === name), qty }));
@@ -634,10 +674,10 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
   const isProductView = typeof view === 'object';
 
   return (
-    <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/shop`} fill scrollRef={frameRef}>
+    <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/shop`} fill scrollRef={frameRef} overlay={<AutoCursor ref={cursorRef} theme={theme} size={size} />}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${10 * size}px` }}>
-        <button onClick={() => { cancelAuto(); setView('shop'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</button>
-        <button onClick={() => { cancelAuto(); setView(view === 'cart' ? 'shop' : 'cart'); }} style={{
+        <button data-demo="nav-shop" onClick={() => { cancelAuto(); setView('shop'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</button>
+        <button data-demo="nav-cart" onClick={() => { cancelAuto(); setView(view === 'cart' ? 'shop' : 'cart'); }} style={{
           position: 'relative', border: `1px solid ${t.border}`, borderRadius: '100px',
           padding: `${4 * size}px ${9 * size}px`, background: 'transparent', cursor: 'pointer',
           fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.text,
@@ -659,7 +699,7 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
             const qty = cart[p.name] || 0;
             return (
               <ScrollReveal key={p.name} delay={(i % 4) * 0.06} y={16} amount={0.4} style={{ border: `1px solid ${t.border}`, borderRadius: `${5 * size}px`, padding: `${8 * size}px`, textAlign: 'center' }}>
-                <button onClick={() => { cancelAuto(); setView(p); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'center', font: 'inherit' }}>
+                <button data-demo={`product-${i}`} onClick={() => { cancelAuto(); setView(p); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'center', font: 'inherit' }}>
                   <div style={{ marginBottom: `${6 * size}px` }}>
                     <ProductImg src={p.img} alt={p.name} size={size} />
                   </div>
@@ -715,7 +755,7 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
                 <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Subtotal</span>
                 <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${11 * size}px`, color: t.text }}>${subtotal.toFixed(2)}</span>
               </div>
-              <button style={{
+              <button data-demo="checkout" style={{
                 width: '100%', padding: `${8 * size}px`, border: 'none',
                 borderRadius: `${4 * size}px`, background: t.accent, color: theme.isLight ? '#fff' : t.bg,
                 fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${9 * size}px`, cursor: 'pointer',
@@ -1641,61 +1681,208 @@ function MockupPortal({ theme, size, paceMs = 18000 }) {
 function MockupWhy({ theme, size, paceMs = 19000 }) {
   const t = theme.colors;
   const audiences = [
-    { Icon: Package,  label: 'Makers',            line: 'Ingredients, suppliers, and batch cost — no more spreadsheets.', detail: 'Costing built into every product' },
-    { Icon: Calendar, label: 'Service businesses', line: 'Bookings, customers, and invoicing without five different logins.', detail: 'Book online, get paid automatically' },
-    { Icon: Store,    label: 'Retailers',          line: 'A storefront and back office that actually share the same data.', detail: 'One inventory, every channel' },
+    { Icon: Package,  label: 'Makers',             url: 'costing',  line: 'Ingredients, suppliers, and batch cost — no more spreadsheets.', detail: 'Costing built into every product' },
+    { Icon: Calendar, label: 'Service businesses', url: 'bookings', line: 'Bookings, customers, and invoicing without five different logins.', detail: 'Book online, get paid automatically' },
+    { Icon: Store,    label: 'Retailers',          url: 'inventory', line: 'A storefront and back office that actually share the same data.', detail: 'One inventory, every channel' },
   ];
   const slideEntered = useSlideEntered();
 
-  // Motion-graphics beat: a soft spotlight visits each audience card in
-  // turn (scale + accent border), like a presenter pointing at one at a
-  // time, instead of all three sitting inert after their entrance stagger.
-  const [spot, setSpot] = useState(-1);
+  // Motion-graphics beat: the deck picks each audience in turn and shows what
+  // the platform does FOR THEM — a live mini-screen per audience (batch costing,
+  // a booking that becomes a paid invoice, one inventory feeding every
+  // channel). Clicking a tab takes over and stops the tour.
+  const [spot, setSpot] = useState(0);
+  const timersRef = useRef([]);
   useEffect(() => {
     if (!slideEntered) return;
-    setSpot(-1);
-    const startDelay = 900;
-    const gap = Math.max(1400, (paceMs * 0.55) / audiences.length);
-    const timers = [];
-    audiences.forEach((_, i) => {
-      timers.push(setTimeout(() => setSpot(i), startDelay + i * gap));
-    });
-    timers.push(setTimeout(() => setSpot(-1), startDelay + audiences.length * gap));
-    return () => timers.forEach(clearTimeout);
+    setSpot(0);
+    const gap = Math.max(3600, (paceMs * 0.8) / audiences.length);
+    timersRef.current = [1, 2].map((i) => setTimeout(() => setSpot(i), i * gap));
+    return () => timersRef.current.forEach(clearTimeout);
   }, [slideEntered, paceMs]);
+  const pick = (i) => { timersRef.current.forEach(clearTimeout); setSpot(i); };
+  const a = audiences[spot];
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px`, flex: '1 1 auto', minHeight: `${140 * size}px`, marginBottom: `${12 * size}px` }}>
-        {audiences.map((a, i) => (
-          <Reveal key={a.label} delay={i * 0.12} y={16} style={{
-            border: `1px solid ${spot === i ? t.accent : t.border}`, borderRadius: `${7 * size}px`, padding: `${12 * size}px`,
-            display: 'flex', flexDirection: 'column', background: t.surface || t.bg,
-            boxShadow: spot === i ? `0 ${6 * size}px ${16 * size}px ${t.accent}22` : `0 ${3 * size}px ${8 * size}px rgba(0,0,0,0.05)`,
-            transform: spot === i ? 'translateY(-2px) scale(1.02)' : 'none',
-            transition: 'border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease',
-          }}>
-            <a.Icon size={18 * size} color={t.accent} strokeWidth={1.8} />
-            <div style={{ fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${9.5 * size}px`, color: t.text, marginTop: `${8 * size}px`, marginBottom: `${5 * size}px` }}>{a.label}</div>
-            <div style={{ fontFamily: theme.fonts.body, fontSize: `${8 * size}px`, color: t.textMuted, lineHeight: 1.55, flex: 1 }}>{a.line}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: `${4 * size}px`, marginTop: `${8 * size}px`, paddingTop: `${8 * size}px`, borderTop: `1px solid ${t.border}` }}>
-              <Check size={9 * size} color={t.positive || t.accent} strokeWidth={2.5} />
-              <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.positive || t.accent }}>{a.detail}</span>
-            </div>
+      {/* audience tabs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${10 * size}px`, flexShrink: 0 }}>
+        {audiences.map((x, i) => (
+          <Reveal key={x.label} delay={i * 0.1} y={12}>
+            <button onClick={() => pick(i)} style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${6 * size}px`, cursor: 'pointer',
+              padding: `${8 * size}px ${6 * size}px`, borderRadius: `${7 * size}px`,
+              border: `1px solid ${spot === i ? t.accent : t.border}`,
+              background: spot === i ? `${t.accent}14` : (t.surface || t.bg),
+              boxShadow: spot === i ? `0 ${5 * size}px ${14 * size}px ${t.accent}22` : 'none',
+              transition: 'all 0.35s ease',
+            }}>
+              <x.Icon size={13 * size} color={t.accent} strokeWidth={1.8} />
+              <span style={{ fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${8.5 * size}px`, color: spot === i ? t.text : t.textMuted }}>{x.label}</span>
+            </button>
           </Reveal>
         ))}
       </div>
 
+      {/* what it does for them */}
+      <motion.div key={`cap-${spot}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        style={{ marginBottom: `${8 * size}px`, flexShrink: 0 }}>
+        <div style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: t.textMuted, lineHeight: 1.5, marginBottom: `${3 * size}px` }}>{a.line}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: `${4 * size}px` }}>
+          <Check size={9 * size} color={t.positive || t.accent} strokeWidth={2.5} />
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.positive || t.accent }}>{a.detail}</span>
+        </div>
+      </motion.div>
+
+      {/* the live mini-screen */}
+      <div style={{ flex: '1 1 auto', minHeight: `${120 * size}px`, marginBottom: `${10 * size}px` }}>
+        <motion.div key={`panel-${spot}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} style={{ height: '100%' }}>
+          <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/admin/${a.url}`}>
+            {spot === 0 && <WhyMakers theme={theme} size={size} />}
+            {spot === 1 && <WhyService theme={theme} size={size} />}
+            {spot === 2 && <WhyRetail theme={theme} size={size} />}
+          </DeviceFrame>
+        </motion.div>
+      </div>
+
       <Reveal delay={0.45} y={10} style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${12 * size}px`,
-        padding: `${14 * size}px`, borderRadius: `${8 * size}px`, background: t.bgAlt, flexShrink: 0,
+        padding: `${10 * size}px`, borderRadius: `${8 * size}px`, background: t.bgAlt, flexShrink: 0,
       }}>
-        <PeakMark size={size * 0.7} color={t.accent} />
+        <PeakMark size={size * 0.6} color={t.accent} />
         <div style={{ textAlign: 'left' }}>
-          <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${11 * size}px`, color: t.text }}>Not another website builder.</div>
-          <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint }}>The infrastructure behind the storefront, too.</div>
+          <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${10 * size}px`, color: t.text }}>Not another website builder.</div>
+          <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint }}>The infrastructure behind the storefront, too.</div>
         </div>
       </Reveal>
+    </div>
+  );
+}
+
+const whyLabel = (theme, size, t) => ({ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' });
+
+// Makers — costing is built into the product: cost bars grow in, margin counts up.
+function WhyMakers({ theme, size }) {
+  const t = theme.colors;
+  const rows = [
+    { item: 'Shea butter',  from: 'Fair-trade co-op',  cost: 2.10 },
+    { item: 'Moss extract', from: 'Own garden',        cost: 1.35 },
+    { item: 'Mint oil',     from: 'Prairie Botanicals', cost: 1.80 },
+    { item: 'Packaging',    from: 'Local print shop',  cost: 1.60 },
+  ];
+  const total = rows.reduce((s, r) => s + r.cost, 0); // 6.85
+  const price = 18;
+  const margin = Math.round((1 - total / price) * 100); // 62
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: `${14 * size}px`, alignItems: 'center' }}>
+      <div>
+        <div style={{ ...whyLabel(theme, size, t), marginBottom: `${8 * size}px` }}>Whispering Moss Soap · cost per bar</div>
+        {rows.map((r, i) => (
+          <div key={r.item} style={{ marginBottom: `${7 * size}px` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, marginBottom: `${3 * size}px` }}>
+              <span style={{ color: t.text, fontWeight: 500 }}>{r.item} <span style={{ color: t.textFaint, fontWeight: 400 }}>· {r.from}</span></span>
+              <span style={{ fontFamily: theme.fonts.mono, color: t.textMuted }}>${r.cost.toFixed(2)}</span>
+            </div>
+            <div style={{ height: `${4 * size}px`, borderRadius: '100px', background: t.bgAlt, overflow: 'hidden' }}>
+              <motion.div initial={{ width: 0 }} animate={{ width: `${(r.cost / 2.5) * 100}%` }} transition={{ delay: 0.35 + i * 0.18, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                style={{ height: '100%', borderRadius: '100px', background: t.accent }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ textAlign: 'center', borderLeft: `1px solid ${t.border}`, paddingLeft: `${12 * size}px` }}>
+        <div style={whyLabel(theme, size, t)}>Margin</div>
+        <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${26 * size}px`, color: t.positive || t.accent, lineHeight: 1.1, margin: `${4 * size}px 0` }}>
+          <CountUp to={margin} suffix="%" duration={1.4} delay={0.6} />
+        </div>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, lineHeight: 1.7 }}>
+          Cost ${total.toFixed(2)}<br />Price ${price.toFixed(2)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Service businesses — a booking lands on the calendar, then becomes a paid invoice.
+function WhyService({ theme, size }) {
+  const t = theme.colors;
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const taken = { Mon: [1], Tue: [0, 2], Wed: [1], Fri: [0] };
+  const [stage, setStage] = useState(0); // 0 empty, 1 booked, 2 confirmed, 3 paid
+  useEffect(() => {
+    const ids = [setTimeout(() => setStage(1), 700), setTimeout(() => setStage(2), 1700), setTimeout(() => setStage(3), 2900)];
+    return () => ids.forEach(clearTimeout);
+  }, []);
+  const slot = (filled, hot) => ({
+    height: `${11 * size}px`, borderRadius: `${3 * size}px`, marginBottom: `${4 * size}px`,
+    border: `1px solid ${hot ? t.accent : t.border}`,
+    background: hot ? t.accent : (filled ? `${t.textFaint}30` : 'transparent'),
+    transition: 'all 0.4s ease',
+  });
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: `${14 * size}px`, alignItems: 'center' }}>
+      <div>
+        <div style={{ ...whyLabel(theme, size, t), marginBottom: `${8 * size}px` }}>This week · bookings</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: `${5 * size}px` }}>
+          {days.map((d) => (
+            <div key={d}>
+              <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, textAlign: 'center', marginBottom: `${4 * size}px` }}>{d}</div>
+              {[0, 1, 2].map((r) => <div key={r} style={slot((taken[d] || []).includes(r), d === 'Thu' && r === 1 && stage >= 1)} />)}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: `${6 * size}px` }}>
+        {[
+          { on: stage >= 1, Icon: Calendar, text: 'Consult · Thu 2:00 PM' },
+          { on: stage >= 2, Icon: Mail, text: 'Confirmation sent' },
+          { on: stage >= 3, Icon: CreditCard, text: 'Invoice #204 · $120 paid' },
+        ].map(({ on, Icon, text }) => (
+          <div key={text} style={{
+            display: 'flex', alignItems: 'center', gap: `${6 * size}px`, padding: `${5 * size}px ${7 * size}px`, borderRadius: `${5 * size}px`,
+            border: `1px solid ${on ? (t.positive || t.accent) : t.border}`, opacity: on ? 1 : 0.35, transition: 'all 0.4s ease',
+          }}>
+            <Icon size={9 * size} color={on ? (t.positive || t.accent) : t.textFaint} />
+            <span style={{ fontFamily: theme.fonts.body, fontSize: `${7 * size}px`, color: t.text }}>{text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Retailers — one inventory number; every channel sells from it and stays in sync.
+function WhyRetail({ theme, size }) {
+  const t = theme.colors;
+  const channels = ['Online store', 'Market stall (POS)', 'Wholesale'];
+  const [stock, setStock] = useState(54);
+  const [last, setLast] = useState(-1);
+  useEffect(() => {
+    const sale = (ms, ch) => setTimeout(() => { setStock((s) => s - 1); setLast(ch); }, ms);
+    const ids = [sale(900, 0), sale(2100, 1), sale(3300, 2)];
+    return () => ids.forEach(clearTimeout);
+  }, []);
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: `${14 * size}px`, alignItems: 'center' }}>
+      <div style={{ textAlign: 'center', padding: `${8 * size}px`, borderRadius: `${6 * size}px`, background: t.bgAlt }}>
+        <div style={whyLabel(theme, size, t)}>Whispering Moss Soap</div>
+        <motion.div key={stock} initial={{ scale: 1.25, opacity: 0.4 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.35 }}
+          style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${28 * size}px`, color: t.text, lineHeight: 1.15, margin: `${3 * size}px 0` }}>{stock}</motion.div>
+        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.accent }}>in stock · one count</div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: `${6 * size}px` }}>
+        {channels.map((c, i) => (
+          <div key={c} style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${6 * size}px ${8 * size}px`, borderRadius: `${5 * size}px`,
+            border: `1px solid ${last === i ? t.accent : t.border}`, background: last === i ? `${t.accent}14` : 'transparent', transition: 'all 0.35s ease',
+          }}>
+            <span style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.text }}>{c}</span>
+            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: last === i ? t.accent : t.textFaint }}>
+              {last === i ? 'sale · −1' : `${stock} available`}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
