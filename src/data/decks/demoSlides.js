@@ -79,11 +79,11 @@ const BASE_SLIDES = [
   {
     id: 8,
     slug: 'portal',
-    autoMs: 19000,
+    autoMs: 24000,
     eyebrow: 'One-Stop-Shop Portal',
     headline: 'Stop paying for the seams between your tools.',
     body: 'Business, storefront, customer, order, payment, and fulfillment \u2014 one connected workflow instead of six subscriptions that don\u2019t know about each other.',
-    speakerNote: 'Toggle Before/After. Let the after-state breathe for a second before moving on.',
+    speakerNote: 'Let the six subscriptions land and the total tick up, then watch them get pulled into Peak. Point at the core, then follow the workflow around it. Let the savings number breathe.',
     tag: '08',
   },
   {

@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import QRCode from 'react-qr-code';
-import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart, Calendar } from 'lucide-react';
+import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart, Calendar, Briefcase, ClipboardList } from 'lucide-react';
 import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom, SiHubspot, SiGmail, SiAirtable } from 'react-icons/si';
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
@@ -1911,97 +1911,294 @@ function WorkflowFulfilled({ theme, size }) {
   );
 }
 
-// ── 8. portal — before / after toggle ────────────────────────────────────────────
-function MockupPortal({ theme, size, paceMs = 18000 }) {
-  const t = theme.colors;
-  const [after, setAfter] = useState(false);
-  const slideEntered = useSlideEntered();
+// ── 8. portal — six subscriptions in, ONE core out ───────────────────────────────
+// The story: you're paying for six tools that don't know about each other (big
+// logos, big prices, a running total, and the broken "seams" between them). Then
+// all six get pulled into Peak — and Peak is shown for what it is, the CORE:
+// a glowing hub with the whole workflow running off it — business, storefront,
+// customer, order, payment, fulfillment — lighting up in order, one connected
+// loop, with the old tools reduced to a "replaces" list and the savings counted up.
 
-  // Motion-graphics beat: the "before" cost stack gives way to "one
-  // subscription" on its own, a beat after the slide opens.
+// measure an element's layout size (unscaled px) so a scene can be placed in real px
+function useBox(ref, fallback = { w: 720, h: 420 }) {
+  const [box, setBox] = useState(fallback);
   useEffect(() => {
-    if (!slideEntered) return;
-    setAfter(false);
-    const t = setTimeout(() => setAfter(true), Math.max(1400, paceMs * 0.32));
-    return () => clearTimeout(t);
-  }, [slideEntered, paceMs]);
+    const el = ref.current;
+    if (!el) return undefined;
+    const read = () => setBox({ w: el.offsetWidth || fallback.w, h: el.offsetHeight || fallback.h });
+    read();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(read) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, []);
+  return box;
+}
+
+// an integer that glides to its new value
+function AnimNum({ value, prefix = '$', suffix = '', ms = 700 }) {
+  const [shown, setShown] = useState(0);
+  const fromRef = useRef(0);
+  useEffect(() => {
+    const from = fromRef.current, t0 = performance.now();
+    let raf;
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - p, 3);
+      const v = from + (value - from) * e;
+      fromRef.current = v; setShown(v);
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value, ms]);
+  return <>{prefix}{Math.round(shown)}{suffix}</>;
+}
+
+function MockupPortal({ theme, size, paceMs = 24000 }) {
+  const t = theme.colors;
+  const onAccent = theme.isLight ? '#fff' : t.bg;
+  const [after, setAfter] = useState(false);
+  const [landed, setLanded] = useState(0);      // subscription cards landed so far (drives the running total)
+  const [active, setActive] = useState(-1);     // workflow node currently lit
+  const slideEntered = useSlideEntered();
+  const timerRef = useRef(null);
+  const sceneRef = useRef(null);
+  const box = useBox(sceneRef);
 
   const SUBS = [
-    { name: 'Shopify',    Icon: SiShopify,   color: '#95BF47', min: 30 },
-    { name: 'Mailchimp',  Icon: SiMailchimp, color: '#FFE01B', min: 20 },
-    { name: 'HubSpot',    Icon: SiHubspot,   color: '#FF7A59', min: 50 },
-    { name: 'Calendly',   Icon: SiCalendly,  color: '#006BFF', min: 20 },
-    { name: 'QuickBooks', Icon: SiQuickbooks,color: '#2CA01C', min: 25 },
-    { name: 'Notion',     Icon: SiNotion,    color: t.text,    min: 15 },
+    { name: 'Shopify',    Icon: SiShopify,    color: '#95BF47', min: 30 },
+    { name: 'Mailchimp',  Icon: SiMailchimp,  color: '#FFE01B', min: 20 },
+    { name: 'HubSpot',    Icon: SiHubspot,    color: '#FF7A59', min: 50 },
+    { name: 'Calendly',   Icon: SiCalendly,   color: '#006BFF', min: 20 },
+    { name: 'QuickBooks', Icon: SiQuickbooks, color: '#2CA01C', min: 25 },
+    { name: 'Notion',     Icon: SiNotion,     color: t.text,    min: 15 },
+  ];
+  const FLOW = [
+    { label: 'Business',    Icon: Briefcase },
+    { label: 'Storefront',  Icon: Store },
+    { label: 'Customer',    Icon: Users },
+    { label: 'Order',       Icon: ClipboardList },
+    { label: 'Payment',     Icon: CreditCard },
+    { label: 'Fulfillment', Icon: Truck },
   ];
   const total = SUBS.reduce((s, x) => s + x.min, 0);
   const peakLow = parseInt(PRICING.starter.replace(/[^0-9–-]/g, '').split(/[–-]/)[0], 10);
   const savings = total - peakLow;
+  const runningTotal = SUBS.slice(0, landed).reduce((s, x) => s + x.min, 0);
+  const red = t.negative || '#DB3521';
+
+  // the narration says "Before: ... After: ..." — flip a little over a third of the way in
+  useEffect(() => {
+    if (!slideEntered) return undefined;
+    setAfter(false);
+    timerRef.current = setTimeout(() => setAfter(true), Math.max(5000, paceMs * 0.36));
+    return () => clearTimeout(timerRef.current);
+  }, [slideEntered, paceMs]);
+
+  // the six cards land one by one and the running total ticks up
+  useEffect(() => {
+    if (after || !slideEntered) return undefined;
+    setLanded(0);
+    const ids = SUBS.map((_, i) => setTimeout(() => setLanded(i + 1), 650 + i * 380));
+    return () => ids.forEach(clearTimeout);
+  }, [after, slideEntered]);
+
+  // after: the workflow lights up business -> fulfillment in the order the narration says it, then keeps looping
+  useEffect(() => {
+    if (!after) { setActive(-1); return undefined; }
+    const step = Math.max(700, paceMs * 0.04);
+    let i = 0, iv;
+    const start = setTimeout(() => {
+      setActive(0);
+      iv = setInterval(() => { i = (i + 1) % FLOW.length; setActive(i); }, step);
+    }, 2300);
+    return () => { clearTimeout(start); clearInterval(iv); };
+  }, [after, paceMs]);
+
+  const toggle = () => { clearTimeout(timerRef.current); setAfter(a => !a); };
+
+  // ── geometry (real px, measured) ──
+  const pad = 16 * size, gap = 12 * size, topH = 30 * size, bottomH = 66 * size;
+  const areaTop = topH, areaH = Math.max(120, box.h - topH - bottomH);
+  const cardW = (box.w - pad * 2 - gap * 2) / 3;
+  const cardH = Math.min(136 * size, (areaH - gap) / 2);
+  const gy0 = areaTop + (areaH - (cardH * 2 + gap)) / 2;
+  const cardPos = SUBS.map((_, i) => ({ x: pad + (i % 3) * (cardW + gap), y: gy0 + Math.floor(i / 3) * (cardH + gap) }));
+  const seams = [];
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) seams.push({ x: pad + (c + 1) * cardW + c * gap + gap / 2, y: gy0 + r * (cardH + gap) + cardH / 2 });
+  for (let c = 0; c < 3; c++) seams.push({ x: pad + c * (cardW + gap) + cardW / 2, y: gy0 + cardH + gap / 2 });
+
+  const hubX = box.w / 2, hubY = areaTop + areaH / 2, hubR = 60 * size;
+  const nodeW = 98 * size, nodeH = 68 * size;
+  const rx = Math.max(90 * size, box.w / 2 - nodeW / 2 - pad), ry = Math.max(60 * size, areaH / 2 - nodeH / 2 - 2 * size);
+  const nodes = FLOW.map((f, i) => {
+    const a = (-90 + i * 60) * Math.PI / 180;
+    return { ...f, x: hubX + rx * Math.cos(a), y: hubY + ry * Math.sin(a) };
+  });
+
+  const mono = (sz, color, extra) => ({ fontFamily: theme.fonts.mono, fontSize: `${sz * size}px`, color, letterSpacing: '0.06em', textTransform: 'uppercase', ...extra });
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{
-        flex: '1 1 auto', minHeight: `${220 * size}px`,
-        border: `1px solid ${t.border}`, borderRadius: `${8 * size}px`, padding: `${16 * size}px`,
-        marginBottom: `${10 * size}px`, position: 'relative', overflow: 'hidden',
+      <div ref={sceneRef} style={{
+        flex: '1 1 auto', minHeight: `${240 * size}px`, position: 'relative', overflow: 'hidden',
+        border: `1px solid ${after ? t.accent : t.border}`, borderRadius: `${8 * size}px`, marginBottom: `${10 * size}px`, transition: 'border-color 0.6s ease',
       }}>
-        {!after ? (
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: `${10 * size}px` }}>
-              What you're paying for today
+        {/* ── BEFORE: six subscriptions, big and loud ── */}
+        <motion.div initial={false} animate={{ opacity: after ? 0 : 1 }} transition={{ duration: 0.3 }}
+          style={{ position: 'absolute', left: pad, top: 10 * size, ...mono(8.5, t.textFaint) }}>What you&apos;re paying for today</motion.div>
+
+        {SUBS.map((s, i) => (
+          <motion.div key={s.name}
+            initial={{ opacity: 0, y: 20 * size, scale: 0.9, x: 0, rotate: 0 }}
+            animate={after
+              ? { x: hubX - (cardPos[i].x + cardW / 2), y: hubY - (cardPos[i].y + cardH / 2), scale: 0.08, opacity: 0, rotate: (i % 2 ? 1 : -1) * 220 }
+              : { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }}
+            transition={after ? { duration: 0.8, delay: i * 0.05, ease: [0.5, 0, 0.9, 0.4] } : { type: 'spring', stiffness: 230, damping: 18, delay: 0.5 + i * 0.38 }}
+            style={{ position: 'absolute', left: cardPos[i].x, top: cardPos[i].y, width: cardW, height: cardH, zIndex: 2, pointerEvents: 'none' }}>
+            <div style={{
+              height: '100%', border: `1px solid ${t.border}`, borderRadius: `${9 * size}px`, background: t.surface || t.bg,
+              boxShadow: `0 ${5 * size}px ${14 * size}px rgba(0,0,0,0.08)`,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: `${6 * size}px`,
+            }}>
+              <s.Icon size={38 * size} color={s.color} />
+              <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${11 * size}px`, color: t.text }}>{s.name}</div>
+              <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${22 * size}px`, color: red, lineHeight: 1 }}>
+                ${s.min}<span style={{ fontFamily: theme.fonts.mono, fontWeight: 500, fontSize: `${9 * size}px`, color: t.textFaint }}>+/mo</span>
+              </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${10 * size}px`, flex: 1 }}>
-              {SUBS.map(s => (
-                <div key={s.name} style={{ border: `1px solid ${t.border}`, borderRadius: `${6 * size}px`, padding: `${10 * size}px`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <s.Icon size={16 * size} color={s.color} />
-                  <div>
-                    <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, color: t.text, marginTop: `${6 * size}px` }}>{s.name}</div>
-                    <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint }}>${s.min}+/mo</div>
-                  </div>
-                </div>
+          </motion.div>
+        ))}
+
+        {/* the seams between the tools — where the money and the hours leak */}
+        {seams.map((m, k) => (
+          <motion.div key={k} initial={{ scale: 0, opacity: 0 }}
+            animate={after ? { scale: 0, opacity: 0 } : { scale: 1, opacity: 1 }}
+            transition={after ? { duration: 0.25 } : { type: 'spring', stiffness: 420, damping: 12, delay: 3.1 + k * 0.1 }}
+            style={{
+              position: 'absolute', zIndex: 3, left: m.x - 8 * size, top: m.y - 8 * size, width: `${16 * size}px`, height: `${16 * size}px`, borderRadius: '50%',
+              background: red, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${9 * size}px`, boxShadow: '0 1px 4px rgba(0,0,0,0.3)', pointerEvents: 'none',
+            }}>{'\u2715'}</motion.div>
+        ))}
+
+        {!after && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+            style={{ position: 'absolute', left: pad, right: pad, bottom: 12 * size, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: `${12 * size}px` }}>
+            <div>
+              <div style={mono(8.5, t.textFaint)}>Starting at</div>
+              <div style={mono(7, t.textFaint, { textTransform: 'none', marginTop: `${3 * size}px` }) }>{'\u2026'}plus every hour you spend stitching them together</div>
+            </div>
+            <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${30 * size}px`, color: red, lineHeight: 1, whiteSpace: 'nowrap' }}>
+              <AnimNum value={runningTotal} prefix="$" suffix="/mo" ms={420} />
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── AFTER: Peak is the core ── */}
+        {after && (
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+              style={{ position: 'absolute', left: pad, top: 10 * size, ...mono(8.5, t.accent) }}>One subscription</motion.div>
+
+            <svg width={box.w} height={box.h} viewBox={`0 0 ${box.w} ${box.h}`} style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+              {nodes.map((n, i) => {
+                const nx = nodes[(i + 1) % nodes.length];
+                const live = active === i;
+                const arrived = active === (i + 1) % nodes.length;
+                return (
+                  <g key={i}>
+                    {/* spoke: hub -> node */}
+                    <motion.line x1={hubX} y1={hubY} x2={n.x} y2={n.y} stroke={t.accent} strokeLinecap="round"
+                      initial={{ opacity: 0 }} animate={{ opacity: live ? 0.95 : 0.3, strokeWidth: (live ? 2.8 : 1.6) * size }} transition={{ duration: 0.3, delay: live ? 0 : (active < 0 ? 1 + i * 0.2 : 0) }} />
+                    {/* the loop: node -> next node */}
+                    <motion.line x1={n.x} y1={n.y} x2={nx.x} y2={nx.y} stroke={t.accent} strokeLinecap="round" strokeDasharray={`${5 * size} ${5 * size}`}
+                      initial={{ opacity: 0 }} animate={{ opacity: arrived ? 0.9 : 0.22, strokeWidth: (arrived ? 2.4 : 1.4) * size }} transition={{ duration: 0.3, delay: active < 0 ? 1.4 + i * 0.2 : 0 }} />
+                    {/* a data packet running out from the core to this node, forever */}
+                    <circle r={3 * size} fill={t.accent}>
+                      <animateMotion dur="2.4s" begin={`${1.6 + i * 0.4}s`} repeatCount="indefinite" path={`M ${hubX} ${hubY} L ${n.x} ${n.y}`} />
+                    </circle>
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* the core */}
+            <div style={{ position: 'absolute', left: hubX - hubR, top: hubY - hubR, width: hubR * 2, height: hubR * 2, zIndex: 3 }}>
+              {[0, 1.4].map((d) => (
+                <span key={d} style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: `${2 * size}px solid ${t.accent}`, opacity: 0, animation: `hubRing 2.8s ease-out ${1.2 + d}s infinite` }} />
               ))}
+              <motion.span initial={{ scale: 0.4, opacity: 0.7 }} animate={{ scale: 4.2, opacity: 0 }} transition={{ delay: 0.62, duration: 1, ease: 'easeOut' }}
+                style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: `${3 * size}px solid ${t.accent}` }} />
+              <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 13, delay: 0.55 }}
+                style={{
+                  position: 'absolute', inset: 0, borderRadius: '50%', background: t.surface || t.bg, border: `${2.5 * size}px solid ${t.accent}`,
+                  boxShadow: `0 0 ${34 * size}px ${t.accent}55, 0 ${8 * size}px ${22 * size}px rgba(0,0,0,0.14)`,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: `${2 * size}px`,
+                }}>
+                <PeakMark size={size * 1.15} color={t.accent} />
+                <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${14 * size}px`, color: t.text, letterSpacing: '0.04em' }}>{COMPANY.name.toUpperCase()}</div>
+                <div style={{ fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${8 * size}px`, color: t.accent }}>{PRICING.starter}/mo</div>
+              </motion.div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: `${10 * size}px`, marginTop: `${10 * size}px`, borderTop: `1px solid ${t.border}` }}>
-              <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Starting at</span>
-              <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${16 * size}px`, color: t.negative || t.text }}>${total}/mo</span>
-            </div>
-          </div>
-        ) : (
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', animation: 'fadeSlideIn 0.35s ease both' }}>
-            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: `${10 * size}px` }}>
-              One subscription
-            </div>
-            <div style={{ border: `1px solid ${t.accent}`, borderRadius: `${7 * size}px`, padding: `${16 * size}px`, flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: `${12 * size}px` }}>
-                <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${14 * size}px`, color: t.text }}>{COMPANY.name}</span>
-                <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${14 * size}px`, color: t.accent }}>{PRICING.starter}/mo</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, flex: 1 }}>
-                {SUBS.map(s => (
-                  <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px` }}>
-                    <Check size={11 * size} color={t.positive || t.accent} strokeWidth={2.5} />
-                    <s.Icon size={12 * size} color={s.color} />
-                    <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textMuted }}>{s.name}</span>
+
+            {/* the workflow, in the order it actually runs */}
+            {nodes.map((n, i) => {
+              const live = active === i;
+              return (
+                <motion.div key={n.label} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 15, delay: 0.95 + i * 0.2 }}
+                  style={{ position: 'absolute', zIndex: 4, left: n.x - nodeW / 2, top: n.y - nodeH / 2, width: nodeW, height: nodeH }}>
+                  <div style={{
+                    height: '100%', borderRadius: `${10 * size}px`, background: t.surface || t.bg, position: 'relative',
+                    border: `${live ? 2 : 1}px solid ${live ? t.accent : t.border}`,
+                    boxShadow: live ? `0 0 ${20 * size}px ${t.accent}66` : `0 ${4 * size}px ${12 * size}px rgba(0,0,0,0.08)`,
+                    transform: live ? 'scale(1.08)' : 'scale(1)', transition: 'all 0.3s ease',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: `${5 * size}px`,
+                  }}>
+                    <span style={{ position: 'absolute', top: `${-7 * size}px`, left: `${-7 * size}px`, width: `${16 * size}px`, height: `${16 * size}px`, borderRadius: '50%', background: t.accent, color: onAccent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${8 * size}px` }}>{i + 1}</span>
+                    <span style={{ width: `${30 * size}px`, height: `${30 * size}px`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: live ? t.accent : `${t.accent}1A`, color: live ? onAccent : t.accent, transition: 'background 0.3s ease, color 0.3s ease' }}>
+                      <n.Icon size={16 * size} color="currentColor" strokeWidth={2} />
+                    </span>
+                    <span style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${9.5 * size}px`, color: t.text }}>{n.label}</span>
                   </div>
-                ))}
+                </motion.div>
+              );
+            })}
+
+            {/* what it replaced, and what that's worth */}
+            <motion.div initial={{ opacity: 0, y: 12 * size }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.4, duration: 0.5 }}
+              style={{ position: 'absolute', left: pad, right: pad, bottom: 10 * size, zIndex: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: `${12 * size}px` }}>
+              <div style={{ maxWidth: '62%' }}>
+                <div style={mono(7.5, t.textFaint, { marginBottom: `${4 * size}px` })}>Replaces</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${4 * size}px ${10 * size}px` }}>
+                  {SUBS.map((s) => (
+                    <span key={s.name} style={{ display: 'flex', alignItems: 'center', gap: `${4 * size}px`, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textMuted }}>
+                      <Check size={9 * size} color={t.positive || t.accent} strokeWidth={3} />
+                      <s.Icon size={11 * size} color={s.color} />{s.name}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: `${10 * size}px`, marginTop: `${10 * size}px`, borderTop: `1px solid ${t.border}` }}>
-                <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textTransform: 'uppercase' }}>You save</span>
-                <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${16 * size}px`, color: t.positive || t.accent }}>~${savings}/mo</span>
+              <div style={{ textAlign: 'right' }}>
+                <div style={mono(8.5, t.textFaint)}>You save</div>
+                <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${28 * size}px`, color: t.positive || t.accent, lineHeight: 1.05, whiteSpace: 'nowrap' }}>
+                  <AnimNum value={savings} prefix={'~$'} suffix="/mo" ms={1100} />
+                </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         )}
       </div>
-      <button onClick={() => setAfter(a => !a)} style={{
+
+      <button onClick={toggle} style={{
         width: '100%', padding: `${9 * size}px`, border: `1px solid ${t.accent}`,
         borderRadius: `${5 * size}px`, background: after ? 'transparent' : t.accent,
-        color: after ? t.accent : (theme.isLight ? '#fff' : t.bg),
+        color: after ? t.accent : onAccent,
         fontFamily: theme.fonts.mono, fontWeight: 600, fontSize: `${9.5 * size}px`, letterSpacing: '0.06em', cursor: 'pointer', flexShrink: 0,
       }}>
-        {after ? '← Show what you pay today' : 'Show one subscription →'}
+        {after ? '\u2190 Back to six subscriptions' : `Move it all into ${COMPANY.name} \u2192`}
       </button>
-      <style>{`@keyframes fadeSlideIn { from { opacity:0; } to { opacity:1; } }`}</style>
+      <style>{`@keyframes hubRing { 0% { transform: scale(1); opacity: 0.45; } 100% { transform: scale(1.9); opacity: 0; } }`}</style>
     </div>
   );
 }
