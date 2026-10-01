@@ -9,7 +9,7 @@ const BASE_SLIDES = [
   {
     id: 1,
     slug: 'welcome',
-    autoMs: 20000,
+    autoMs: 36000,
     eyebrow: 'Welcome',
     headline: 'One platform. Every operation.',
     body: `${COMPANY.name} is the complete business platform for small brands and makers — a branded storefront, a merchant dashboard, and everything behind it, in one place.`,

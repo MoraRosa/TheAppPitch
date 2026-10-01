@@ -53,14 +53,14 @@ export async function waitFor(root, selector, isLive = () => true, timeout = 250
 // press, then run `onClick` (a state setter — NOT a DOM click, so it doesn't
 // trip the "real click cancels the demo" handlers). Resolves false if the demo
 // was cancelled or the target never appeared.
-export async function pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs = 800, onClick }) {
+export async function pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs = 800, scroll = true, onClick }) {
   const frame = frameRef.current;
   const el = await waitFor(frame, selector, isLive);
   if (!el || !isLive()) return false;
 
   const fr = frame.getBoundingClientRect();
   const er = el.getBoundingClientRect();
-  if (er.top < fr.top + 8 || er.bottom > fr.bottom - 8) {
+  if (scroll && (er.top < fr.top + 8 || er.bottom > fr.bottom - 8)) {
     await glide(frame, frame.scrollTop + (er.top - fr.top) - fr.height / 3, 900, isLive);
     if (!isLive()) return false;
   }
@@ -71,4 +71,17 @@ export async function pointAndClick({ cursorRef, frameRef, selector, isLive, mov
   if (!isLive()) return false;
   onClick?.();
   return true;
+}
+
+// Type `text` one character at a time (with a little human jitter), calling
+// onUpdate(partialText) after each keystroke. Resolves false if cancelled.
+export async function typeText(text, isLive, onUpdate, cps = 20) {
+  for (let i = 1; i <= text.length; i++) {
+    if (!isLive()) return false;
+    onUpdate(text.slice(0, i));
+    const ch = text[i - 1];
+    const pause = ch === ' ' ? 1.6 : ch === ',' || ch === '.' || ch === '!' || ch === '?' ? 3 : 1;
+    await sleep((1000 / cps) * pause + ((i * 37) % 30));
+  }
+  return isLive();
 }

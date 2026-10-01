@@ -12,8 +12,8 @@ import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNot
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
 import AutoCursor from './AutoCursor.jsx';
-import { sleep, glide, pointAndClick } from '../../../utils/demoScript.js';
-import { ProductDetailView, BlogPostView, ContactView } from './storefrontViews.jsx';
+import { sleep, glide, pointAndClick, typeText } from '../../../utils/demoScript.js';
+import { ProductDetailView, BlogPostView, ContactView, CONTACT_SEND_MS } from './storefrontViews.jsx';
 import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
 import { ScrollReveal, CountUp, Reveal } from '../motion.jsx';
 import { COMPANY, PRICING } from '../../../data/config.js';
@@ -54,6 +54,7 @@ function MockupWelcome({ theme, size, isFullscreen, autoDemo = false, paceMs = 2
   // anywhere hands control straight back.
   const liveRef = useRef(true);
   const cursorRef = useRef(null);
+  const contactRef = useRef(null);
   const cancelAuto = () => { liveRef.current = false; cursorRef.current?.hide(); };
 
   useEffect(() => {
@@ -62,13 +63,20 @@ function MockupWelcome({ theme, size, isFullscreen, autoDemo = false, paceMs = 2
     setView({ type: 'home' }); setCart({});
     const frame = frameRef.current;
     const isLive = () => liveRef.current;
-    const k = paceMs / 20000; // baseline tour was timed against a 20s slide
+    const k = paceMs / 36000; // baseline tour (incl. contact form) is timed against a 36s slide
     const wait = (ms) => sleep(ms * k);
     const glideTo = (to, ms) => glide(frameRef.current, to, Math.max(900, ms * k), isLive);
     const click = (selector, onClick) => pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs: Math.max(500, 800 * k), onClick });
     const stop = () => cancelAuto();
     frame?.addEventListener('wheel', stop, { passive: true });
     frame?.addEventListener('touchstart', stop, { passive: true });
+
+    // click a form field, then type into it like a person would
+    const fill = async (field, text, cps) => {
+      if (!(await click(`[data-demo="contact-${field}"]`, () => contactRef.current?.focus(field)))) return false;
+      await wait(250);
+      return typeText(text, isLive, (v) => contactRef.current?.setValue(field, v), cps);
+    };
 
     (async () => {
       await wait(700);
@@ -87,8 +95,16 @@ function MockupWelcome({ theme, size, isFullscreen, autoDemo = false, paceMs = 2
       await glideTo(0, 1500);
       await wait(300);
       if (!(await click('[data-demo="nav-contact"]', () => setView({ type: 'contact' })))) return;
-      await wait(1500);                              // let the contact page land
-      cursorRef.current?.hide();
+      await wait(900);                               // let the contact page land
+      if (!(await fill('name', 'Mira Halloran', 18))) return;
+      await wait(250);
+      if (!(await fill('email', 'mira@example.com', 20))) return;
+      await wait(250);
+      if (!(await fill('message', 'Hi! Do you ship Dragon Mint Tea internationally?', 30))) return;
+      await wait(500);
+      if (!(await click('[data-demo="contact-send"]', () => contactRef.current?.send()))) return;
+      cursorRef.current?.hide();                     // paper plane takes over from here
+      await sleep(CONTACT_SEND_MS + 1800);           // fly away, then hold on the sent screen
     })();
 
     return () => {
@@ -116,7 +132,7 @@ function MockupWelcome({ theme, size, isFullscreen, autoDemo = false, paceMs = 2
         <BlogPostView theme={theme} size={size} post={view.post} onBack={() => { cancelAuto(); goHome(); }} />
       )}
       {view.type === 'contact' && (
-        <ContactView theme={theme} size={size} onBack={() => { cancelAuto(); goHome(); }} />
+        <ContactView ref={contactRef} theme={theme} size={size} onBack={() => { cancelAuto(); goHome(); }} onInteract={cancelAuto} />
       )}
 
       {view.type === 'shop' && (
@@ -877,25 +893,57 @@ function MockupMerchant({ theme, size, paceMs = 18000 }) {
   const [tab, setTab] = useState(0);
   const slideEntered = useSlideEntered();
 
-  // Motion-graphics beat: walk through every tab automatically once the
-  // slide opens — this was the one dashboard slide still sitting static on
-  // "Overview" while every other slide moved. Spread across most of the
-  // slide's pace; a real click takes over immediately.
-  const autoRef = useRef(false);
+  // Motion-graphics beat: a visible cursor runs the dashboard — reads down the
+  // Overview, then clicks through Orders, Products and Customers, stopping on
+  // one meaningful row in each (an order in progress, the low-stock item, the
+  // top customer). A real click, wheel or touch hands control straight back.
+  const [hot, setHot] = useState(null);
+  const frameRef = useRef(null);
+  const cursorRef = useRef(null);
+  const liveRef = useRef(false);
+  const cancelAuto = () => { liveRef.current = false; cursorRef.current?.hide(); };
   useEffect(() => {
     if (!slideEntered) return;
-    setTab(0);
-    autoRef.current = true;
-    const gap = Math.max(1100, (paceMs * 0.75) / Math.max(tabs.length - 1, 1));
-    let i = 0;
-    const id = setInterval(() => {
-      i += 1;
-      if (i >= tabs.length) { clearInterval(id); return; }
-      if (autoRef.current) setTab(i);
-    }, gap);
-    return () => clearInterval(id);
+    setTab(0); setHot(null);
+    liveRef.current = true;
+    const frame = frameRef.current;
+    const isLive = () => liveRef.current;
+    const k = paceMs / 15000; // baseline script plays out in ~15s; stretched to the slide's pace
+    const wait = (ms) => sleep(ms * k);
+    const glideTo = (to, ms) => glide(frameRef.current, to, Math.max(900, ms * k), isLive);
+    const click = (selector, onClick) => pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs: Math.max(500, 800 * k), onClick });
+    const stop = () => cancelAuto();
+    frame?.addEventListener('wheel', stop, { passive: true });
+    frame?.addEventListener('touchstart', stop, { passive: true });
+
+    (async () => {
+      await wait(900);
+      await glideTo('bottom', 2800);                 // read down the overview: KPIs, revenue, orders, visitors
+      await wait(300);
+      await glideTo(0, 1400);
+      if (!(await click('[data-demo="tab-1"]', () => setTab(1)))) return;
+      await wait(600);
+      if (!(await click('[data-demo="order-#1046"]', () => setHot('order-#1046')))) return;   // an order in progress
+      await wait(900);
+      if (!(await click('[data-demo="tab-2"]', () => { setHot(null); setTab(2); }))) return;
+      await wait(600);
+      if (!(await click('[data-demo="product-Solar Radiance Elixir"]', () => setHot('product-Solar Radiance Elixir')))) return;   // low stock
+      await wait(1000);
+      if (!(await click('[data-demo="tab-3"]', () => { setHot(null); setTab(3); }))) return;
+      await wait(600);
+      if (!(await click('[data-demo="customer-A. Reyes"]', () => setHot('customer-A. Reyes')))) return;   // top customer
+      await wait(1500);
+      cursorRef.current?.hide();
+    })();
+
+    return () => {
+      liveRef.current = false;
+      frame?.removeEventListener('wheel', stop);
+      frame?.removeEventListener('touchstart', stop);
+    };
   }, [slideEntered, paceMs]);
-  const goToTab = (i) => { autoRef.current = false; setTab(i); };
+  const goToTab = (i) => { cancelAuto(); setHot(null); setTab(i); };
+  const rowHot = (key) => (hot === key ? { background: `${t.accent}14`, boxShadow: `inset 2px 0 0 ${t.accent}` } : null);
 
   const REVENUE_7D = [820, 1140, 960, 1480, 1290, 1860, 1620];
   const maxRev = Math.max(...REVENUE_7D);
@@ -930,10 +978,10 @@ function MockupMerchant({ theme, size, paceMs = 18000 }) {
   ];
 
   return (
-    <DeviceFrame theme={theme} size={size} url={`${COMPANY.url}/merchant`} fill>
+    <DeviceFrame theme={theme} size={size} url={`${COMPANY.url}/merchant`} fill scrollRef={frameRef} overlay={<AutoCursor ref={cursorRef} theme={theme} size={size} />}>
       <div style={{ display: 'flex', gap: `${4 * size}px`, marginBottom: `${10 * size}px`, borderBottom: `1px solid ${t.border}`, paddingBottom: `${6 * size}px` }}>
         {tabs.map((label, i) => (
-          <button key={label} onClick={() => goToTab(i)} style={{
+          <button key={label} data-demo={`tab-${i}`} onClick={() => goToTab(i)} style={{
             padding: `${5 * size}px ${9 * size}px`, border: 'none', borderRadius: `${4 * size}px`,
             background: tab === i ? t.accent : 'transparent',
             color: tab === i ? (theme.isLight ? '#fff' : t.bg) : t.textMuted,
@@ -991,7 +1039,7 @@ function MockupMerchant({ theme, size, paceMs = 18000 }) {
       {tab === 1 && (
         <div>
           {ORDERS.map(o => (
-            <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${7 * size}px 0`, borderBottom: `1px solid ${t.border}`, fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px` }}>
+            <div key={o.id} data-demo={`order-${o.id}`} onClick={cancelAuto} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${7 * size}px ${4 * size}px`, borderBottom: `1px solid ${t.border}`, fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px`, transition: 'background 0.3s ease', ...rowHot(`order-${o.id}`) }}>
               <div>
                 <span style={{ color: t.text, fontWeight: 500 }}>{o.id}</span>{' '}
                 <span style={{ color: t.textFaint }}>· {o.c} · {o.items} item{o.items > 1 ? 's' : ''}</span>
@@ -1008,7 +1056,7 @@ function MockupMerchant({ theme, size, paceMs = 18000 }) {
       {tab === 2 && (
         <div>
           {EMBER_MOSS_PRODUCTS.map(p => (
-            <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: `${8 * size}px`, padding: `${6 * size}px 0`, borderBottom: `1px solid ${t.border}` }}>
+            <div key={p.name} data-demo={`product-${p.name}`} onClick={cancelAuto} style={{ display: 'flex', alignItems: 'center', gap: `${8 * size}px`, padding: `${6 * size}px ${4 * size}px`, borderBottom: `1px solid ${t.border}`, transition: 'background 0.3s ease', ...rowHot(`product-${p.name}`) }}>
               <div style={{ width: `${24 * size}px`, flexShrink: 0 }}>
                 <ProductImg src={p.img} alt={p.name} size={size} radius={3} />
               </div>
@@ -1021,7 +1069,7 @@ function MockupMerchant({ theme, size, paceMs = 18000 }) {
       {tab === 3 && (
         <div>
           {CUSTOMERS.map(c => (
-            <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: `${8 * size}px`, padding: `${6 * size}px 0`, borderBottom: `1px solid ${t.border}` }}>
+            <div key={c.name} data-demo={`customer-${c.name}`} onClick={cancelAuto} style={{ display: 'flex', alignItems: 'center', gap: `${8 * size}px`, padding: `${6 * size}px ${4 * size}px`, borderBottom: `1px solid ${t.border}`, transition: 'background 0.3s ease', ...rowHot(`customer-${c.name}`) }}>
               <div style={{
                 width: `${18 * size}px`, height: `${18 * size}px`, borderRadius: '50%', flexShrink: 0,
                 background: `${t.accent}22`, color: t.accent, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1044,25 +1092,64 @@ function MockupThemeSwitch({ theme, size, paceMs = 18000 }) {
   const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
   const slideEntered = useSlideEntered();
 
-  // Motion-graphics beat: cycle once through every swatch a beat after the
-  // slide opens, so the storefront visibly repaints itself unprompted —
-  // this IS the "watch it repaint live" moment from the speaker note.
-  // Spread evenly across most of the slide's pace, not a quick fixed burst.
-  const userTouchedRef = useRef(false);
+  // Motion-graphics beat: a visible cursor picks each theme swatch in turn and
+  // the storefront repaints itself — with a slow scroll down each new look so
+  // the whole page (not just the top) is seen in that theme. This IS the
+  // "watch it repaint live" moment. A real click, wheel or touch takes over.
+  const wrapRef = useRef(null);      // whole visual: swatches live OUTSIDE the browser frame
+  const frameRef = useRef(null);     // the scrolling storefront preview
+  const cursorRef = useRef(null);
+  const liveRef = useRef(false);
+  const cancelAuto = () => { liveRef.current = false; cursorRef.current?.hide(); };
   useEffect(() => {
     if (!slideEntered) return;
-    userTouchedRef.current = false;
-    const steps = STOREFRONT_THEME_SWATCHES.length - 1;
-    const gap = Math.max(900, (paceMs * 0.7) / Math.max(steps, 1));
-    let i = 0;
-    const id = setInterval(() => {
-      i += 1;
-      if (i >= STOREFRONT_THEME_SWATCHES.length) { clearInterval(id); return; }
-      if (!userTouchedRef.current) setMt(STOREFRONT_THEME_SWATCHES[i]);
-    }, gap);
-    return () => clearInterval(id);
+    liveRef.current = true;
+    setMt(STOREFRONT_THEME_SWATCHES[0]);
+    const frame = frameRef.current;
+    const isLive = () => liveRef.current;
+    const swatches = STOREFRONT_THEME_SWATCHES;
+    const steps = swatches.length - 1;
+    const k = paceMs / 20000;
+    const moveMs = Math.max(600, 900 * k);
+    const look = Math.max(1400, Math.min(2600, 2000 * k));   // slow scroll down each new look
+    const back = Math.max(800, 1000 * k);
+    // time to spend on each theme so the whole cycle fills ~88% of the slide
+    const dwell = Math.max(1800, (paceMs * 0.88 - steps * (moveMs + 360) - 900 * k) / (swatches.length));
+    const lookAround = async () => {
+      const t0 = performance.now();
+      await glide(frameRef.current, 'bottom', look, isLive);   // see the whole page in this theme
+      await glide(frameRef.current, 0, back, isLive);
+      // previews that fit the frame don't scroll at all, so wait out whatever is left of this theme's time
+      await sleep(Math.max(300, dwell - (performance.now() - t0)));
+    };
+    const stop = () => cancelAuto();
+    frame?.addEventListener('wheel', stop, { passive: true });
+    frame?.addEventListener('touchstart', stop, { passive: true });
+
+    (async () => {
+      await sleep(900 * k);
+      await lookAround();                            // start on the first theme, then go through the rest
+      for (let i = 1; i < swatches.length; i++) {
+        const ok = await pointAndClick({
+          cursorRef, frameRef: wrapRef, scroll: false, isLive, moveMs,
+          selector: `[data-demo="swatch-${swatches[i].id}"]`,
+          onClick: () => setMt(swatches[i]),
+        });
+        if (!ok) return;
+        await sleep(400 * k);
+        await lookAround();
+        if (!isLive()) return;
+      }
+      cursorRef.current?.hide();
+    })();
+
+    return () => {
+      liveRef.current = false;
+      frame?.removeEventListener('wheel', stop);
+      frame?.removeEventListener('touchstart', stop);
+    };
   }, [slideEntered, paceMs]);
-  const pickTheme = (candidate) => { userTouchedRef.current = true; setMt(candidate); };
+  const pickTheme = (candidate) => { cancelAuto(); setMt(candidate); };
 
   const Preview = {
     elegant: ElegantPreview,
@@ -1072,15 +1159,16 @@ function MockupThemeSwitch({ theme, size, paceMs = 18000 }) {
   }[mt.style];
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div ref={wrapRef} style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <AutoCursor ref={cursorRef} theme={theme} size={size} />
       <div style={{ flex: '1 1 auto', minHeight: 0, marginBottom: `${10 * size}px` }}>
-        <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill>
+        <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill scrollRef={frameRef}>
           <Preview mt={mt} size={size} products={products} />
         </DeviceFrame>
       </div>
       <div style={{ display: 'flex', gap: `${6 * size}px`, flexWrap: 'wrap', flexShrink: 0 }}>
         {STOREFRONT_THEME_SWATCHES.map(candidate => (
-          <button key={candidate.id} onClick={() => pickTheme(candidate)} style={{
+          <button key={candidate.id} data-demo={`swatch-${candidate.id}`} onClick={() => pickTheme(candidate)} style={{
             display: 'flex', alignItems: 'center', gap: `${5 * size}px`,
             padding: `${5 * size}px ${9 * size}px`, borderRadius: '100px',
             border: `1px solid ${mt.id === candidate.id ? t.accent : t.border}`,
