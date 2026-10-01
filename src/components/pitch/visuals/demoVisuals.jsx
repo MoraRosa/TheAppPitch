@@ -4,16 +4,16 @@
 // something to a cart, swap a theme. They use theme.colors so they repaint
 // automatically with the presenter's active theme (including Showroom).
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import QRCode from 'react-qr-code';
 import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart, Calendar } from 'lucide-react';
-import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom, SiHubspot } from 'react-icons/si';
+import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom, SiHubspot, SiGmail, SiAirtable } from 'react-icons/si';
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
 import AutoCursor from './AutoCursor.jsx';
 import { sleep, glide, pointAndClick, typeText } from '../../../utils/demoScript.js';
-import { ProductDetailView, BlogPostView, ContactView, CONTACT_SEND_MS } from './storefrontViews.jsx';
+import { ProductDetailView, BlogPostView, ContactView, CONTACT_SEND_MS, CheckoutView, SHIP_CALC_MS, PAY_MS } from './storefrontViews.jsx';
 import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
 import { ScrollReveal, CountUp, Reveal } from '../motion.jsx';
 import { COMPANY, PRICING } from '../../../data/config.js';
@@ -298,7 +298,6 @@ function SectionLabel({ size, theme, children }) {
 }
 
 
-// ── 2. problem — scattered tools consolidate on click ──────────────────────────
 // Placeholder mark for Peak — no real logo exists yet, so this is a simple
 // literal "summit" glyph (a peak, for Peak) in the theme's accent color.
 // Swap this out the day a real logo exists; nothing else references it.
@@ -331,96 +330,219 @@ function PeakMark({ size, color }) {
   );
 }
 
-function MockupProblem({ theme, size, paceMs = 18000 }) {
+
+// ── 2. problem — "the flood" ─────────────────────────────────────────────────────
+// The story this slide has to tell: a merchant's tools each have their own
+// login, none of them talk to each other, and keeping up with them is its own
+// job. So instead of ten tidy boxes, the scene BUILDS into overwhelm the moment
+// the slide opens (think the Hogwarts-letters scene): login windows pile up,
+// wax-sealed letters pour in from every edge and swarm around the business,
+// notifications pop up about things that don't match, the sync lines between
+// tools snap, and a live counter climbs. Then everything gets pulled into one
+// point and the platform resolves. Replay runs the WHOLE build again.
+
+// tiny seeded RNG so the "random" scene is identical on every run
+function rng(seed) {
+  let a = seed;
+  return () => {
+    a = (a + 0x6D2B79F5) | 0;
+    let x = Math.imul(a ^ (a >>> 15), 1 | a);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// One wax-sealed letter in the flood, sealed in a tool's brand colour.
+function Letter({ w, seal, urgent }) {
+  return (
+    <svg viewBox="0 0 40 30" width={w} height={w * 0.75} style={{ display: 'block', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.28))' }} aria-hidden>
+      <rect x="1" y="1" width="38" height="28" rx="3" fill="#FBF7EE" stroke="#B9AF9C" strokeWidth="1.2" />
+      <path d="M2 3 L20 17 L38 3" fill="none" stroke="#B9AF9C" strokeWidth="1.2" strokeLinejoin="round" />
+      <circle cx="20" cy="16" r="5.2" fill={seal} />
+      <circle cx="20" cy="16" r="2.4" fill="none" stroke="#fff" strokeOpacity="0.45" strokeWidth="1" />
+      {urgent && <circle cx="35.5" cy="4.5" r="4.2" fill="#DB3521" stroke="#fff" strokeWidth="1.2" />}
+    </svg>
+  );
+}
+
+// Live counters. They climb while the chaos builds, then tick down to 1 / 1 / 0.
+function ChaosHUD({ theme, size, merged, durationMs }) {
+  const t = theme.colors;
+  const [v, setV] = useState({ tabs: 1, logins: 1, unread: 0 });
+  const curRef = useRef(v);
+  useEffect(() => {
+    let raf;
+    const t0 = performance.now();
+    const push = (nv) => {
+      const c = curRef.current;
+      if (c.tabs === nv.tabs && c.logins === nv.logins && c.unread === nv.unread) return;
+      curRef.current = nv; setV(nv);
+    };
+    if (!merged) {
+      const step = (now) => {
+        const p = Math.min(1, (now - t0) / durationMs);
+        push({ tabs: Math.round(1 + 22 * p), logins: Math.round(1 + 11 * p), unread: Math.round(214 * Math.pow(p, 1.7)) });
+        if (p < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    } else {
+      const from = { ...curRef.current };
+      const step = (now) => {
+        const q = Math.max(0, Math.min(1, (now - t0 - 300) / 1000));
+        const e = 1 - Math.pow(1 - q, 3);
+        push({ tabs: Math.round(from.tabs + (1 - from.tabs) * e), logins: Math.round(from.logins + (1 - from.logins) * e), unread: Math.round(from.unread * (1 - e)) });
+        if (q < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }
+    return () => cancelAnimationFrame(raf);
+  }, [merged, durationMs]);
+
+  const col = merged ? (t.positive || t.accent) : (t.negative || '#DB3521');
+  const chip = (label, val) => (
+    <div style={{
+      display: 'flex', alignItems: 'baseline', gap: `${4 * size}px`, padding: `${4 * size}px ${8 * size}px`,
+      borderRadius: `${5 * size}px`, background: t.surface || t.bg, border: `1px solid ${col}`, transition: 'border-color 0.4s ease',
+    }}>
+      <span style={{ fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${12 * size}px`, color: col, minWidth: `${17 * size}px`, textAlign: 'right', transition: 'color 0.4s ease' }}>{val}</span>
+      <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</span>
+    </div>
+  );
+  return (
+    <div style={{ position: 'absolute', top: `${10 * size}px`, right: `${10 * size}px`, zIndex: 7, display: 'flex', gap: `${5 * size}px` }}>
+      {chip('tabs open', v.tabs)}{chip('logins', v.logins)}{chip('unread', v.unread)}
+    </div>
+  );
+}
+
+function MockupProblem({ theme, size, paceMs = 24000 }) {
   const t = theme.colors;
   const [merged, setMerged] = useState(false);
+  const [pains, setPains] = useState(0);
   // Infinite CSS keyframe animations inserted while an ancestor is
   // mid-transform can get stuck at their first frame in some browsers.
-  // slideEntered comes from PresentMode's real onAnimationComplete event —
-  // not a guessed duration — so remounting the tiles (via key) the instant
-  // it flips true reliably starts the animation exactly when it's safe to,
-  // whether that's 300ms or 600ms depending on the active theme.
+  // slideEntered comes from PresentMode's real onAnimationComplete event, and
+  // everything below mounts (keyed by animKey) only once it flips true.
   const slideEntered = useSlideEntered();
   const [animKey, setAnimKey] = useState(0);
-  useEffect(() => {
-    if (slideEntered) setAnimKey(k => k + 1);
-  }, [slideEntered]);
+  useEffect(() => { if (slideEntered) setAnimKey(k => k + 1); }, [slideEntered]);
 
-  // Motion-graphics beat: the tab chaos plays itself out automatically a
-  // moment after the slide opens — jitter, then the tools fly away and the
-  // dashboard resolves underneath — instead of waiting on a click. The
-  // button still lets the audience replay it on demand. Timed to a quarter
-  // of the slide's pace (real narration length once recorded, else autoMs)
-  // so it doesn't fire and finish while the presenter is still on the
-  // eyebrow line.
+  // How long the chaos builds before it all collapses: the slide's pace (real
+  // narration length once recorded, else autoMs), leaving the tail for the
+  // resolution. The narration ends on "watch what happens when they collapse
+  // into one", so that's where the collapse lands.
+  const C = Math.max(8000, paceMs * 0.78);
   useEffect(() => {
-    if (!slideEntered) return;
-    setMerged(false);
-    const t = setTimeout(() => setMerged(true), Math.max(1400, paceMs * 0.28));
-    return () => clearTimeout(t);
-  }, [slideEntered, animKey, paceMs]);
+    if (!slideEntered || animKey === 0) return;
+    setMerged(false); setPains(0);
+    const ids = [0.22, 0.5, 0.76].map((f, i) => setTimeout(() => setPains(i + 1), C * f));
+    ids.push(setTimeout(() => setMerged(true), C));
+    return () => ids.forEach(clearTimeout);
+  }, [slideEntered, animKey, C]);
+  const replay = () => { setMerged(false); setPains(0); setAnimKey(k => k + 1); };
 
+  // measure the scene so everything can be placed (and sucked back) in real px
+  const sceneRef = useRef(null);
+  const [box, setBox] = useState({ w: 720, h: 420 });
+  useEffect(() => {
+    const el = sceneRef.current;
+    if (!el) return;
+    const read = () => setBox({ w: el.offsetWidth || 720, h: el.offsetHeight || 420 });
+    read();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(read) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, []);
+  const cx = box.w / 2, cy = box.h / 2;
+
+  // in the order they arrive — the first few land at the edges, the last ones bury the middle
   const tools = [
-    { name: 'Shopify',    Icon: SiShopify,      color: '#95BF47' },
-    { name: 'Mailchimp',  Icon: SiMailchimp,    color: '#FFE01B' },
-    { name: 'Sheets',     Icon: SiGooglesheets, color: '#188038' },
-    { name: 'Calendly',   Icon: SiCalendly,     color: '#006BFF' },
-    { name: 'QuickBooks', Icon: SiQuickbooks,   color: '#2CA01C' },
-    { name: 'Notion',     Icon: SiNotion,       color: t.text },
-    { name: 'Trello',     Icon: SiTrello,       color: '#0052CC' },
-    { name: 'Stripe',     Icon: SiStripe,       color: '#635BFF' },
-    { name: 'Dropbox',    Icon: SiDropbox,      color: '#0061FF' },
-    { name: 'Zoom',       Icon: SiZoom,         color: '#2D8CFF' },
+    { name: 'Shopify',    Icon: SiShopify,      color: '#95BF47', status: 'Session expired' },
+    { name: 'Gmail',      Icon: SiGmail,        color: '#EA4335', status: 'New sign-in detected' },
+    { name: 'Sheets',     Icon: SiGooglesheets, color: '#188038', status: 'Request access' },
+    { name: 'Mailchimp',  Icon: SiMailchimp,    color: '#FFE01B', status: 'Verify it\u2019s you' },
+    { name: 'QuickBooks', Icon: SiQuickbooks,   color: '#2CA01C', status: '2-step code needed' },
+    { name: 'Calendly',   Icon: SiCalendly,     color: '#006BFF', status: 'Sign in again' },
+    { name: 'Trello',     Icon: SiTrello,       color: '#0052CC', status: 'Link expired' },
+    { name: 'Airtable',   Icon: SiAirtable,     color: '#FCB400', status: 'Wrong password' },
+    { name: 'Stripe',     Icon: SiStripe,       color: '#635BFF', status: 'New device login' },
+    { name: 'Notion',     Icon: SiNotion,       color: t.text,    status: 'Workspace locked' },
+    { name: 'Dropbox',    Icon: SiDropbox,      color: '#0061FF', status: 'Storage full' },
+    { name: 'Zoom',       Icon: SiZoom,         color: '#2D8CFF', status: 'Update required' },
   ];
-  // Scattered around the edges, leaving the center clear for the dashboard behind them
-  const positions = [
-    { top: '2%',  left: '2%'  }, { top: '2%',  left: '28%' }, { top: '2%',  left: '54%' }, { top: '2%',  left: '80%' },
-    { top: '40%', left: '0%'  },                                                            { top: '40%', left: '82%' },
-    { top: '76%', left: '2%'  }, { top: '76%', left: '28%' }, { top: '76%', left: '54%' }, { top: '76%', left: '80%' },
+  const slots = [
+    [.02, .06], [.97, .04], [.04, .92], [.95, .9], [.34, .02], [.66, .96],
+    [0, .46], [1, .5], [.3, .4], [.7, .36], [.48, .68], [.52, .2],
   ];
-  // Fly-away direction derived from each tile's position relative to center —
-  // scales to any tool count without hand-picking a direction per tile.
-  const flyTo = positions.map(p => {
-    const left = parseFloat(p.left), top = parseFloat(p.top);
-    const dx = (left - 46) * 2.4, dy = (top - 40) * 2.2;
-    return { x: dx, y: dy, r: dx > 0 ? 22 : -22 };
-  });
+  const ww = 108 * size, wh = 78 * size;
+  const winPos = slots.map(([fx, fy]) => ({ x: fx * (box.w - ww), y: fy * (box.h - wh) }));
+  const winAt = (i) => (C * (0.03 + 0.55 * (i / (tools.length - 1)))) / 1000;
+
+  // the flood: letters pour in from every edge, loop through the middle, land anywhere
+  const flood = useMemo(() => {
+    const r = rng(11);
+    return Array.from({ length: 56 }, (_, i) => {
+      const side = Math.floor(r() * 4), e = r();
+      const start = side === 0 ? { x: e, y: -0.14 } : side === 1 ? { x: 1.12, y: e } : side === 2 ? { x: e, y: 1.14 } : { x: -0.12, y: e };
+      return {
+        start, way: { x: 0.28 + r() * 0.44, y: 0.22 + r() * 0.5 }, land: { x: 0.04 + r() * 0.9, y: 0.05 + r() * 0.86 },
+        spin: (r() < 0.5 ? -1 : 1) * (360 + r() * 360), rot: (r() - 0.5) * 70, dur: 1.3 + r() * 0.9,
+        seal: i % 12, urgent: r() < 0.35, w: 26 + r() * 16, flutter: 1.4 + r() * 1.6,
+      };
+    });
+  }, []);
+  // ...and a swarm that never lands, buzzing around the business
+  const swarm = useMemo(() => {
+    const r = rng(29);
+    return Array.from({ length: 22 }, (_, i) => ({
+      rx: 110 + r() * 220, ry: 60 + r() * 150, dx: 2.4 + r() * 2.4, dy: 1.9 + r() * 2.2,
+      spin: 2 + r() * 3, phase: -r() * 5, seal: (i * 5) % 12, w: 30 + r() * 14, urgent: r() < 0.45,
+    }));
+  }, []);
+
+  const toasts = [
+    { i: 0, text: 'Order #1046 isn\u2019t in your sheet',   fx: .02, fy: .24 },
+    { i: 1, text: '47 unread \u2014 which one matters?',      fx: .98, fy: .22 },
+    { i: 4, text: 'Invoice doesn\u2019t match Stripe',        fx: 0,   fy: .72 },
+    { i: 5, text: 'Double-booked Thursday, 2pm',              fx: 1,   fy: .76 },
+    { i: 3, text: 'Subscriber list is out of date',           fx: .5,  fy: .1 },
+    { i: 2, text: 'Stock count is wrong. Again.',             fx: .5,  fy: .9 },
+    { i: 8, text: 'Payout doesn\u2019t match orders',         fx: .2,  fy: .52 },
+    { i: 9, text: 'Which doc is the latest one?',             fx: .8,  fy: .5 },
+  ];
+  const tw = 160 * size, th = 32 * size;
+  const links = [[0, 8], [1, 9], [2, 10], [3, 11], [6, 8], [7, 9], [4, 10]];
   const painPoints = ['10 logins a day', '~5 hrs/week stitching data', '0% of it talking to each other'];
+  const red = t.negative || '#DB3521';
+  const live = animKey > 0;
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{
+      <div ref={sceneRef} style={{
         position: 'relative', flex: '1 1 auto', minHeight: `${260 * size}px`,
         border: `1px dashed ${t.border}`, borderRadius: `${10 * size}px`,
         marginBottom: `${12 * size}px`, overflow: 'hidden',
       }}>
-        {/* AFTER badge only — the BEFORE one obstructed the Shopify tile and wasn't needed once the scene itself reads clearly */}
         {merged && (
           <div style={{
-            position: 'absolute', top: `${10 * size}px`, left: `${10 * size}px`, zIndex: 3,
+            position: 'absolute', top: `${10 * size}px`, left: `${10 * size}px`, zIndex: 8,
             display: 'flex', alignItems: 'center', gap: `${6 * size}px`,
-            padding: `${5 * size}px ${11 * size}px`, borderRadius: `${5 * size}px`,
-            background: t.accent,
+            padding: `${5 * size}px ${11 * size}px`, borderRadius: `${5 * size}px`, background: t.accent,
           }}>
-            <span style={{
-              fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${9.5 * size}px`,
-              letterSpacing: '0.1em', color: theme.isLight ? '#fff' : t.bg,
-            }}>
+            <span style={{ fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${9.5 * size}px`, letterSpacing: '0.1em', color: theme.isLight ? '#fff' : t.bg }}>
               AFTER — 1 platform
             </span>
           </div>
         )}
 
-        {/* ── background: the business's own dashboard, buried under tools ── */}
+        {/* ── the business's own dashboard — calm at first, then buried ── */}
         <div style={{
-          position: 'absolute', top: '50%', left: '50%', zIndex: 1,
-          width: '64%',
+          position: 'absolute', top: '50%', left: '50%', zIndex: 1, width: '64%',
           border: `1px solid ${t.border}`, borderRadius: `${8 * size}px`, overflow: 'hidden',
-          background: t.surface || t.bg,
-          boxShadow: `0 ${10 * size}px ${28 * size}px rgba(0,0,0,0.12)`,
-          opacity: merged ? 1 : 0.72,
+          background: t.surface || t.bg, boxShadow: `0 ${10 * size}px ${28 * size}px rgba(0,0,0,0.12)`,
+          opacity: merged ? 1 : 0.8,
           transform: merged ? 'translate(-50%, -50%) scale(1.12)' : 'translate(-50%, -50%) scale(1)',
-          transition: 'opacity 0.6s ease 0.3s, transform 0.6s cubic-bezier(0.4,0,0.2,1) 0.3s',
+          transition: 'opacity 0.6s ease 0.55s, transform 0.6s cubic-bezier(0.4,0,0.2,1) 0.55s',
         }}>
           {!merged && (
             <>
@@ -428,9 +550,7 @@ function MockupProblem({ theme, size, paceMs = 18000 }) {
                 {[0, 1, 2].map(i => <span key={i} style={{ width: `${6 * size}px`, height: `${6 * size}px`, borderRadius: '50%', background: t.border }} />)}
               </div>
               <div style={{ padding: `${18 * size}px` }}>
-                <div style={{ fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${12 * size}px`, letterSpacing: '0.06em', marginBottom: `${10 * size}px`, color: t.text }}>
-                  YOUR BUSINESS
-                </div>
+                <div style={{ fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${12 * size}px`, letterSpacing: '0.06em', marginBottom: `${10 * size}px`, color: t.text }}>YOUR BUSINESS</div>
                 {[72, 50, 62].map((w, i) => (
                   <div key={i} style={{ height: `${9 * size}px`, width: `${w}%`, borderRadius: `${3 * size}px`, background: t.bgAlt, marginBottom: `${7 * size}px` }} />
                 ))}
@@ -441,12 +561,10 @@ function MockupProblem({ theme, size, paceMs = 18000 }) {
             <div style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               padding: `${28 * size}px ${18 * size}px`, gap: `${10 * size}px`,
-              animation: 'revealIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.35s both',
+              animation: 'revealIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.9s both',
             }}>
               <PeakMark size={size} color={t.accent} />
-              <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${18 * size}px`, color: t.text, letterSpacing: '0.02em' }}>
-                {COMPANY.name.toUpperCase()}
-              </div>
+              <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${18 * size}px`, color: t.text, letterSpacing: '0.02em' }}>{COMPANY.name.toUpperCase()}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px`, fontFamily: theme.fonts.mono, fontSize: `${9.5 * size}px`, color: t.positive || t.accent }}>
                 <Check size={12 * size} strokeWidth={2.5} /> One dashboard. Everything visible.
               </div>
@@ -454,67 +572,153 @@ function MockupProblem({ theme, size, paceMs = 18000 }) {
           )}
         </div>
 
-        {/* ── foreground: the scattered tools burying it ── */}
-        {tools.map((tool, i) => (
-          <div key={`${tool.name}-${animKey}`} style={{
-            position: 'absolute', ...positions[i], zIndex: 2,
-            width: `${104 * size}px`,
-            border: `1px solid ${t.border}`, borderRadius: `${7 * size}px`, overflow: 'hidden',
-            background: t.surface || t.bg,
-            boxShadow: `0 ${6 * size}px ${16 * size}px rgba(0,0,0,0.14)`,
-            opacity: merged ? 0 : 1,
-            pointerEvents: merged ? 'none' : 'auto',
-            animation: merged ? 'none' : `jitter 2.8s ease-in-out ${i * 0.18}s infinite`,
-            transform: merged ? `translate(${flyTo[i].x * size}px, ${flyTo[i].y * size}px) scale(0.5) rotate(${flyTo[i].r}deg)` : 'none',
-            transition: 'transform 0.55s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, padding: `${7 * size}px ${9 * size}px`, borderBottom: `1px solid ${t.border}`, background: t.bgAlt }}>
-              <span style={{ position: 'relative', display: 'flex' }}>
-                <tool.Icon size={17 * size} color={tool.color} />
-                <span style={{
-                  position: 'absolute', top: `-${3 * size}px`, right: `-${3 * size}px`,
-                  width: `${7 * size}px`, height: `${7 * size}px`, borderRadius: '50%',
-                  background: t.negative || '#DB3521',
-                  animation: `pulseDot 1.6s ease-in-out ${i * 0.15}s infinite`,
-                }} />
-              </span>
-              <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9.5 * size}px`, color: t.textMuted, whiteSpace: 'nowrap' }}>{tool.name}</span>
-            </div>
-            <div style={{ padding: `${8 * size}px ${9 * size}px` }}>
-              <div style={{ height: `${4 * size}px`, width: '80%', borderRadius: '2px', background: t.bgAlt, marginBottom: `${5 * size}px` }} />
-              <div style={{ height: `${4 * size}px`, width: '55%', borderRadius: '2px', background: t.bgAlt }} />
-            </div>
+        {live && (
+          <div key={animKey} style={{ position: 'absolute', inset: 0 }}>
+            {/* 1 · every tool has its own login — and its own problem */}
+            {tools.map((tool, i) => {
+              const rot = ((i * 53) % 11) - 5;
+              const p = winPos[i];
+              return (
+                <motion.div key={tool.name}
+                  initial={{ opacity: 0, scale: 0.4, x: 0, y: 0, rotate: rot - 12 }}
+                  animate={merged
+                    ? { x: cx - (p.x + ww / 2), y: cy - (p.y + wh / 2), scale: 0.08, rotate: rot + 420, opacity: 0 }
+                    : { opacity: 1, scale: 1, x: 0, y: 0, rotate: rot }}
+                  transition={merged ? { duration: 0.8, delay: i * 0.03, ease: [0.5, 0, 0.9, 0.4] } : { type: 'spring', stiffness: 260, damping: 15, delay: winAt(i) }}
+                  style={{ position: 'absolute', left: p.x, top: p.y, width: ww, zIndex: 2 }}>
+                  <div style={{
+                    border: `1px solid ${t.border}`, borderRadius: `${7 * size}px`, overflow: 'hidden', background: t.surface || t.bg,
+                    boxShadow: `0 ${6 * size}px ${16 * size}px rgba(0,0,0,0.16)`,
+                    animation: `jitter ${2.4 + (i % 4) * 0.35}s ease-in-out ${i * 0.17}s infinite`,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, padding: `${6 * size}px ${8 * size}px`, borderBottom: `1px solid ${t.border}`, background: t.bgAlt }}>
+                      <span style={{ position: 'relative', display: 'flex' }}>
+                        <tool.Icon size={15 * size} color={tool.color} />
+                        <span style={{ position: 'absolute', top: `-${3 * size}px`, right: `-${3 * size}px`, width: `${7 * size}px`, height: `${7 * size}px`, borderRadius: '50%', background: red, animation: `pulseDot 1.6s ease-in-out ${i * 0.15}s infinite` }} />
+                      </span>
+                      <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.textMuted, whiteSpace: 'nowrap' }}>{tool.name}</span>
+                    </div>
+                    <div style={{ padding: `${6 * size}px ${8 * size}px ${8 * size}px` }}>
+                      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: red, marginBottom: `${5 * size}px`, whiteSpace: 'nowrap' }}>{tool.status}</div>
+                      <div style={{ height: `${8 * size}px`, borderRadius: `${2 * size}px`, border: `1px solid ${t.border}`, background: t.bgAlt, marginBottom: `${4 * size}px` }} />
+                      <div style={{ height: `${8 * size}px`, borderRadius: `${2 * size}px`, border: `1px solid ${t.border}`, background: t.bgAlt, marginBottom: `${5 * size}px`, fontFamily: theme.fonts.mono, fontSize: `${6 * size}px`, lineHeight: `${8 * size}px`, color: t.textFaint, paddingLeft: `${4 * size}px`, letterSpacing: '0.1em' }}>{'\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}</div>
+                      <div style={{ height: `${9 * size}px`, borderRadius: `${2 * size}px`, background: tool.color, opacity: 0.85 }} />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            {/* 2 · the flood: letters pour in from every edge and bury everything */}
+            {flood.map((l, i) => {
+              const lw = l.w * size;
+              const px = (f) => f * box.w - lw / 2, py = (f) => f * box.h - lw * 0.375;
+              const delay = (C * (0.1 + 0.78 * Math.pow(i / (flood.length - 1), 1.5))) / 1000;
+              return (
+                <motion.div key={i}
+                  initial={{ left: px(l.start.x), top: py(l.start.y), opacity: 0, scale: 0.6, rotate: 0 }}
+                  animate={merged
+                    ? { left: cx - lw / 2, top: cy - lw * 0.375, scale: 0, rotate: l.rot + 540, opacity: 0 }
+                    : { left: [px(l.start.x), px(l.way.x), px(l.land.x)], top: [py(l.start.y), py(l.way.y), py(l.land.y)], rotate: [0, l.spin * 0.6, l.rot], scale: [0.6, 1.15, 1], opacity: [0, 1, 1] }}
+                  transition={merged ? { duration: 0.75, delay: (i % 12) * 0.03, ease: [0.5, 0, 0.9, 0.4] } : { duration: l.dur, delay, times: [0, 0.55, 1], ease: 'easeOut' }}
+                  style={{ position: 'absolute', zIndex: 3 }}>
+                  <div style={{ animation: `flutter ${l.flutter}s ease-in-out ${delay + l.dur}s infinite alternate` }}>
+                    <Letter w={lw} seal={tools[l.seal].color} urgent={l.urgent} />
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            {/* 3 · a swarm that never lands — it just keeps circling the business */}
+            {swarm.map((s, i) => (
+              <motion.div key={i} initial={{ opacity: 0, scale: 0.3 }}
+                animate={merged ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }}
+                transition={merged ? { duration: 0.5 } : { delay: (C * (0.22 + 0.5 * (i / swarm.length))) / 1000, duration: 0.5 }}
+                style={{ position: 'absolute', left: '50%', top: '50%', zIndex: 4, marginLeft: `${-s.w * size / 2}px`, marginTop: `${-s.w * size * 0.375}px` }}>
+                <div style={{ '--rx': `${s.rx * size}px`, animation: `swayX ${s.dx}s ease-in-out ${s.phase}s infinite alternate` }}>
+                  <div style={{ '--ry': `${s.ry * size}px`, animation: `swayY ${s.dy}s ease-in-out ${s.phase}s infinite alternate` }}>
+                    <div style={{ animation: `spinL ${s.spin}s linear infinite` }}>
+                      <Letter w={s.w * size} seal={tools[s.seal].color} urgent={s.urgent} />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+
+            {/* 4 · the tools don't talk to each other: every sync line is broken */}
+            <svg width={box.w} height={box.h} viewBox={`0 0 ${box.w} ${box.h}`} style={{ position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
+              {links.map(([a, b], k) => (
+                <motion.line key={k} x1={winPos[a].x + ww / 2} y1={winPos[a].y + wh / 2} x2={winPos[b].x + ww / 2} y2={winPos[b].y + wh / 2}
+                  stroke={red} strokeWidth={1.6 * size} strokeDasharray={`${5 * size} ${4 * size}`} strokeLinecap="round"
+                  initial={{ opacity: 0 }} animate={{ opacity: merged ? 0 : 0.85 }}
+                  transition={{ delay: merged ? 0 : (C * (0.45 + 0.4 * (k / links.length))) / 1000, duration: 0.4 }} />
+              ))}
+            </svg>
+            {links.map(([a, b], k) => (
+              <motion.div key={k} initial={{ scale: 0, opacity: 0 }}
+                animate={merged ? { scale: 0, opacity: 0 } : { scale: 1, opacity: 1 }}
+                transition={merged ? { duration: 0.3 } : { type: 'spring', stiffness: 400, damping: 12, delay: (C * (0.45 + 0.4 * (k / links.length))) / 1000 + 0.25 }}
+                style={{
+                  position: 'absolute', zIndex: 5, width: `${15 * size}px`, height: `${15 * size}px`, borderRadius: '50%',
+                  left: (winPos[a].x + winPos[b].x) / 2 + ww / 2 - 7.5 * size, top: (winPos[a].y + winPos[b].y) / 2 + wh / 2 - 7.5 * size,
+                  background: red, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${9 * size}px`, boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                }}>{'\u2715'}</motion.div>
+            ))}
+
+            {/* 5 · notifications about things that don't line up */}
+            {toasts.map((n, j) => (
+              <motion.div key={j} initial={{ opacity: 0, y: -14 * size, scale: 0.85 }}
+                animate={merged ? { opacity: 0, scale: 0.5, y: 0 } : { opacity: 1, y: 0, scale: 1 }}
+                transition={merged ? { duration: 0.35 } : { type: 'spring', stiffness: 300, damping: 16, delay: (C * (0.15 + 0.62 * (j / (toasts.length - 1)))) / 1000 }}
+                style={{
+                  position: 'absolute', zIndex: 6, width: tw, left: n.fx * (box.w - tw), top: n.fy * (box.h - th),
+                  display: 'flex', alignItems: 'center', gap: `${7 * size}px`, padding: `${6 * size}px ${8 * size}px`,
+                  borderRadius: `${6 * size}px`, background: t.surface || t.bg, border: `1px solid ${t.border}`, borderLeft: `${3 * size}px solid ${red}`,
+                  boxShadow: `0 ${6 * size}px ${16 * size}px rgba(0,0,0,0.22)`,
+                }}>
+                {(() => { const I = tools[n.i].Icon; return <I size={13 * size} color={tools[n.i].color} />; })()}
+                <span style={{ fontFamily: theme.fonts.body, fontSize: `${8 * size}px`, color: t.text, lineHeight: 1.25 }}>{n.text}</span>
+              </motion.div>
+            ))}
+
+            <ChaosHUD theme={theme} size={size} merged={merged} durationMs={C} />
           </div>
-        ))}
+        )}
       </div>
 
       <div style={{
         display: 'flex', justifyContent: 'space-between', gap: `${10 * size}px`, marginBottom: `${10 * size}px`, flexShrink: 0,
-        opacity: merged ? 0 : 1, maxHeight: merged ? 0 : `${28 * size}px`, overflow: 'hidden',
-        transition: 'opacity 0.3s ease, max-height 0.3s ease',
+        opacity: merged ? 0 : 1, maxHeight: merged ? 0 : `${28 * size}px`, overflow: 'hidden', transition: 'opacity 0.3s ease, max-height 0.3s ease',
       }}>
-        {painPoints.map(pt => (
-          <span key={pt} style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px`, fontFamily: theme.fonts.mono, fontWeight: 600, fontSize: `${9.5 * size}px`, color: t.text, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
-            <span style={{ width: `${5 * size}px`, height: `${5 * size}px`, borderRadius: '50%', background: t.negative || '#DB3521', flexShrink: 0 }} />
+        {painPoints.map((pt, i) => (
+          <span key={pt} style={{
+            display: 'flex', alignItems: 'center', gap: `${5 * size}px`, fontFamily: theme.fonts.mono, fontWeight: 600, fontSize: `${9.5 * size}px`,
+            color: t.text, letterSpacing: '0.01em', whiteSpace: 'nowrap',
+            opacity: pains > i ? 1 : 0, transform: pains > i ? 'none' : `translateY(${6 * size}px)`, transition: 'opacity 0.5s ease, transform 0.5s ease',
+          }}>
+            <span style={{ width: `${5 * size}px`, height: `${5 * size}px`, borderRadius: '50%', background: red, flexShrink: 0 }} />
             {pt}
           </span>
         ))}
       </div>
 
-      <button onClick={() => setMerged(m => !m)} style={{
+      <button onClick={() => (merged ? replay() : setMerged(true))} style={{
         width: '100%', padding: `${10 * size}px`, flexShrink: 0,
         border: `1px solid ${t.accent}`, borderRadius: `${6 * size}px`,
-        background: merged ? 'transparent' : t.accent,
-        color: merged ? t.accent : (theme.isLight ? '#fff' : t.bg),
-        fontFamily: theme.fonts.mono, fontWeight: 600, fontSize: `${11 * size}px`,
-        letterSpacing: '0.06em', cursor: 'pointer',
+        background: merged ? 'transparent' : t.accent, color: merged ? t.accent : (theme.isLight ? '#fff' : t.bg),
+        fontFamily: theme.fonts.mono, fontWeight: 600, fontSize: `${11 * size}px`, letterSpacing: '0.06em', cursor: 'pointer',
       }}>
-        {merged ? '↺ Show the tab chaos' : 'Consolidate →'}
+        {merged ? '\u21BA Replay the chaos' : 'Consolidate \u2192'}
       </button>
       <style>{`
         @keyframes jitter { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
         @keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }
         @keyframes revealIn { from { opacity: 0; transform: scale(0.75); } to { opacity: 1; transform: scale(1); } }
+        @keyframes swayX { from { transform: translateX(calc(var(--rx) * -1)); } to { transform: translateX(var(--rx)); } }
+        @keyframes swayY { from { transform: translateY(calc(var(--ry) * -1)); } to { transform: translateY(var(--ry)); } }
+        @keyframes spinL { to { transform: rotate(360deg); } }
+        @keyframes flutter { from { transform: rotate(-5deg) translateY(0); } to { transform: rotate(6deg) translateY(-3px); } }
       `}</style>
     </div>
   );
@@ -632,21 +836,24 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
   const addOne = (p) => setQty(p.name, (cart[p.name] || 0) + 1);
 
   // Motion-graphics beat: in presentation mode the storefront demos ITSELF
-  // with a visible cursor — read down the grid, click a product, add it to
-  // the cart, go back to the shop, browse once more, then open the cart and
-  // hover Checkout. Any real click, wheel or touch hands control back.
+  // with a visible cursor — read down the grid, open a product, add it to the
+  // cart, open the cart, then walk the WHOLE checkout: address typed in,
+  // shipping + tax calculated, card entered, paid, and the confirmation + receipt
+  // email land. Any real click, wheel or touch hands control back.
   const liveRef = useRef(true);
   const cursorRef = useRef(null);
+  const checkoutRef = useRef(null);
   const cancelAuto = () => { liveRef.current = false; cursorRef.current?.hide(); };
+  useEffect(() => { if (frameRef.current) frameRef.current.scrollTop = 0; }, [view]);   // every new page starts at the top
   useEffect(() => {
     if (!autoDemo || !slideEntered) return;
     liveRef.current = true;
     setView('shop'); setCart({});
     const frame = frameRef.current;
     const isLive = () => liveRef.current;
-    // Baseline script is ~20s; stretch/shrink it to however long this slide
-    // actually gets (real narration length once recorded, else autoMs).
-    const k = paceMs / 20000;
+    // Baseline script plays out in ~46s; stretch/shrink it to however long this
+    // slide actually gets (real narration length once recorded, else autoMs).
+    const k = paceMs / 46000;
     const wait = (ms) => sleep(ms * k);
     const glideTo = (to, ms) => glide(frameRef.current, to, Math.max(900, ms * k), isLive);
     const click = (selector, onClick) => pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs: Math.max(500, 800 * k), onClick });
@@ -654,27 +861,56 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
     frame?.addEventListener('wheel', stop, { passive: true });
     frame?.addEventListener('touchstart', stop, { passive: true });
 
+    // click a checkout field, then type into it like a person would
+    const fill = async (field, text, cps) => {
+      if (!(await click(`[data-demo="co-${field}"]`, () => checkoutRef.current?.focus(field)))) return false;
+      await wait(200);
+      return typeText(text, isLive, (v) => checkoutRef.current?.setValue(field, v), cps / Math.max(0.7, k));
+    };
+
     (async () => {
       await wait(700);
-      await glideTo('bottom', 3400);                 // browse all the way down the grid
-      await wait(400);
-      await glideTo(0, 1800);
+      await glideTo('bottom', 3000);                 // browse all the way down the grid
+      await wait(300);
+      await glideTo(0, 1500);
       await wait(300);
       if (!(await click('[data-demo="product-2"]', () => setView(products[2])))) return;   // Dragon Mint Tea
       await wait(700);
       if (!(await click('[data-demo="add-to-cart"]', () => addOne(products[2])))) return;
-      await wait(700);
-      if (!(await click('[data-demo="nav-shop"]', () => setView('shop')))) return;
       await wait(600);
-      await glideTo('bottom', 2800);                 // one more browse pass
-      await wait(300);
-      await glideTo(0, 1400);
-      await wait(300);
       if (!(await click('[data-demo="nav-cart"]', () => setView('cart')))) return;
-      await wait(500);
-      if (!(await click('[data-demo="checkout"]', null))) return;   // point at Checkout, script ends
+      await wait(700);
+      if (!(await click('[data-demo="checkout"]', () => setView('checkout')))) return;
       await wait(800);
-      cursorRef.current?.hide();
+
+      // 1 · where should we send it?
+      if (!(await fill('name', 'Mira Halloran', 18))) return;
+      await wait(200);
+      if (!(await fill('street', '88 Juniper Lane', 22))) return;
+      await wait(200);
+      if (!(await fill('city', 'Austin, TX 78701', 22))) return;
+      await wait(400);
+
+      // 2 · shipping + tax get calculated
+      if (!(await click('[data-demo="co-continue"]', () => checkoutRef.current?.calcShipping()))) return;
+      await sleep(SHIP_CALC_MS + 1500 * k);          // the truck drives, rates and tax land in the summary
+      if (!isLive()) return;
+      if (!(await click('[data-demo="co-continue"]', () => checkoutRef.current?.toPayment()))) return;
+      await wait(900);
+
+      // 3 · payment details
+      if (!(await fill('card', '4242 4242 4242 4242', 26))) return;
+      await wait(200);
+      if (!(await fill('exp', '08 / 28', 14))) return;
+      await wait(200);
+      if (!(await fill('cvc', '123', 10))) return;
+      await wait(500);
+      if (!(await click('[data-demo="co-pay"]', () => checkoutRef.current?.pay()))) return;
+      cursorRef.current?.hide();                     // card is charged — let the confirmation take over
+      await sleep(PAY_MS + 500);
+      await glideTo(0, 700);
+      await wait(2800);                              // parcel pops, receipt email lands, chips tick off
+      await glideTo('bottom', 2400);
     })();
 
     return () => {
@@ -690,7 +926,7 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
   const isProductView = typeof view === 'object';
 
   return (
-    <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/shop`} fill scrollRef={frameRef} overlay={<AutoCursor ref={cursorRef} theme={theme} size={size} />}>
+    <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/${view === 'checkout' ? 'checkout' : view === 'cart' ? 'cart' : 'shop'}`} fill scrollRef={frameRef} overlay={<AutoCursor ref={cursorRef} theme={theme} size={size} />}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${10 * size}px` }}>
         <button data-demo="nav-shop" onClick={() => { cancelAuto(); setView('shop'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</button>
         <button data-demo="nav-cart" onClick={() => { cancelAuto(); setView(view === 'cart' ? 'shop' : 'cart'); }} style={{
@@ -741,6 +977,12 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
         </div>
       )}
 
+      {view === 'checkout' && (
+        <CheckoutView ref={checkoutRef} theme={theme} size={size} items={cartEntries} subtotal={subtotal}
+          onBack={() => { cancelAuto(); setView('cart'); }} onInteract={cancelAuto}
+          onPlaced={() => setCart({})} onAgain={() => setView('shop')} />
+      )}
+
       {view === 'cart' && (
         <div>
           {cartEntries.length === 0 ? (
@@ -771,7 +1013,7 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
                 <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Subtotal</span>
                 <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${11 * size}px`, color: t.text }}>${subtotal.toFixed(2)}</span>
               </div>
-              <button data-demo="checkout" style={{
+              <button data-demo="checkout" onClick={() => { cancelAuto(); setView('checkout'); }} style={{
                 width: '100%', padding: `${8 * size}px`, border: 'none',
                 borderRadius: `${4 * size}px`, background: t.accent, color: theme.isLight ? '#fff' : t.bg,
                 fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${9 * size}px`, cursor: 'pointer',

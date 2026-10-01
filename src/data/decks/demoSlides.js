@@ -19,11 +19,11 @@ const BASE_SLIDES = [
   {
     id: 2,
     slug: 'problem',
-    autoMs: 20000,
+    autoMs: 24000,
     eyebrow: 'The Problem',
     headline: 'Right now, your business lives in ten different tabs.',
     body: 'A storefront tool. A spreadsheet for inventory. A CRM. An email platform. A separate costing sheet. None of them talk to each other, and you\u2019re the one stitching it together every morning.',
-    speakerNote: 'Click through the scattered tabs, then let them collapse into one. That\u2019s the whole pitch in five seconds.',
+    speakerNote: 'Let the flood build on its own \u2014 logins, letters, mismatched notifications \u2014 then let it all collapse into one. Hit Replay if the room wants to see the chaos again.',
     tag: '02',
   },
   {
@@ -39,11 +39,11 @@ const BASE_SLIDES = [
   {
     id: 4,
     slug: 'customer',
-    autoMs: 24000,
+    autoMs: 46000,
     eyebrow: 'Customer Experience',
     headline: 'Browse, buy, and check out in a storefront that feels custom-built.',
     body: 'Every business gets its own branded storefront \u2014 product pages, variants, cart, checkout, and order history \u2014 with none of the generic template feel.',
-    speakerNote: 'Click a product, add it to cart, open the cart drawer. Let it feel real.',
+    speakerNote: 'Let it run: browse, add to cart, then the whole checkout \u2014 address, shipping and tax, payment, confirmation email. Let it feel real.',
     tag: '04',
   },
   {
