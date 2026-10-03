@@ -29,11 +29,11 @@ const BASE_SLIDES = [
   {
     id: 3,
     slug: 'platform',
-    autoMs: 28000,
+    autoMs: 26000,
     eyebrow: 'What You Can Do',
     headline: 'Everything a business needs to operate online, under one login.',
     body: 'Storefront, products and inventory, orders, payments, shipping, customers, content, and production costing \u2014 all built in, all connected, nothing bolted on.',
-    speakerNote: 'Eight cards get dealt face down. The cursor flips them over one by one, in the order the narration lists them, then a data bus connects them all. This is the map for the rest of the demo.',
+    speakerNote: 'Let the cursor walk the eight modules, then let the data bus connect them. This is the map for the rest of the demo.',
     tag: '03',
   },
   {
