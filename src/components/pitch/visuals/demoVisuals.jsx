@@ -877,7 +877,7 @@ function HeroContent({ theme, size, playKey }) {
         <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${7.5 * size}px`, color: t.text, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.title}</div>
       </div>
       <div style={{ height: `${5 * size}px`, borderRadius: '100px', background: t.bgAlt, marginBottom: `${7 * size}px`, overflow: 'hidden' }}>
-        <motion.div key={`bar-${playKey}`} initial={{ width: 0 }} animate={{ width: '88%' }} transition={{ delay: 0.1, duration: 0.8 }} style={{ height: '100%', background: `${t.accent}66` }} />
+        <motion.div key={`bar-${playKey}`} initial={{ width: 0 }} animate={{ width: '88%' }} transition={{ delay: 0.1, duration: 0.8 }} style={{ height: '100%', borderRadius: '100px', background: `linear-gradient(90deg, ${t.accent}, ${t.accentLight || t.accent})` }} />
       </div>
       <motion.span key={`pub-${playKey}`} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 14, delay: 0.9 }}
         style={{ display: 'inline-flex', alignItems: 'center', gap: `${3 * size}px`, padding: `${3 * size}px ${8 * size}px`, borderRadius: '100px', background: t.positive || t.accent, color: '#fff', fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${7 * size}px` }}>
@@ -2913,11 +2913,12 @@ function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
         {slideEntered && (
           <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 15, delay: 0.5 }}
             style={{ position: 'relative', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${5 * u}px`, padding: `${9 * u}px`, background: '#fff', borderRadius: `${12 * u}px`, border: `1px solid ${t.border}`, boxShadow: `0 ${6 * u}px ${18 * u}px rgba(0,0,0,0.12)` }}>
-            <motion.span aria-hidden animate={{ scale: [1, 1.14], opacity: [0.55, 0] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
+            <motion.span aria-hidden initial={{ opacity: 0 }} animate={{ scale: [1, 1.14], opacity: [0.55, 0] }} transition={{ duration: 2.2, repeat: 2, delay: 0.9, ease: 'easeOut' }}
               style={{ position: 'absolute', inset: 0, borderRadius: `${12 * u}px`, border: `${2 * u}px solid ${t.accent}`, pointerEvents: 'none' }} />
             <div style={{ position: 'relative', width: `${qr}px`, height: `${qr}px`, lineHeight: 0 }}>
               <QRCode value={LIVE_URL} size={qr} fgColor={t.bgDeep || '#111'} bgColor="#ffffff" style={{ width: `${qr}px`, height: `${qr}px` }} />
-              <motion.div aria-hidden animate={{ top: ['2%', '96%'] }} transition={{ duration: 2.4, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+              {/* one slow scan down and back, then it stops (no looping motion over the code) */}
+              <motion.div aria-hidden initial={{ top: '2%', opacity: 0 }} animate={{ top: ['2%', '96%', '2%'], opacity: [0, 1, 1, 0] }} transition={{ duration: 2.6, delay: 1.1, ease: 'easeInOut', times: [0, 0.5, 1] }}
                 style={{ position: 'absolute', left: '-4%', right: '-4%', height: `${2.5 * u}px`, borderRadius: '2px', background: t.accent, boxShadow: `0 0 ${8 * u}px ${t.accent}` }} />
             </div>
             <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * u}px`, color: '#555', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Scan to try it</span>
@@ -2930,7 +2931,7 @@ function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
             <div style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * u}px`, color: t.textMuted, marginBottom: `${10 * u}px` }}>{COMPANY.url}</div>
             <div style={{ position: 'relative', display: 'inline-block' }}>
               {invite && (
-                <motion.span aria-hidden animate={{ scale: [1, 1.22], opacity: [0.6, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
+                <motion.span aria-hidden animate={{ scale: [1, 1.22], opacity: [0.6, 0] }} transition={{ duration: 1.5, repeat: 3, ease: 'easeOut' }}
                   style={{ position: 'absolute', inset: 0, borderRadius: `${8 * u}px`, border: `${2 * u}px solid ${t.accent}`, pointerEvents: 'none' }} />
               )}
               <a data-demo="live-open" href={LIVE_URL} target="_blank" rel="noopener noreferrer" style={{
