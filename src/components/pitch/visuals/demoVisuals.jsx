@@ -917,6 +917,8 @@ function MockupPlatform({ theme, size, paceMs = 26000 }) {
   const liveRef = useRef(false);
   const [active, setActive] = useState(-1);
   const [plays, setPlays] = useState(() => Array(8).fill(0));
+  const [flipped, setFlipped] = useState(() => Array(8).fill(false));   // which cards are face-up
+  const playTimers = useRef([]);
   const [connected, setConnected] = useState(false);
   const [checks, setChecks] = useState(0);
 
@@ -932,24 +934,29 @@ function MockupPlatform({ theme, size, paceMs = 26000 }) {
   ];
 
   const cancelAuto = () => { liveRef.current = false; cursorRef.current?.hide(); };
-  const activate = (i) => { setActive(i); setPlays((p) => p.map((v, j) => (j === i ? v + 1 : v))); };
+  // clicking a card flips it over; its little animation starts as the front comes round
+  const activate = (i) => {
+    setActive(i);
+    setFlipped((f) => f.map((v, j) => (j === i ? true : v)));
+    playTimers.current.push(setTimeout(() => setPlays((p) => p.map((v, j) => (j === i ? v + 1 : v))), 380));
+  };
 
   useEffect(() => {
     if (!slideEntered) return undefined;
     liveRef.current = true;
-    setActive(-1); setConnected(false); setChecks(0); setPlays(Array(8).fill(0));
+    setActive(-1); setConnected(false); setChecks(0); setPlays(Array(8).fill(0)); setFlipped(Array(8).fill(false));
     const isLive = () => liveRef.current;
-    const k = paceMs / 26000;
+    const k = paceMs / 28000;
     const wait = (ms) => sleep(ms * k);
     (async () => {
-      await wait(1300);                                // the cards finish arriving
+      await wait(3000);                                // the eight cards get dealt, face down, one at a time
       for (let i = 0; i < 8; i++) {
         const ok = await pointAndClick({
           cursorRef, frameRef: sceneRef, scroll: false, isLive, moveMs: Math.max(450, 650 * k),
           selector: `[data-demo="mod-${i}"]`, onClick: () => activate(i),
         });
         if (!ok) return;
-        await wait(1050);                              // let that card's little animation play
+        await wait(1250);                              // the card flips and its little animation plays
         if (!isLive()) return;
       }
       cursorRef.current?.hide();
@@ -959,7 +966,7 @@ function MockupPlatform({ theme, size, paceMs = 26000 }) {
       setConnected(true);                              // the bus draws and every module snaps onto it
       for (let c = 1; c <= 3; c++) { await wait(750); if (!isLive()) return; setChecks(c); }
     })();
-    return () => { liveRef.current = false; };
+    return () => { liveRef.current = false; playTimers.current.forEach(clearTimeout); playTimers.current = []; };
   }, [slideEntered, paceMs]);
 
   // ── geometry (real px, measured) ──
@@ -967,6 +974,10 @@ function MockupPlatform({ theme, size, paceMs = 26000 }) {
   const cardW = (box.w - pad * 2 - gap * 3) / 4;
   const cardH = (box.h - headH - footH - rowGap - 4 * size) / 2;
   const pos = (i) => ({ x: pad + (i % 4) * (cardW + gap), y: headH + Math.floor(i / 4) * (cardH + rowGap) });
+  // Card interiors use the normal fluid layout at `size`. Only when a card has LESS room
+  // than its content needs (a short browser window) does the interior shrink in step with
+  // the card (cs < size), so nothing ever overlaps — and on normal screens cs === size.
+  const cs = Math.max(0.45, Math.min(size, cardH / 178, cardW / 108));
   const busY = headH + cardH + rowGap / 2;
   const mono = (sz, color, extra) => ({ fontFamily: theme.fonts.mono, fontSize: `${sz * size}px`, color, letterSpacing: '0.06em', textTransform: 'uppercase', ...extra });
   const good = t.positive || t.accent;
@@ -1019,31 +1030,51 @@ function MockupPlatform({ theme, size, paceMs = 26000 }) {
             </motion.div>
           )}
 
-          {/* the eight modules */}
+          {/* the eight modules — dealt face down, flipped over one by one */}
           {MODULES.map((m, i) => {
-            const p = pos(i), on = active === i;
+            const p = pos(i), on = active === i, up = flipped[i];
+            const face = (extra) => ({ position: 'absolute', inset: 0, borderRadius: `${10 * size}px`, overflow: 'hidden', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', ...extra });
             return (
-              <motion.div key={m.title} initial={{ opacity: 0, y: 20 * size, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.1 + i * 0.07 }}
-                style={{ position: 'absolute', left: p.x, top: p.y, width: cardW, height: cardH, zIndex: 2 }}>
+              <motion.div key={m.title} initial={{ opacity: 0, y: -26 * size, rotate: -7, scale: 0.9 }} animate={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 230, damping: 17, delay: 0.2 + i * 0.32 }}
+                style={{ position: 'absolute', left: p.x, top: p.y, width: cardW, height: cardH, zIndex: 2, perspective: 1000 }}>
                 <div data-demo={`mod-${i}`} onClick={() => { cancelAuto(); activate(i); }} style={{
-                  height: '100%', boxSizing: 'border-box', cursor: 'pointer', borderRadius: `${10 * size}px`, background: t.surface || t.bg,
-                  border: `${on ? 2 : 1}px solid ${on ? t.accent : t.border}`, padding: `${11 * size}px ${11 * size}px ${10 * size}px`,
-                  boxShadow: on ? `0 ${10 * size}px ${26 * size}px ${t.accent}40` : `0 ${4 * size}px ${12 * size}px rgba(0,0,0,0.07)`,
+                  position: 'absolute', inset: 0, cursor: 'pointer', borderRadius: `${10 * size}px`,
+                  boxShadow: on ? `0 ${10 * size}px ${26 * size}px ${t.accent}40` : `0 ${4 * size}px ${12 * size}px rgba(0,0,0,0.1)`,
                   transform: on ? `translateY(${-4 * size}px) scale(1.035)` : 'none', transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-                  display: 'flex', flexDirection: 'column',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: `${7 * size}px` }}>
-                    <span style={{ width: `${30 * size}px`, height: `${30 * size}px`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? t.accent : `${t.accent}1A`, color: on ? onAccent : t.accent, transition: 'all 0.3s ease' }}>
-                      <m.Icon size={16 * size} color="currentColor" strokeWidth={2} />
-                    </span>
-                    <span style={mono(8, on ? t.accent : t.textFaint, { fontWeight: 700 })}>{String(i + 1).padStart(2, '0')}</span>
-                  </div>
-                  <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${14 * size}px`, color: t.text, lineHeight: 1.1 }}>{m.title}</div>
-                  <div style={{ fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px`, color: t.textMuted, lineHeight: 1.35, margin: `${3 * size}px 0 ${8 * size}px` }}>{m.cap}</div>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', minHeight: 0 }}>
-                    <m.Hero theme={theme} size={size} playKey={plays[i]} />
-                  </div>
+                  <motion.div initial={{ rotateY: 180 }} animate={{ rotateY: up ? 0 : 180 }} transition={{ duration: 0.75, ease: [0.4, 0, 0.2, 1] }}
+                    style={{ position: 'absolute', inset: 0, transformStyle: 'preserve-3d' }}>
+                    {/* front — the same fluid layout as before, sized by cs */}
+                    <div style={face({ background: t.surface || t.bg, border: `${on ? 2 : 1}px solid ${on ? t.accent : t.border}`, boxSizing: 'border-box', transition: 'border-color 0.3s ease' })}>
+                      <div style={{ position: 'absolute', inset: 0, boxSizing: 'border-box', padding: `${11 * cs}px ${11 * cs}px ${10 * cs}px`, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: `${7 * cs}px` }}>
+                          <span style={{ width: `${30 * cs}px`, height: `${30 * cs}px`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? t.accent : `${t.accent}1A`, color: on ? onAccent : t.accent, transition: 'all 0.3s ease' }}>
+                            <m.Icon size={16 * cs} color="currentColor" strokeWidth={2} />
+                          </span>
+                          <span style={mono(8 * cs / size, on ? t.accent : t.textFaint, { fontWeight: 700 })}>{String(i + 1).padStart(2, '0')}</span>
+                        </div>
+                        <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${14 * cs}px`, color: t.text, lineHeight: 1.1 }}>{m.title}</div>
+                        <div style={{ fontFamily: theme.fonts.body, fontSize: `${8.5 * cs}px`, color: t.textMuted, lineHeight: 1.35, margin: `${3 * cs}px 0 ${8 * cs}px` }}>{m.cap}</div>
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', minHeight: 0 }}>
+                          {plays[i] > 0 && <m.Hero key={plays[i]} theme={theme} size={cs} playKey={plays[i]} />}
+                        </div>
+                      </div>
+                    </div>
+                    {/* back: what you see until the cursor turns the card over */}
+                    <div style={face({
+                      transform: 'rotateY(180deg)',
+                      backgroundImage: `repeating-linear-gradient(45deg, rgba(255,255,255,0.07) 0 ${7 * cs}px, transparent ${7 * cs}px ${14 * cs}px), linear-gradient(150deg, ${t.accent}, ${t.accent}B3)`,
+                    })}>
+                      <div style={{ position: 'absolute', inset: `${8 * cs}px`, border: `${1.5 * cs}px solid rgba(255,255,255,0.4)`, borderRadius: `${7 * cs}px` }} />
+                      <div style={{ position: 'absolute', top: `${15 * cs}px`, left: `${16 * cs}px`, fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${10 * cs}px`, color: '#fff', opacity: 0.9 }}>{String(i + 1).padStart(2, '0')}</div>
+                      <div style={{ position: 'absolute', bottom: `${15 * cs}px`, right: `${16 * cs}px`, fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${10 * cs}px`, color: '#fff', opacity: 0.9, transform: 'rotate(180deg)' }}>{String(i + 1).padStart(2, '0')}</div>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: `${8 * cs}px` }}>
+                        <PeakMark size={cs * 1.5} color="#fff" />
+                        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * cs}px`, letterSpacing: '0.24em', color: '#fff', opacity: 0.85 }}>MODULE</div>
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
               </motion.div>
             );
