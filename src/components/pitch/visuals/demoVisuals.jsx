@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import QRCode from 'react-qr-code';
-import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart, Calendar, Briefcase, ClipboardList } from 'lucide-react';
+import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart, Calendar, Briefcase, ClipboardList, Lock } from 'lucide-react';
 import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom, SiHubspot, SiGmail, SiAirtable } from 'react-icons/si';
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
@@ -724,98 +724,348 @@ function MockupProblem({ theme, size, paceMs = 24000 }) {
   );
 }
 
-// ── 3. platform — module tour ────────────────────────────────────────────────────
-function MockupPlatform({ theme, size }) {
-  const t = theme.colors;
-  const [ready, setReady] = useState(false);
-  useEffect(() => { const id = setTimeout(() => setReady(true), 60); return () => clearTimeout(id); }, []);
+// ── 3. platform — the map ────────────────────────────────────────────────────────
+// Eight big poster-cards that fill the whole visual side. A cursor walks the
+// narration's list in order — storefront, products & inventory, orders,
+// payments, shipping, customers, content, costing — and each card comes alive
+// with its own tiny animation as it's clicked (the storefront repaints in three
+// themes, stock bars fill, an order flips to Shipped, revenue counts up, a truck
+// drives, customers pop in, a post publishes, the margin ring fills). Then a
+// data bus draws through the middle and every module snaps onto it: "built in,
+// connected, nothing bolted on."
 
-  const journalPost = EMBER_MOSS_JOURNAL[0];
-  const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
-
-  const Tile = ({ icon: Icon, label, span = 1, children, delay = 0 }) => (
-    <div style={{
-      gridColumn: `span ${span}`,
-      border: `1px solid ${t.border}`, borderRadius: `${7 * size}px`,
-      padding: `${10 * size}px`, background: t.surface || t.bg,
-      boxShadow: `0 ${3 * size}px ${8 * size}px rgba(0,0,0,0.05)`,
-      opacity: ready ? 1 : 0, transform: ready ? 'translateY(0)' : 'translateY(6px)',
-      transition: `opacity 0.4s ease ${delay}s, transform 0.4s ease ${delay}s`,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px`, marginBottom: `${8 * size}px` }}>
-        <Icon size={13 * size} color={t.accent} strokeWidth={2} />
-        <span style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8.5 * size}px`, color: t.text }}>{label}</span>
-      </div>
-      {children}
+function HeroStorefront({ theme, size, playKey }) {
+  const looks = [
+    { bg: '#1B3B2E', fg: '#F5F1E4', ac: '#C9A227', tag: 'BOTANICAL' },
+    { bg: '#111111', fg: '#FFD400', ac: '#FFD400', tag: 'WORKSHOP' },
+    { bg: '#FFD9EC', fg: '#C2185B', ac: '#C2185B', tag: 'BUBBLEGUM' },
+  ];
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (!playKey) return undefined;
+    const ids = [setTimeout(() => setI(1), 300), setTimeout(() => setI(2), 720), setTimeout(() => setI(0), 1140)];
+    return () => ids.forEach(clearTimeout);
+  }, [playKey]);
+  const L = looks[i];
+  return (
+    <div style={{ position: 'relative', width: '100%', borderRadius: `${8 * size}px`, background: L.bg, padding: `${12 * size}px ${12 * size}px ${11 * size}px`, transition: 'background 0.35s ease' }}>
+      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: `${17 * size}px`, color: L.fg, lineHeight: 1.1, transition: 'color 0.35s ease' }}>Ember &amp; Moss</div>
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: L.ac, letterSpacing: '0.08em', marginTop: `${4 * size}px`, transition: 'color 0.35s ease' }}>{L.tag} {'\u00B7'} LIVE</div>
+      <motion.span animate={{ scale: [1, 1.6, 1], opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 1.6 }}
+        style={{ position: 'absolute', top: `${9 * size}px`, right: `${9 * size}px`, width: `${7 * size}px`, height: `${7 * size}px`, borderRadius: '50%', background: '#3DDC84' }} />
     </div>
   );
+}
+
+function HeroProducts({ theme, size, playKey }) {
+  const t = theme.colors;
+  const stock = [42, 18, 65];
+  return (
+    <div style={{ display: 'flex', gap: `${6 * size}px`, width: '100%' }}>
+      {EMBER_MOSS_PRODUCTS.slice(0, 3).map((p, j) => {
+        const low = stock[j] < 25;
+        return (
+          <div key={p.name} style={{ flex: 1, minWidth: 0 }}>
+            <ProductImg src={p.img} alt={p.name} size={size} radius={4} />
+            <div style={{ height: `${4 * size}px`, borderRadius: '100px', background: t.bgAlt, margin: `${5 * size}px 0 ${3 * size}px`, overflow: 'hidden' }}>
+              <motion.div key={`b-${playKey}`} initial={{ width: 0 }} animate={{ width: `${(stock[j] / 70) * 100}%` }} transition={{ delay: 0.15 + j * 0.12, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                style={{ height: '100%', borderRadius: '100px', background: low ? (t.negative || '#DB3521') : t.accent }} />
+            </div>
+            <div style={{ fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${8.5 * size}px`, color: low ? (t.negative || '#DB3521') : t.textMuted, whiteSpace: 'nowrap' }}>{stock[j]}{low ? ' !' : ''}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function HeroOrders({ theme, size, playKey }) {
+  const t = theme.colors;
+  const [st, setSt] = useState('Processing');
+  useEffect(() => {
+    if (!playKey) return undefined;
+    setSt('Processing');
+    const id = setTimeout(() => setSt('Shipped'), 800);
+    return () => clearTimeout(id);
+  }, [playKey]);
+  const good = t.positive || t.accent;
+  const rows = [{ id: '#1049', s: 'Shipped' }, { id: '#1048', s: st }, { id: '#1047', s: 'New' }];
+  return (
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: `${5 * size}px` }}>
+      {rows.map((o, j) => {
+        const shipped = o.s === 'Shipped';
+        return (
+          <motion.div key={`${o.id}-${playKey}`} initial={{ opacity: 0, x: -10 * size }} animate={{ opacity: 1, x: 0 }} transition={{ delay: j * 0.1, duration: 0.35 }}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${6 * size}px ${8 * size}px`, borderRadius: `${5 * size}px`, border: `1px solid ${shipped ? good : t.border}`, background: shipped ? `${good}12` : 'transparent', transition: 'all 0.3s ease' }}>
+            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8.5 * size}px`, color: t.text, fontWeight: 600 }}>{o.id}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: `${3 * size}px`, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: shipped ? good : o.s === 'New' ? t.accent : t.textMuted }}>
+              {shipped && <Check size={9 * size} strokeWidth={3} />}{o.s}
+            </span>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+function HeroPayments({ theme, size, playKey }) {
+  const t = theme.colors;
+  const bars = [30, 44, 38, 58, 52, 74, 90];
+  return (
+    <div style={{ width: '100%' }}>
+      <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${26 * size}px`, color: t.text, lineHeight: 1 }}>
+        <AnimNum key={`p-${playKey}`} value={9170} prefix="$" ms={900} />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: `${3 * size}px`, height: `${34 * size}px`, margin: `${8 * size}px 0 ${5 * size}px` }}>
+        {bars.map((h, j) => (
+          <motion.div key={`${playKey}-${j}`} initial={{ height: 0 }} animate={{ height: `${h}%` }} transition={{ delay: 0.1 + j * 0.07, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            style={{ flex: 1, borderRadius: `${2 * size}px`, background: j === bars.length - 1 ? t.accent : `${t.accent}55` }} />
+        ))}
+      </div>
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint }}>via Stripe Connect</div>
+    </div>
+  );
+}
+
+function HeroShipping({ theme, size, playKey }) {
+  const t = theme.colors;
+  const good = t.positive || t.accent;
+  return (
+    <div style={{ width: '100%' }}>
+      <div style={{ position: 'relative', height: `${34 * size}px`, marginBottom: `${6 * size}px` }}>
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: `${5 * size}px`, borderBottom: `2px dashed ${t.border}` }} />
+        <motion.div key={`t-${playKey}`} initial={{ left: '0%' }} animate={{ left: '72%' }} transition={{ duration: 1.1, ease: 'easeInOut' }} style={{ position: 'absolute', bottom: `${2 * size}px` }}>
+          <Truck size={24 * size} color={t.accent} strokeWidth={1.8} />
+        </motion.div>
+        <Package size={18 * size} color={t.textFaint} strokeWidth={1.8} style={{ position: 'absolute', right: 0, bottom: `${2 * size}px` }} />
+      </div>
+      <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${9.5 * size}px`, color: t.text }}>3{'\u2013'}5 days {'\u00B7'} $5.00</div>
+      <motion.div key={`l-${playKey}`} initial={{ opacity: 0.35 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}
+        style={{ display: 'flex', alignItems: 'center', gap: `${4 * size}px`, fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: good, marginTop: `${3 * size}px` }}>
+        <Check size={9 * size} strokeWidth={3} /> label printed
+      </motion.div>
+    </div>
+  );
+}
+
+function HeroCustomers({ theme, size, playKey }) {
+  const t = theme.colors;
+  const initials = ['A', 'S', 'M', 'D', 'L'];
+  return (
+    <div style={{ width: '100%' }}>
+      <div style={{ display: 'flex', marginBottom: `${9 * size}px` }}>
+        {initials.map((c, j) => (
+          <motion.div key={`${playKey}-${j}`} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 420, damping: 14, delay: 0.05 + j * 0.09 }}
+            style={{ width: `${26 * size}px`, height: `${26 * size}px`, borderRadius: '50%', background: `${t.accent}${['22', '33', '22', '33', '22'][j]}`, color: t.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${9.5 * size}px`, marginLeft: j ? `-${8 * size}px` : 0, border: `2px solid ${t.surface || t.bg}` }}>{c}</motion.div>
+        ))}
+      </div>
+      <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${24 * size}px`, color: t.text, lineHeight: 1 }}>
+        <AnimNum key={`c-${playKey}`} value={1204} prefix="" ms={900} />
+      </div>
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.positive || t.accent, marginTop: `${4 * size}px` }}>+12 this week</div>
+    </div>
+  );
+}
+
+function HeroContent({ theme, size, playKey }) {
+  const t = theme.colors;
+  const post = EMBER_MOSS_JOURNAL[0];
+  return (
+    <div style={{ width: '100%' }}>
+      <div style={{ display: 'flex', gap: `${7 * size}px`, alignItems: 'flex-start', marginBottom: `${7 * size}px` }}>
+        <div style={{ width: `${34 * size}px`, flexShrink: 0 }}><ProductImg src={post.img} alt={post.title} size={size} radius={4} fallbackIcon={post.icon} /></div>
+        <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${7.5 * size}px`, color: t.text, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.title}</div>
+      </div>
+      <div style={{ height: `${5 * size}px`, borderRadius: '100px', background: t.bgAlt, marginBottom: `${7 * size}px`, overflow: 'hidden' }}>
+        <motion.div key={`bar-${playKey}`} initial={{ width: 0 }} animate={{ width: '88%' }} transition={{ delay: 0.1, duration: 0.8 }} style={{ height: '100%', background: `${t.accent}66` }} />
+      </div>
+      <motion.span key={`pub-${playKey}`} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 14, delay: 0.9 }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: `${3 * size}px`, padding: `${3 * size}px ${8 * size}px`, borderRadius: '100px', background: t.positive || t.accent, color: '#fff', fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${7 * size}px` }}>
+        <Check size={8 * size} strokeWidth={3.5} /> Published
+      </motion.span>
+    </div>
+  );
+}
+
+function HeroCosting({ theme, size, playKey }) {
+  const t = theme.colors;
+  const r = 22 * size, c = r + 5 * size;
+  return (
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${6 * size}px` }}>
+      <div style={{ position: 'relative', width: `${c * 2}px`, height: `${c * 2}px` }}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${c * 2} ${c * 2}`} style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx={c} cy={c} r={r} fill="none" stroke={t.bgAlt} strokeWidth={6 * size} />
+          <motion.circle key={`ring-${playKey}`} cx={c} cy={c} r={r} fill="none" stroke={t.positive || t.accent} strokeWidth={6 * size} strokeLinecap="round"
+            initial={{ pathLength: 0 }} animate={{ pathLength: 0.62 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }} />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${12 * size}px`, color: t.text }}>
+          <AnimNum key={`m-${playKey}`} value={62} prefix="" suffix="%" ms={1000} />
+        </div>
+      </div>
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textMuted, whiteSpace: 'nowrap' }}>cost $6.85 {'\u2192'} price $18</div>
+    </div>
+  );
+}
+
+function MockupPlatform({ theme, size, paceMs = 26000 }) {
+  const t = theme.colors;
+  const onAccent = theme.isLight ? '#fff' : t.bg;
+  const slideEntered = useSlideEntered();
+  const sceneRef = useRef(null);
+  const box = useBox(sceneRef);
+  const cursorRef = useRef(null);
+  const liveRef = useRef(false);
+  const [active, setActive] = useState(-1);
+  const [plays, setPlays] = useState(() => Array(8).fill(0));
+  const [connected, setConnected] = useState(false);
+  const [checks, setChecks] = useState(0);
+
+  const MODULES = [
+    { Icon: Store,      title: 'Storefront', cap: 'Your branded shop, live',    Hero: HeroStorefront },
+    { Icon: Package,    title: 'Products',   cap: 'Catalog + live inventory',   Hero: HeroProducts },
+    { Icon: ShoppingCart, title: 'Orders',   cap: 'Checkout to doorstep',       Hero: HeroOrders },
+    { Icon: CreditCard, title: 'Payments',   cap: 'Paid straight to you',       Hero: HeroPayments },
+    { Icon: Truck,      title: 'Shipping',   cap: 'Rates and labels built in',  Hero: HeroShipping },
+    { Icon: Users,      title: 'Customers',  cap: 'Everyone who\u2019s bought', Hero: HeroCustomers },
+    { Icon: FileText,   title: 'Content',    cap: 'Journal posts that sell',    Hero: HeroContent },
+    { Icon: PieChart,   title: 'Costing',    cap: 'Know your real margin',      Hero: HeroCosting },
+  ];
+
+  const cancelAuto = () => { liveRef.current = false; cursorRef.current?.hide(); };
+  const activate = (i) => { setActive(i); setPlays((p) => p.map((v, j) => (j === i ? v + 1 : v))); };
+
+  useEffect(() => {
+    if (!slideEntered) return undefined;
+    liveRef.current = true;
+    setActive(-1); setConnected(false); setChecks(0); setPlays(Array(8).fill(0));
+    const isLive = () => liveRef.current;
+    const k = paceMs / 26000;
+    const wait = (ms) => sleep(ms * k);
+    (async () => {
+      await wait(1300);                                // the cards finish arriving
+      for (let i = 0; i < 8; i++) {
+        const ok = await pointAndClick({
+          cursorRef, frameRef: sceneRef, scroll: false, isLive, moveMs: Math.max(450, 650 * k),
+          selector: `[data-demo="mod-${i}"]`, onClick: () => activate(i),
+        });
+        if (!ok) return;
+        await wait(1050);                              // let that card's little animation play
+        if (!isLive()) return;
+      }
+      cursorRef.current?.hide();
+      setActive(-1);
+      await wait(500);
+      if (!isLive()) return;
+      setConnected(true);                              // the bus draws and every module snaps onto it
+      for (let c = 1; c <= 3; c++) { await wait(750); if (!isLive()) return; setChecks(c); }
+    })();
+    return () => { liveRef.current = false; };
+  }, [slideEntered, paceMs]);
+
+  // ── geometry (real px, measured) ──
+  const pad = 14 * size, gap = 12 * size, rowGap = 34 * size, headH = 38 * size, footH = 36 * size;
+  const cardW = (box.w - pad * 2 - gap * 3) / 4;
+  const cardH = (box.h - headH - footH - rowGap - 4 * size) / 2;
+  const pos = (i) => ({ x: pad + (i % 4) * (cardW + gap), y: headH + Math.floor(i / 4) * (cardH + rowGap) });
+  const busY = headH + cardH + rowGap / 2;
+  const mono = (sz, color, extra) => ({ fontFamily: theme.fonts.mono, fontSize: `${sz * size}px`, color, letterSpacing: '0.06em', textTransform: 'uppercase', ...extra });
+  const good = t.positive || t.accent;
+  const checkItems = ['Built in', 'Connected', 'Nothing bolted on'];
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: `${8 * size}px`, width: '100%' }}>
+    <div ref={sceneRef} style={{ position: 'relative', width: '100%', height: '100%', minHeight: `${300 * size}px`, overflow: 'hidden' }}>
+      {slideEntered && (
+        <>
+          {/* header */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
+            style={{ position: 'absolute', left: pad, right: pad, top: 4 * size, height: headH - 8 * size, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: `${7 * size}px` }}>
+              <PeakMark size={size * 0.7} color={t.accent} />
+              <span style={mono(9.5, t.text, { fontWeight: 700 })}>The platform</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * size}px`, ...mono(8.5, active >= 0 ? t.accent : t.textFaint) }}>
+              {active >= 0 ? <span>{active + 1} / 8 {'\u00B7'} {MODULES[active].title}</span> : <><Lock size={10 * size} color={connected ? t.accent : t.textFaint} /> 8 modules {'\u00B7'} one login</>}
+            </div>
+          </motion.div>
 
-      <Tile icon={Store} label="Storefront" span={2} delay={0}>
-        <div style={{ background: '#1B3B2E', borderRadius: `${5 * size}px`, padding: `${9 * size}px ${12 * size}px` }}>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: `${11 * size}px`, color: '#F5F1E4' }}>{EMBER_MOSS_BRAND.name}</div>
-          <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: '#C9A227', letterSpacing: '0.06em', marginTop: '2px' }}>BOTANICAL THEME · LIVE</div>
-        </div>
-      </Tile>
+          {/* the data bus: every module hooks onto it once the tour is done */}
+          {connected && (
+            <svg width={box.w} height={box.h} viewBox={`0 0 ${box.w} ${box.h}`} style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+              <motion.line x1={pad} y1={busY} x2={box.w - pad} y2={busY} stroke={t.accent} strokeWidth={3 * size} strokeLinecap="round"
+                initial={{ pathLength: 0, opacity: 0.2 }} animate={{ pathLength: 1, opacity: 0.9 }} transition={{ duration: 0.9, ease: 'easeInOut' }} />
+              {MODULES.map((_, i) => {
+                const p = pos(i), cx = p.x + cardW / 2, top = i < 4;
+                const y1 = top ? p.y + cardH : p.y, y2 = busY;
+                return (
+                  <g key={i}>
+                    <motion.line x1={cx} y1={y1} x2={cx} y2={y2} stroke={t.accent} strokeWidth={2.4 * size} strokeLinecap="round"
+                      initial={{ opacity: 0 }} animate={{ opacity: 0.85 }} transition={{ delay: 0.6 + (i % 4) * 0.1, duration: 0.4 }} />
+                    <circle r={3.2 * size} fill={t.accent}>
+                      <animateMotion dur="1.8s" begin={`${1 + (i % 4) * 0.3}s`} repeatCount="indefinite" path={top ? `M ${cx} ${y1} L ${cx} ${y2}` : `M ${cx} ${y2} L ${cx} ${y1}`} />
+                    </circle>
+                  </g>
+                );
+              })}
+              <circle r={4 * size} fill={t.accent}>
+                <animateMotion dur="3.2s" begin="1s" repeatCount="indefinite" path={`M ${pad} ${busY} L ${box.w - pad} ${busY}`} />
+              </circle>
+            </svg>
+          )}
+          {connected && (
+            <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.5 }}
+              style={{ position: 'absolute', zIndex: 4, left: box.w / 2, top: busY, transform: 'translate(-50%, -50%)', display: 'flex', alignItems: 'center', gap: `${5 * size}px`,
+                padding: `${4 * size}px ${12 * size}px`, borderRadius: '100px', background: t.accent, color: onAccent, ...mono(8.5, onAccent, { fontWeight: 700 }), whiteSpace: 'nowrap', boxShadow: `0 ${4 * size}px ${14 * size}px ${t.accent}55` }}>
+              <Lock size={9 * size} /> One database {'\u00B7'} one login
+            </motion.div>
+          )}
 
-      <Tile icon={Package} label="Products" span={1} delay={0.06}>
-        <div style={{ display: 'flex', gap: `${4 * size}px`, marginBottom: `${5 * size}px` }}>
-          {products.map(p => <div key={p.name} style={{ flex: 1 }}><ProductImg src={p.img} alt={p.name} size={size} radius={3} /></div>)}
-        </div>
-        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint }}>{EMBER_MOSS_PRODUCTS.length} products</div>
-      </Tile>
+          {/* the eight modules */}
+          {MODULES.map((m, i) => {
+            const p = pos(i), on = active === i;
+            return (
+              <motion.div key={m.title} initial={{ opacity: 0, y: 20 * size, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.1 + i * 0.07 }}
+                style={{ position: 'absolute', left: p.x, top: p.y, width: cardW, height: cardH, zIndex: 2 }}>
+                <div data-demo={`mod-${i}`} onClick={() => { cancelAuto(); activate(i); }} style={{
+                  height: '100%', boxSizing: 'border-box', cursor: 'pointer', borderRadius: `${10 * size}px`, background: t.surface || t.bg,
+                  border: `${on ? 2 : 1}px solid ${on ? t.accent : t.border}`, padding: `${11 * size}px ${11 * size}px ${10 * size}px`,
+                  boxShadow: on ? `0 ${10 * size}px ${26 * size}px ${t.accent}40` : `0 ${4 * size}px ${12 * size}px rgba(0,0,0,0.07)`,
+                  transform: on ? `translateY(${-4 * size}px) scale(1.035)` : 'none', transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+                  display: 'flex', flexDirection: 'column',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: `${7 * size}px` }}>
+                    <span style={{ width: `${30 * size}px`, height: `${30 * size}px`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? t.accent : `${t.accent}1A`, color: on ? onAccent : t.accent, transition: 'all 0.3s ease' }}>
+                      <m.Icon size={16 * size} color="currentColor" strokeWidth={2} />
+                    </span>
+                    <span style={mono(8, on ? t.accent : t.textFaint, { fontWeight: 700 })}>{String(i + 1).padStart(2, '0')}</span>
+                  </div>
+                  <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${14 * size}px`, color: t.text, lineHeight: 1.1 }}>{m.title}</div>
+                  <div style={{ fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px`, color: t.textMuted, lineHeight: 1.35, margin: `${3 * size}px 0 ${8 * size}px` }}>{m.cap}</div>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', minHeight: 0 }}>
+                    <m.Hero theme={theme} size={size} playKey={plays[i]} />
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
 
-      <Tile icon={CreditCard} label="Payments" span={1} delay={0.12}>
-        <div style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.text }}>$9,170</div>
-        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint }}>via Stripe Connect</div>
-      </Tile>
-
-      <Tile icon={ShoppingCart} label="Orders" span={1} delay={0.18}>
-        {[{ id: '#1049', s: 'Shipped' }, { id: '#1048', s: 'Processing' }].map(o => (
-          <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, marginBottom: '3px' }}>
-            <span style={{ color: t.textMuted }}>{o.id}</span>
-            <span style={{ color: o.s === 'Shipped' ? (t.positive || t.accent) : t.textFaint }}>{o.s}</span>
+          {/* footer: built in / connected / nothing bolted on */}
+          <div style={{ position: 'absolute', left: pad, right: pad, bottom: 8 * size, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: `${14 * size}px` }}>
+              {checkItems.map((c, j) => (
+                <span key={c} style={{ display: 'flex', alignItems: 'center', gap: `${5 * size}px`, ...mono(8.5, checks > j ? t.text : t.textFaint, { fontWeight: 600, transition: 'color 0.3s ease' }) }}>
+                  <span style={{ width: `${13 * size}px`, height: `${13 * size}px`, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: checks > j ? good : 'transparent', border: `1.5px solid ${checks > j ? good : t.border}`, transition: 'all 0.3s ease' }}>
+                    {checks > j && <Check size={8 * size} color="#fff" strokeWidth={3.5} />}
+                  </span>
+                  {c}
+                </span>
+              ))}
+            </div>
           </div>
-        ))}
-      </Tile>
 
-      <Tile icon={FileText} label="Content" span={2} delay={0.24}>
-        <div style={{ display: 'flex', gap: `${8 * size}px`, alignItems: 'center' }}>
-          <div style={{ width: `${34 * size}px`, flexShrink: 0 }}><ProductImg src={journalPost.img} alt={journalPost.title} size={size} radius={3} fallbackIcon={journalPost.icon} /></div>
-          <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted, lineHeight: 1.4 }}>{journalPost.title}</div>
-        </div>
-      </Tile>
-
-      <Tile icon={Truck} label="Shipping" span={1} delay={0.3}>
-        <div style={{ fontFamily: theme.fonts.body, fontSize: `${8 * size}px`, color: t.text, marginBottom: '2px' }}>Rates configured</div>
-        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint }}>Ships in 2–3 days</div>
-      </Tile>
-
-      <Tile icon={Users} label="Customers" span={1} delay={0.36}>
-        <div style={{ display: 'flex', marginBottom: `${5 * size}px` }}>
-          {['A', 'S', 'M', 'D'].map((initial, i) => (
-            <div key={i} style={{
-              width: `${16 * size}px`, height: `${16 * size}px`, borderRadius: '50%',
-              background: `${t.accent}${['22', '33', '22', '33'][i]}`, color: t.accent,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, fontWeight: 700,
-              marginLeft: i > 0 ? `-${5 * size}px` : 0, border: `1.5px solid ${t.surface || t.bg}`,
-            }}>{initial}</div>
-          ))}
-        </div>
-        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint }}>1,204 customers</div>
-      </Tile>
-
-      <Tile icon={PieChart} label="Costing" span={1} delay={0.42}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: `${4 * size}px` }}>
-          <span style={{ fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.positive || t.accent }}>62%</span>
-          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint }}>margin</span>
-        </div>
-        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, marginTop: '2px' }}>ingredients synced</div>
-      </Tile>
-
+          <AutoCursor ref={cursorRef} theme={theme} size={size} />
+        </>
+      )}
     </div>
   );
 }
@@ -1950,7 +2200,7 @@ function AnimNum({ value, prefix = '$', suffix = '', ms = 700 }) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [value, ms]);
-  return <>{prefix}{Math.round(shown)}{suffix}</>;
+  return <>{prefix}{Math.round(shown).toLocaleString('en-US')}{suffix}</>;
 }
 
 function MockupPortal({ theme, size, paceMs = 24000 }) {
@@ -1960,7 +2210,9 @@ function MockupPortal({ theme, size, paceMs = 24000 }) {
   const [landed, setLanded] = useState(0);      // subscription cards landed so far (drives the running total)
   const [active, setActive] = useState(-1);     // workflow node currently lit
   const slideEntered = useSlideEntered();
-  const timerRef = useRef(null);
+  const wrapRef = useRef(null);
+  const cursorRef = useRef(null);
+  const liveRef = useRef(false);
   const sceneRef = useRef(null);
   const box = useBox(sceneRef);
 
@@ -1986,12 +2238,21 @@ function MockupPortal({ theme, size, paceMs = 24000 }) {
   const runningTotal = SUBS.slice(0, landed).reduce((s, x) => s + x.min, 0);
   const red = t.negative || '#DB3521';
 
-  // the narration says "Before: ... After: ..." — flip a little over a third of the way in
+  // the narration says "Before: ... After: ..." — a cursor glides to the button and
+  // clicks it a little over a third of the way in (a real click takes over).
   useEffect(() => {
     if (!slideEntered) return undefined;
     setAfter(false);
-    timerRef.current = setTimeout(() => setAfter(true), Math.max(5000, paceMs * 0.36));
-    return () => clearTimeout(timerRef.current);
+    liveRef.current = true;
+    const isLive = () => liveRef.current;
+    const flipAt = Math.max(5000, paceMs * 0.36);
+    (async () => {
+      await sleep(Math.max(1500, flipAt - 1300));       // the cards land, the total ticks, the seams show
+      if (!isLive()) return;
+      await pointAndClick({ cursorRef, frameRef: wrapRef, scroll: false, isLive, moveMs: 900, selector: '[data-demo="portal-toggle"]', onClick: () => setAfter(true) });
+      cursorRef.current?.hide();
+    })();
+    return () => { liveRef.current = false; };
   }, [slideEntered, paceMs]);
 
   // the six cards land one by one and the running total ticks up
@@ -2014,7 +2275,7 @@ function MockupPortal({ theme, size, paceMs = 24000 }) {
     return () => { clearTimeout(start); clearInterval(iv); };
   }, [after, paceMs]);
 
-  const toggle = () => { clearTimeout(timerRef.current); setAfter(a => !a); };
+  const toggle = () => { liveRef.current = false; cursorRef.current?.hide(); setAfter(a => !a); };
 
   // ── geometry (real px, measured) ──
   const pad = 16 * size, gap = 12 * size, topH = 30 * size, bottomH = 66 * size;
@@ -2038,7 +2299,8 @@ function MockupPortal({ theme, size, paceMs = 24000 }) {
   const mono = (sz, color, extra) => ({ fontFamily: theme.fonts.mono, fontSize: `${sz * size}px`, color, letterSpacing: '0.06em', textTransform: 'uppercase', ...extra });
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div ref={wrapRef} style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <AutoCursor ref={cursorRef} theme={theme} size={size} />
       <div ref={sceneRef} style={{
         flex: '1 1 auto', minHeight: `${240 * size}px`, position: 'relative', overflow: 'hidden',
         border: `1px solid ${after ? t.accent : t.border}`, borderRadius: `${8 * size}px`, marginBottom: `${10 * size}px`, transition: 'border-color 0.6s ease',
@@ -2190,7 +2452,7 @@ function MockupPortal({ theme, size, paceMs = 24000 }) {
         )}
       </div>
 
-      <button onClick={toggle} style={{
+      <button data-demo="portal-toggle" onClick={toggle} style={{
         width: '100%', padding: `${9 * size}px`, border: `1px solid ${t.accent}`,
         borderRadius: `${5 * size}px`, background: after ? 'transparent' : t.accent,
         color: after ? t.accent : onAccent,
