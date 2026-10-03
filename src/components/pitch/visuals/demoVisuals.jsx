@@ -1063,15 +1063,15 @@ function MockupPlatform({ theme, size, paceMs = 26000 }) {
                     </div>
                     {/* back: what you see until the cursor turns the card over */}
                     <div style={face({
-                      transform: 'rotateY(180deg)',
-                      backgroundImage: `repeating-linear-gradient(45deg, rgba(255,255,255,0.07) 0 ${7 * cs}px, transparent ${7 * cs}px ${14 * cs}px), linear-gradient(150deg, ${t.accent}, ${t.accent}B3)`,
+                      transform: 'rotateY(180deg)', boxSizing: 'border-box', border: `${1.5 * size}px solid ${t.accent}66`,
+                      backgroundImage: `repeating-linear-gradient(45deg, ${t.accent}14 0 ${7 * cs}px, transparent ${7 * cs}px ${14 * cs}px), linear-gradient(150deg, ${t.surface || t.bg} 0%, ${t.accent}2E 100%)`,
                     })}>
-                      <div style={{ position: 'absolute', inset: `${8 * cs}px`, border: `${1.5 * cs}px solid rgba(255,255,255,0.4)`, borderRadius: `${7 * cs}px` }} />
-                      <div style={{ position: 'absolute', top: `${15 * cs}px`, left: `${16 * cs}px`, fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${10 * cs}px`, color: '#fff', opacity: 0.9 }}>{String(i + 1).padStart(2, '0')}</div>
-                      <div style={{ position: 'absolute', bottom: `${15 * cs}px`, right: `${16 * cs}px`, fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${10 * cs}px`, color: '#fff', opacity: 0.9, transform: 'rotate(180deg)' }}>{String(i + 1).padStart(2, '0')}</div>
+                      <div style={{ position: 'absolute', inset: `${8 * cs}px`, border: `${1.5 * cs}px solid ${t.accent}66`, borderRadius: `${7 * cs}px` }} />
+                      <div style={{ position: 'absolute', top: `${15 * cs}px`, left: `${16 * cs}px`, fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${10 * cs}px`, color: t.accent }}>{String(i + 1).padStart(2, '0')}</div>
+                      <div style={{ position: 'absolute', bottom: `${15 * cs}px`, right: `${16 * cs}px`, fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${10 * cs}px`, color: t.accent, transform: 'rotate(180deg)' }}>{String(i + 1).padStart(2, '0')}</div>
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: `${8 * cs}px` }}>
-                        <PeakMark size={cs * 1.5} color="#fff" />
-                        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * cs}px`, letterSpacing: '0.24em', color: '#fff', opacity: 0.85 }}>MODULE</div>
+                        <PeakMark size={cs * 1.5} color={t.accent} />
+                        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * cs}px`, letterSpacing: '0.24em', color: t.accent, opacity: 0.85 }}>MODULE</div>
                       </div>
                     </div>
                   </motion.div>
