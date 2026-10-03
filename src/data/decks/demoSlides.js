@@ -99,11 +99,11 @@ const BASE_SLIDES = [
   {
     id: 10,
     slug: 'live-demo',
-    autoMs: 18000,
+    autoMs: 22000,
     eyebrow: 'Live Demo',
     headline: 'Let\u2019s look at the real thing.',
     body: 'Business \u2192 storefront \u2192 customer \u2192 checkout \u2192 merchant dashboard \u2192 order. One continuous story, in the actual app.',
-    speakerNote: 'Minimal text on screen \u2014 this is your cue card, not a slide to read from.',
+    speakerNote: 'Let the climb finish and the cursor press the button, then click it (or press Enter) to open the live site. The QR is on screen the whole time, so the audience can scan on their own.',
     tag: '10',
   },
 ];

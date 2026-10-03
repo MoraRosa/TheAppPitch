@@ -2708,46 +2708,247 @@ function WhyRetail({ theme, size }) {
 }
 
 
-// ── 10. live-demo — minimal cue card ─────────────────────────────────────────────
-function MockupLiveDemo({ theme, size }) {
+// ── 10. live-demo — the climb ────────────────────────────────────────────────────
+// The last slide recaps the whole demo as a climb: a hiker walks a trail up the
+// Peak, planting a waypoint at each stop of the story (business → storefront →
+// customer → checkout → dashboard → order), and at the summit the flag goes up,
+// "Peak · Live now" lights up, and a cursor presses the live-site button. The QR
+// code is on screen from the first second — the audience can (and does) scan it
+// on their own while the presenter is still talking. The button is a real link
+// (browsers won't let a script open a tab by itself); Enter opens it too.
+const LIVE_URL = 'https://peakenterprise.ca/';
+
+function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
   const t = theme.colors;
-  const flow = ['Business', 'Storefront', 'Customer', 'Checkout', 'Dashboard', 'Order'];
+  const onAccent = theme.isLight ? '#fff' : t.bg;
+  const slideEntered = useSlideEntered();
+  const wrapRef = useRef(null);
+  const sceneRef = useRef(null);
+  const cursorRef = useRef(null);
+  const box = useBox(sceneRef);
+  const [pressed, setPressed] = useState(false);
+  const [invite, setInvite] = useState(false);
+  const u = Math.min(size, box.w / 480);        // one unit that fits phone, laptop and projector
+
+  const W = box.w, H = box.h;
+  const fy = (y) => 0.2 + (y - 0.13) * 0.92;    // keeps the summit clear of the top edge
+  const pt = (x, y) => [x * W, fy(y) * H];
+  const k = paceMs / 22000;
+
+  // the trail: base, six waypoints, summit
+  const names = ['Business', 'Storefront', 'Customer', 'Checkout', 'Dashboard', 'Order'];
+  const sides = ['r', 'l', 'r', 'l', 'r', 'l'];
+  const trail = [[0.17, 0.88], [0.27, 0.75], [0.37, 0.64], [0.34, 0.53], [0.45, 0.43], [0.43, 0.33], [0.49, 0.23], [0.52, 0.14]].map(([x, y]) => pt(x, y));
+  const travel = 1.1 * k, hold = 0.35 * k, t0 = 1.5 * k;
+  const legStart = (j) => t0 + (j - 1) * (travel + hold);      // leg j: trail[j-1] -> trail[j]
+  const arrive = (j) => legStart(j) + travel;
+  const tSummit = arrive(7);
+
+  // hiker keyframes: travel (ease) then hold (linear) at every waypoint
+  const hx = [trail[0][0]], hy = [trail[0][1]], ht = [0], eases = [];
+  for (let j = 1; j <= 7; j++) {
+    hx.push(trail[j][0]); hy.push(trail[j][1]); ht.push((arrive(j) - t0)); eases.push('easeInOut');
+    if (j < 7) { hx.push(trail[j][0]); hy.push(trail[j][1]); ht.push((arrive(j) - t0) + hold); eases.push('linear'); }
+  }
+  const D = ht[ht.length - 1];
+  const times = ht.map((v) => v / D);
+
+  // the mountain
+  const peakRaw = [[0.10, 1.0], [0.10, 0.84], [0.22, 0.70], [0.27, 0.60], [0.35, 0.48], [0.40, 0.38], [0.46, 0.26], [0.52, 0.13], [0.57, 0.24], [0.62, 0.34], [0.70, 0.50], [0.78, 0.62], [0.86, 0.74], [0.94, 0.84], [0.94, 1.0]];
+  const peakPts = peakRaw.map(([x, y]) => pt(x, y));
+  const toPath = (pts) => `M ${pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(' L ')} Z`;
+  const apex = peakPts[7];
+  const snow = [[0.52, 0.13], [0.57, 0.24], [0.545, 0.225], [0.525, 0.265], [0.50, 0.225], [0.475, 0.255], [0.46, 0.26]].map(([x, y]) => pt(x, y));
+  const shade = [peakRaw[7], ...peakRaw.slice(8), [0.52, 1.0]].map(([x, y]) => pt(x, y));
+  const ridge = (seed, lo, hi) => {
+    const r = rng(seed), pts = [[0, 1.0]];
+    for (let i = 0; i <= 10; i++) pts.push([i / 10, lo + r() * (hi - lo)]);
+    pts.push([1, 1.0]);
+    return pts.map(([x, y]) => [x * W, y * H]);
+  };
+  const back = useMemo(() => ridge(5, 0.42, 0.6), [W, H]);
+  const mid = useMemo(() => ridge(9, 0.56, 0.72), [W, H]);
+  const pines = [[0.04, 0.9], [0.075, 0.87], [0.02, 0.94], [0.93, 0.9], [0.965, 0.86], [0.985, 0.93], [0.12, 0.95], [0.89, 0.95]];
+
+  const bursts = Array.from({ length: 10 }, (_, i) => {
+    const a = (i / 10) * Math.PI * 2 - Math.PI / 2, r = (34 + (i % 3) * 14) * u;
+    return { x: Math.cos(a) * r, y: Math.sin(a) * r, heart: i % 2 === 0, delay: tSummit + 0.1 + i * 0.04 };
+  });
+
+  // the cursor presses the live-site button once the summit is reached
+  useEffect(() => {
+    if (!slideEntered) return undefined;
+    let live = true;
+    const isLive = () => live;
+    let rel;
+    (async () => {
+      await sleep((tSummit + 1.4) * 1000);
+      if (!isLive()) return;
+      await pointAndClick({ cursorRef, frameRef: wrapRef, scroll: false, isLive, moveMs: 900, selector: '[data-demo="live-open"]',
+        onClick: () => { setPressed(true); setInvite(true); rel = setTimeout(() => setPressed(false), 420); } });
+      cursorRef.current?.hide();
+    })();
+    return () => { live = false; clearTimeout(rel); };
+  }, [slideEntered, paceMs]);
+
+  // Enter opens the live site (a real key press is allowed to open a tab; a script is not)
+  useEffect(() => {
+    if (!slideEntered) return undefined;
+    const onKey = (e) => { if (e.key === 'Enter' && !e.repeat) window.open(LIVE_URL, '_blank', 'noopener,noreferrer'); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [slideEntered]);
+
+  const mono = (sz, color, extra) => ({ fontFamily: theme.fonts.mono, fontSize: `${sz * u}px`, color, letterSpacing: '0.06em', textTransform: 'uppercase', ...extra });
+  const qr = Math.round(Math.max(60, 84 * u));
+
   return (
-    <div style={{ width: '100%', textAlign: 'center' }}>
-      <a href="https://peakenterprise.ca/" target="_blank" rel="noopener noreferrer" style={{
-        display: 'inline-flex', alignItems: 'center', gap: `${6 * size}px`,
-        fontFamily: theme.fonts.display, fontWeight: theme.type.displayWeight,
-        fontSize: `${20 * size}px`, color: t.accent, marginBottom: `${16 * size}px`,
-        textDecoration: 'none', cursor: 'pointer',
+    <div ref={wrapRef} style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: `${12 * u}px` }}>
+      {/* ── the mountain ── */}
+      <div ref={sceneRef} style={{
+        position: 'relative', flex: '1 1 auto', minHeight: `${250 * u}px`, overflow: 'hidden', borderRadius: `${12 * u}px`,
+        border: `1px solid ${t.border}`, background: `linear-gradient(180deg, ${t.bgAlt} 0%, ${t.surface || t.bg} 55%, ${t.accent}22 100%)`,
       }}>
-        ▶ Live now
-        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.textFaint, fontWeight: 400 }}>peakenterprise.ca ↗</span>
-      </a>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${4 * size}px`, flexWrap: 'wrap', marginBottom: `${20 * size}px` }}>
-        {flow.map((step, i) => (
-          <Reveal key={step} delay={0.2 + i * 0.1} x={-8} y={0} as="span" style={{ display: 'flex', alignItems: 'center', gap: `${4 * size}px` }}>
-            <span style={{
-              fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textMuted,
-              border: `1px solid ${t.border}`, borderRadius: '100px', padding: `${4 * size}px ${8 * size}px`,
-            }}>{step}</span>
-            {i < flow.length - 1 && <span style={{ color: t.textFaint, fontSize: `${9 * size}px` }}>→</span>}
-          </Reveal>
-        ))}
+        {slideEntered && (
+          <>
+            {/* sun glow behind the summit, breathing */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, scale: [1, 1.08, 1] }} transition={{ opacity: { duration: 1.2 }, scale: { duration: 6, repeat: Infinity, ease: 'easeInOut' } }}
+              style={{ position: 'absolute', left: apex[0] - W * 0.3, top: apex[1] - W * 0.22, width: W * 0.6, height: W * 0.6, borderRadius: '50%', background: `radial-gradient(circle, ${t.accent}40 0%, transparent 65%)` }} />
+            {/* clouds */}
+            {[[0.08, 0.14, 70], [0.62, 0.1, 90], [0.78, 0.27, 60]].map(([cx, cy, w], i) => (
+              <motion.div key={i} initial={{ x: 0, opacity: 0 }} animate={{ x: [0, 26 * u, 0], opacity: 0.7 }} transition={{ x: { duration: 14 + i * 3, repeat: Infinity, ease: 'easeInOut' }, opacity: { duration: 1.5, delay: 0.4 } }}
+                style={{ position: 'absolute', left: cx * W, top: cy * H, width: w * u, height: 14 * u, borderRadius: '100px', background: '#fff', filter: `blur(${3 * u}px)` }} />
+            ))}
+
+            <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: 'absolute', inset: 0 }}>
+              <defs>
+                <linearGradient id="pkGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={t.accent} /><stop offset="100%" stopColor={t.accent} stopOpacity="0.72" />
+                </linearGradient>
+              </defs>
+              <motion.g initial={{ opacity: 0, y: 24 * u }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0 }}>
+                <motion.g animate={{ x: [-6 * u, 6 * u] }} transition={{ duration: 9, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}>
+                  <path d={toPath(back)} fill={`${t.accent}1C`} />
+                </motion.g>
+              </motion.g>
+              <motion.g initial={{ opacity: 0, y: 24 * u }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.3 }}>
+                <motion.g animate={{ x: [5 * u, -5 * u] }} transition={{ duration: 7, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}>
+                  <path d={toPath(mid)} fill={`${t.accent}33`} />
+                </motion.g>
+              </motion.g>
+              <motion.g initial={{ opacity: 0, y: 30 * u }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}>
+                <path d={toPath(peakPts)} fill="url(#pkGrad)" />
+                <path d={toPath(shade)} fill="rgba(0,0,0,0.13)" />
+                <path d={toPath(snow)} fill="#fff" fillOpacity="0.92" />
+              </motion.g>
+              {/* foreground pines */}
+              <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 1 }}>
+                {pines.map(([px, py], i) => {
+                  const x = px * W, y = py * H, s = (9 + (i % 3) * 3) * u;
+                  return <path key={i} d={`M ${x} ${y - s * 2} L ${x + s * 0.8} ${y} L ${x - s * 0.8} ${y} Z`} fill={`${t.accent}99`} />;
+                })}
+              </motion.g>
+              {/* the trail, drawn leg by leg just ahead of the hiker */}
+              {trail.slice(1).map((p, j) => (
+                <motion.line key={j} x1={trail[j][0]} y1={trail[j][1]} x2={p[0]} y2={p[1]} stroke="#fff" strokeWidth={2.4 * u} strokeLinecap="round" strokeOpacity="0.92"
+                  initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.92 }} transition={{ duration: travel, delay: legStart(j + 1), ease: 'easeInOut', opacity: { duration: 0.01, delay: legStart(j + 1) } }} />
+              ))}
+              {/* the flag goes up at the summit */}
+              <motion.line x1={apex[0]} y1={apex[1]} x2={apex[0]} y2={apex[1] - 24 * u} stroke="#fff" strokeWidth={2.2 * u} strokeLinecap="round"
+                initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.5, delay: tSummit, opacity: { duration: 0.01, delay: tSummit } }} />
+              <motion.path d={`M ${apex[0]} ${apex[1] - 24 * u} L ${apex[0] + 17 * u} ${apex[1] - 19 * u} L ${apex[0]} ${apex[1] - 13 * u} Z`} fill={t.accent} stroke="#fff" strokeWidth={1 * u}
+                initial={{ opacity: 0, x: -8 * u }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: tSummit + 0.4 }} />
+            </svg>
+
+            {/* waypoints: a dot on the trail and a label that pops when the hiker gets there */}
+            {names.map((n, i) => {
+              const [x, y] = trail[i + 1], right = sides[i] === 'r', at = arrive(i + 1);
+              return (
+                <div key={n}>
+                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 420, damping: 14, delay: at }}
+                    style={{ position: 'absolute', left: x - 6 * u, top: y - 6 * u, width: `${12 * u}px`, height: `${12 * u}px`, borderRadius: '50%', background: '#fff', border: `${2.5 * u}px solid ${t.accent}`, boxShadow: '0 1px 4px rgba(0,0,0,0.25)' }} />
+                  <motion.div initial={{ opacity: 0, x: (right ? -8 : 8) * u, scale: 0.8 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 18, delay: at + 0.05 }}
+                    style={{
+                      position: 'absolute', top: y - 11 * u, ...(right ? { left: x + 11 * u } : { right: W - x + 11 * u }),
+                      display: 'flex', alignItems: 'center', gap: `${5 * u}px`, padding: `${3 * u}px ${9 * u}px ${3 * u}px ${4 * u}px`, borderRadius: '100px',
+                      background: t.surface || t.bg, border: `1px solid ${t.accent}`, boxShadow: `0 ${3 * u}px ${10 * u}px rgba(0,0,0,0.18)`, whiteSpace: 'nowrap',
+                    }}>
+                    <span style={{ width: `${15 * u}px`, height: `${15 * u}px`, borderRadius: '50%', background: t.accent, color: onAccent, display: 'flex', alignItems: 'center', justifyContent: 'center', ...mono(8, onAccent, { fontWeight: 700 }) }}>{i + 1}</span>
+                    <span style={mono(8.5, t.text, { fontWeight: 700 })}>{n}</span>
+                  </motion.div>
+                </div>
+              );
+            })}
+
+            {/* the hiker */}
+            <motion.div initial={{ opacity: 0, left: trail[0][0] - 8 * u, top: trail[0][1] - 8 * u }}
+              animate={{ opacity: [0, 1, 1], left: hx.map((v) => v - 8 * u), top: hy.map((v) => v - 8 * u) }}
+              transition={{ delay: t0, duration: D, times, ease: eases, opacity: { delay: t0 - 0.3, duration: 0.3, times: [0, 0.5, 1] } }}
+              style={{ position: 'absolute', zIndex: 3, width: `${16 * u}px`, height: `${16 * u}px`, borderRadius: '50%', background: '#fff', border: `${3.5 * u}px solid ${t.accent}`, boxShadow: `0 0 0 ${4 * u}px ${t.accent}40, 0 ${3 * u}px ${8 * u}px rgba(0,0,0,0.3)` }} />
+
+            {/* summit: bloom, sparkles, and the live badge */}
+            <motion.div initial={{ scale: 0.2, opacity: 0 }} animate={{ scale: [0.2, 3.2], opacity: [0.6, 0] }} transition={{ delay: tSummit, duration: 1.1, ease: 'easeOut' }}
+              style={{ position: 'absolute', left: apex[0] - 20 * u, top: apex[1] - 20 * u, width: `${40 * u}px`, height: `${40 * u}px`, borderRadius: '50%', border: `${3 * u}px solid ${t.accent}`, pointerEvents: 'none' }} />
+            {bursts.map((b, i) => (
+              <motion.span key={i} aria-hidden initial={{ x: 0, y: 0, opacity: 0, scale: 0.2 }} animate={{ x: b.x, y: b.y - 14 * u, opacity: [0, 1, 1, 0], scale: [0.2, 1.1, 1, 0.6] }} transition={{ delay: b.delay, duration: 1.3, ease: 'easeOut' }}
+                style={{ position: 'absolute', left: apex[0] - 6 * u, top: apex[1] - 6 * u, fontSize: `${12 * u}px`, lineHeight: 1, color: b.heart ? '#F4A6C0' : t.accent, pointerEvents: 'none' }}>
+                {b.heart ? '\u2665' : '\u2726'}
+              </motion.span>
+            ))}
+            <motion.div initial={{ opacity: 0, y: 8 * u, scale: 0.8 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16, delay: tSummit + 0.3 }}
+              style={{ position: 'absolute', left: apex[0], top: apex[1] - 44 * u, transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: `${6 * u}px`, padding: `${4 * u}px ${12 * u}px`, borderRadius: '100px', background: t.accent, color: onAccent, boxShadow: `0 ${4 * u}px ${14 * u}px ${t.accent}66`, whiteSpace: 'nowrap', ...mono(8.5, onAccent, { fontWeight: 700 }) }}>
+              <motion.span animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 1.4 }} style={{ width: `${6 * u}px`, height: `${6 * u}px`, borderRadius: '50%', background: '#3DDC84' }} />
+              {COMPANY.name} {'\u00B7'} live now
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.6 }} style={{ position: 'absolute', left: 14 * u, top: 12 * u, ...mono(8, t.accent, { fontWeight: 700 }) }}>
+              From first idea to first order
+            </motion.div>
+          </>
+        )}
       </div>
-      <div style={{
-        display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: `${6 * size}px`,
-        padding: `${10 * size}px`, background: '#fff', borderRadius: `${8 * size}px`,
-        border: `1px solid ${t.border}`,
-      }}>
-        <QRCode
-          value="https://peakenterprise.ca/"
-          size={64 * size}
-          fgColor={t.bgDeep || '#111'}
-          bgColor="#ffffff"
-          style={{ width: `${64 * size}px`, height: `${64 * size}px` }}
-        />
-        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: '#666', letterSpacing: '0.06em' }}>Scan to open</span>
+
+      {/* ── the action strip: QR from the very first second, then the button ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: `${16 * u}px`, flexShrink: 0 }}>
+        {slideEntered && (
+          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 15, delay: 0.5 }}
+            style={{ position: 'relative', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${5 * u}px`, padding: `${9 * u}px`, background: '#fff', borderRadius: `${12 * u}px`, border: `1px solid ${t.border}`, boxShadow: `0 ${6 * u}px ${18 * u}px rgba(0,0,0,0.12)` }}>
+            <motion.span aria-hidden animate={{ scale: [1, 1.14], opacity: [0.55, 0] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
+              style={{ position: 'absolute', inset: 0, borderRadius: `${12 * u}px`, border: `${2 * u}px solid ${t.accent}`, pointerEvents: 'none' }} />
+            <div style={{ position: 'relative', width: `${qr}px`, height: `${qr}px`, lineHeight: 0 }}>
+              <QRCode value={LIVE_URL} size={qr} fgColor={t.bgDeep || '#111'} bgColor="#ffffff" style={{ width: `${qr}px`, height: `${qr}px` }} />
+              <motion.div aria-hidden animate={{ top: ['2%', '96%'] }} transition={{ duration: 2.4, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+                style={{ position: 'absolute', left: '-4%', right: '-4%', height: `${2.5 * u}px`, borderRadius: '2px', background: t.accent, boxShadow: `0 0 ${8 * u}px ${t.accent}` }} />
+            </div>
+            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * u}px`, color: '#555', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Scan to try it</span>
+          </motion.div>
+        )}
+        {slideEntered && (
+          <motion.div initial={{ opacity: 0, x: 14 * u }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8, duration: 0.6 }} style={{ flex: 1, minWidth: 0 }}>
+            <div style={mono(8, t.accent, { fontWeight: 700, marginBottom: `${3 * u}px` })}>Try it yourself</div>
+            <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${22 * u}px`, color: t.text, lineHeight: 1.1, marginBottom: `${3 * u}px` }}>Live now.</div>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * u}px`, color: t.textMuted, marginBottom: `${10 * u}px` }}>{COMPANY.url}</div>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              {invite && (
+                <motion.span aria-hidden animate={{ scale: [1, 1.22], opacity: [0.6, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
+                  style={{ position: 'absolute', inset: 0, borderRadius: `${8 * u}px`, border: `${2 * u}px solid ${t.accent}`, pointerEvents: 'none' }} />
+              )}
+              <a data-demo="live-open" href={LIVE_URL} target="_blank" rel="noopener noreferrer" style={{
+                display: 'inline-flex', alignItems: 'center', gap: `${7 * u}px`, padding: `${10 * u}px ${18 * u}px`, borderRadius: `${8 * u}px`,
+                background: t.accent, color: onAccent, textDecoration: 'none', fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${11 * u}px`,
+                boxShadow: pressed ? `0 ${1 * u}px ${3 * u}px ${t.accent}66` : `0 ${6 * u}px ${18 * u}px ${t.accent}55`,
+                transform: pressed ? 'scale(0.95)' : 'none', filter: pressed ? 'brightness(0.92)' : 'none', transition: 'transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease',
+              }}>
+                {'\u25B6'} Open the live site <span style={{ opacity: 0.8 }}>{'\u2197'}</span>
+              </a>
+            </div>
+            <div style={{ ...mono(7, t.textFaint), marginTop: `${8 * u}px`, display: 'flex', alignItems: 'center', gap: `${5 * u}px` }}>
+              <span style={{ border: `1px solid ${t.border}`, borderRadius: `${3 * u}px`, padding: `${1 * u}px ${5 * u}px` }}>{'\u21B5'} Enter</span> opens it
+            </div>
+          </motion.div>
+        )}
       </div>
+      <AutoCursor ref={cursorRef} theme={theme} size={size} />
     </div>
   );
 }
