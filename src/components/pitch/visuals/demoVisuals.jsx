@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import QRCode from 'react-qr-code';
-import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart, Calendar, Briefcase, ClipboardList, Lock } from 'lucide-react';
+import { Check, UserPlus, CheckCircle2, CreditCard, Truck, Mail, Package, Sparkles, Store, ShoppingCart, Users, FileText, PieChart, Calendar, Briefcase, ClipboardList, Lock, Umbrella, Video, Receipt, Droplets, Laptop, Smartphone, Sunrise, Sun, Sunset, CookingPot, RefreshCw } from 'lucide-react';
 import { SiShopify, SiMailchimp, SiGooglesheets, SiCalendly, SiQuickbooks, SiNotion, SiTrello, SiStripe, SiDropbox, SiZoom, SiHubspot, SiGmail, SiAirtable } from 'react-icons/si';
 import DeviceFrame from './DeviceFrame.jsx';
 import ProductImg from './ProductImg.jsx';
@@ -2216,7 +2216,7 @@ function useBox(ref, fallback = { w: 720, h: 420 }) {
 }
 
 // an integer that glides to its new value
-function AnimNum({ value, prefix = '$', suffix = '', ms = 700 }) {
+function AnimNum({ value, prefix = '$', suffix = '', ms = 700, decimals = 0 }) {
   const [shown, setShown] = useState(0);
   const fromRef = useRef(0);
   useEffect(() => {
@@ -2231,7 +2231,7 @@ function AnimNum({ value, prefix = '$', suffix = '', ms = 700 }) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [value, ms]);
-  return <>{prefix}{Math.round(shown).toLocaleString('en-US')}{suffix}</>;
+  return <>{prefix}{Number(shown.toFixed(decimals)).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</>;
 }
 
 function MockupPortal({ theme, size, paceMs = 24000 }) {
@@ -2497,216 +2497,571 @@ function MockupPortal({ theme, size, paceMs = 24000 }) {
 }
 
 
-// ── 9. why — audience chips ──────────────────────────────────────────────────────
-function MockupWhy({ theme, size, paceMs = 19000 }) {
-  const t = theme.colors;
-  const audiences = [
-    { Icon: Package,  label: 'Makers',             url: 'costing',  line: 'Ingredients, suppliers, and batch cost — no more spreadsheets.', detail: 'Costing built into every product' },
-    { Icon: Calendar, label: 'Service businesses', url: 'bookings', line: 'Bookings, customers, and invoicing without five different logins.', detail: 'Book online, get paid automatically' },
-    { Icon: Store,    label: 'Retailers',          url: 'inventory', line: 'A storefront and back office that actually share the same data.', detail: 'One inventory, every channel' },
-  ];
-  const slideEntered = useSlideEntered();
+// ── 9. why — three audiences, three stories ─────────────────────────────────────
+// Makers: a batch gets built ingredient by ingredient, cost and margin appear.
+// Service businesses: a week on the calendar — accept a booking, reschedule, a
+// team call, a holiday block-out. Retailers: one merchant, one day, three
+// places, ONE inventory number ticking down on every device. A cursor walks
+// the three tabs. All artwork is loaded from public/demo-assets/ember-moss/why/
+// (optimized .webp, transparent); any missing file falls back to a friendly icon,
+// so images can be dropped in one at a time.
+const WHY_BASE = `${import.meta.env.BASE_URL || './'}demo-assets/ember-moss/why/`;
 
-  // Motion-graphics beat: the deck picks each audience in turn and shows what
-  // the platform does FOR THEM — a live mini-screen per audience (batch costing,
-  // a booking that becomes a paid invoice, one inventory feeding every
-  // channel). Clicking a tab takes over and stops the tour.
-  const [spot, setSpot] = useState(0);
-  const timersRef = useRef([]);
+function WhyImg({ name, alt = '', Fallback = Sparkles, t, style }) {
+  const [bad, setBad] = useState(false);
+  if (bad) {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', ...style }}>
+        <div style={{ width: '62%', aspectRatio: '1', borderRadius: '50%', background: `${t.accent}1F`, border: `1.5px dashed ${t.accent}77`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.accent }}>
+          <Fallback size="52%" strokeWidth={1.8} />
+        </div>
+      </div>
+    );
+  }
+  return <img src={`${WHY_BASE}${name}.webp`} alt={alt} draggable={false} onError={() => setBad(true)}
+    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', userSelect: 'none', ...style }} />;
+}
+const whyMono = (theme, u, sz, color, extra) => ({ fontFamily: theme.fonts.mono, fontSize: `${sz * u}px`, color, letterSpacing: '0.06em', textTransform: 'uppercase', ...extra });
+
+function MockupWhy({ theme, size, paceMs = 42000 }) {
+  const t = theme.colors;
+  const onAccent = theme.isLight ? '#fff' : t.bg;
+  const slideEntered = useSlideEntered();
+  const wrapRef = useRef(null), sceneRef = useRef(null), cursorRef = useRef(null), liveRef = useRef(false);
+  const box = useBox(sceneRef);
+  const u = Math.min(size, box.w / 480);
+  const [tab, setTab] = useState(0);
+  const seg = paceMs / 3;
+  const k = Math.max(0.6, Math.min(1.5, seg / 13500));
+  const audiences = [
+    { Icon: Package,  label: 'Makers',             line: 'Ingredients, suppliers, and batch cost \u2014 no more spreadsheets.',     detail: 'Costing built into every product' },
+    { Icon: Calendar, label: 'Service businesses', line: 'Bookings, customers, and invoicing without five different logins.',      detail: 'Book online, get paid automatically' },
+    { Icon: Store,    label: 'Retailers',          line: 'A storefront and back office that actually share the same data.',        detail: 'One inventory, every channel' },
+  ];
+
+  // the cursor walks the three tabs, a third of the slide each
   useEffect(() => {
-    if (!slideEntered) return;
-    setSpot(0);
-    const gap = Math.max(3600, (paceMs * 0.8) / audiences.length);
-    timersRef.current = [1, 2].map((i) => setTimeout(() => setSpot(i), i * gap));
-    return () => timersRef.current.forEach(clearTimeout);
+    if (!slideEntered) return undefined;
+    liveRef.current = true;
+    setTab(0);
+    const isLive = () => liveRef.current;
+    (async () => {
+      for (const i of [1, 2]) {
+        await sleep(Math.max(4000, seg - 1500));
+        if (!isLive()) return;
+        const ok = await pointAndClick({ cursorRef, frameRef: wrapRef, scroll: false, isLive, moveMs: 900, selector: `[data-demo="why-tab-${i}"]`, onClick: () => setTab(i) });
+        if (!ok) return;
+      }
+      cursorRef.current?.hide();
+    })();
+    return () => { liveRef.current = false; };
   }, [slideEntered, paceMs]);
-  const pick = (i) => { timersRef.current.forEach(clearTimeout); setSpot(i); };
-  const a = audiences[spot];
+  const pickTab = (i) => { liveRef.current = false; cursorRef.current?.hide(); setTab(i); };
+  const a = audiences[tab];
+  const sceneProps = { theme, u, box, k, cursorRef, wrapRef };
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* audience tabs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * size}px`, marginBottom: `${10 * size}px`, flexShrink: 0 }}>
+    <div ref={wrapRef} style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: `${8 * u}px` }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${8 * u}px`, flexShrink: 0 }}>
         {audiences.map((x, i) => (
           <Reveal key={x.label} delay={i * 0.1} y={12}>
-            <button onClick={() => pick(i)} style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${6 * size}px`, cursor: 'pointer',
-              padding: `${8 * size}px ${6 * size}px`, borderRadius: `${7 * size}px`,
-              border: `1px solid ${spot === i ? t.accent : t.border}`,
-              background: spot === i ? `${t.accent}14` : (t.surface || t.bg),
-              boxShadow: spot === i ? `0 ${5 * size}px ${14 * size}px ${t.accent}22` : 'none',
-              transition: 'all 0.35s ease',
+            <button data-demo={`why-tab-${i}`} onClick={() => pickTab(i)} style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${6 * u}px`, cursor: 'pointer',
+              padding: `${8 * u}px ${6 * u}px`, borderRadius: `${7 * u}px`, border: `1px solid ${tab === i ? t.accent : t.border}`,
+              background: tab === i ? `${t.accent}14` : (t.surface || t.bg), boxShadow: tab === i ? `0 ${5 * u}px ${14 * u}px ${t.accent}22` : 'none', transition: 'all 0.35s ease',
             }}>
-              <x.Icon size={13 * size} color={t.accent} strokeWidth={1.8} />
-              <span style={{ fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${8.5 * size}px`, color: spot === i ? t.text : t.textMuted }}>{x.label}</span>
+              <x.Icon size={13 * u} color={t.accent} strokeWidth={1.8} />
+              <span style={{ fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${8.5 * u}px`, color: tab === i ? t.text : t.textMuted }}>{x.label}</span>
             </button>
           </Reveal>
         ))}
       </div>
 
-      {/* what it does for them */}
-      <motion.div key={`cap-${spot}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-        style={{ marginBottom: `${8 * size}px`, flexShrink: 0 }}>
-        <div style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: t.textMuted, lineHeight: 1.5, marginBottom: `${3 * size}px` }}>{a.line}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: `${4 * size}px` }}>
-          <Check size={9 * size} color={t.positive || t.accent} strokeWidth={2.5} />
-          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.positive || t.accent }}>{a.detail}</span>
+      <motion.div key={`cap-${tab}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} style={{ flexShrink: 0 }}>
+        <div style={{ fontFamily: theme.fonts.body, fontSize: `${9 * u}px`, color: t.textMuted, lineHeight: 1.45 }}>{a.line}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: `${4 * u}px`, marginTop: `${2 * u}px` }}>
+          <Check size={9 * u} color={t.positive || t.accent} strokeWidth={2.5} />
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * u}px`, color: t.positive || t.accent }}>{a.detail}</span>
         </div>
       </motion.div>
 
-      {/* the live mini-screen */}
-      <div style={{ flex: '1 1 auto', minHeight: `${120 * size}px`, marginBottom: `${10 * size}px` }}>
-        <motion.div key={`panel-${spot}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} style={{ height: '100%' }}>
-          <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/admin/${a.url}`}>
-            {spot === 0 && <WhyMakers theme={theme} size={size} />}
-            {spot === 1 && <WhyService theme={theme} size={size} />}
-            {spot === 2 && <WhyRetail theme={theme} size={size} />}
-          </DeviceFrame>
-        </motion.div>
+      <div ref={sceneRef} style={{
+        position: 'relative', flex: '1 1 auto', minHeight: `${280 * u}px`, overflow: 'hidden', borderRadius: `${12 * u}px`,
+        border: `1px solid ${t.border}`, background: `linear-gradient(180deg, ${t.bgAlt} 0%, ${t.surface || t.bg} 100%)`,
+      }}>
+        {slideEntered && (
+          <motion.div key={`stage-${tab}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} style={{ position: 'absolute', inset: 0 }}>
+            {tab === 0 && <WhyMakers {...sceneProps} />}
+            {tab === 1 && <WhyService {...sceneProps} />}
+            {tab === 2 && <WhyRetail {...sceneProps} />}
+          </motion.div>
+        )}
       </div>
 
       <Reveal delay={0.45} y={10} style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${12 * size}px`,
-        padding: `${10 * size}px`, borderRadius: `${8 * size}px`, background: t.bgAlt, flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${10 * u}px`, padding: `${7 * u}px`, borderRadius: `${8 * u}px`, background: t.bgAlt, flexShrink: 0,
       }}>
-        <PeakMark size={size * 0.6} color={t.accent} />
+        <PeakMark size={size * 0.5} color={t.accent} />
         <div style={{ textAlign: 'left' }}>
-          <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${10 * size}px`, color: t.text }}>Not another website builder.</div>
-          <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint }}>The infrastructure behind the storefront, too.</div>
+          <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${9.5 * u}px`, color: t.text }}>Not another website builder.</div>
+          <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * u}px`, color: t.textFaint }}>The infrastructure behind the storefront, too.</div>
         </div>
       </Reveal>
+      <AutoCursor ref={cursorRef} theme={theme} size={size} />
     </div>
   );
 }
 
-const whyLabel = (theme, size, t) => ({ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' });
-
-// Makers — costing is built into the product: cost bars grow in, margin counts up.
-function WhyMakers({ theme, size }) {
+// ── Makers: build the batch ──
+function WhyMakers({ theme, u, box, k, cursorRef, wrapRef }) {
   const t = theme.colors;
-  const rows = [
-    { item: 'Shea butter',  from: 'Fair-trade co-op',  cost: 2.10 },
-    { item: 'Moss extract', from: 'Own garden',        cost: 1.35 },
-    { item: 'Mint oil',     from: 'Prairie Botanicals', cost: 1.80 },
-    { item: 'Packaging',    from: 'Local print shop',  cost: 1.60 },
+  const onAccent = theme.isLight ? '#fff' : t.bg;
+  const good = t.positive || t.accent, red = t.negative || '#DB3521';
+  const ING = [
+    { key: 'shea-butter',   name: 'Shea butter',  from: 'Fair-trade co-op',   cost: 2.10, Icon: Droplets },
+    { key: 'moss-extract',  name: 'Moss extract', from: 'Own garden',         cost: 1.35, Icon: Sparkles },
+    { key: 'mint-oil',      name: 'Mint oil',     from: 'Prairie Botanicals', cost: 1.80, Icon: Droplets },
+    { key: 'packaging-box', name: 'Packaging',    from: 'Local print shop',   cost: 1.60, Icon: Package },
   ];
-  const total = rows.reduce((s, r) => s + r.cost, 0); // 6.85
-  const price = 18;
-  const margin = Math.round((1 - total / price) * 100); // 62
+  const [started, setStarted] = useState(false);
+  const [flying, setFlying] = useState(-1);
+  const [added, setAdded] = useState(0);
+  const [done, setDone] = useState(false);
+  const [nudge, setNudge] = useState(false);
+  const W = box.w, H = box.h, compact = W < 520;
+  const cs = Math.min(W * 0.3, H * 0.46), cx = W * 0.5, cy = H * 0.62;
+  const isz = Math.min(W * 0.2, H * 0.3), ox = W * (compact ? 0.3 : 0.27), oy = H * 0.3;
+  const rx = W * 0.84, ry = H * 0.36, rsz = Math.min(W * 0.26, H * 0.34);
+  const total = ING.slice(0, added).reduce((s, x) => s + x.cost, 0);
+  const price = 18, margin = Math.round((1 - 6.85 / price) * 100);
+
+  useEffect(() => {
+    let live = true;
+    const isLive = () => live, w = (ms) => sleep(ms * k);
+    (async () => {
+      await w(1000);
+      if (!isLive()) return;
+      if (!(await pointAndClick({ cursorRef, frameRef: wrapRef, scroll: false, isLive, moveMs: Math.max(500, 800 * k), selector: '[data-demo="why-batch"]', onClick: () => setStarted(true) }))) return;
+      cursorRef.current?.hide();
+      for (let i = 0; i < ING.length; i++) {
+        await w(450); if (!isLive()) return;
+        setFlying(i);
+        await w(1050); if (!isLive()) return;
+        setAdded(i + 1); setFlying(-1);
+        await w(550);
+      }
+      await w(300); if (!isLive()) return;
+      setDone(true);
+      await w(2600); if (!isLive()) return;
+      setNudge(true);
+    })();
+    return () => { live = false; };
+  }, []);
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: `${14 * size}px`, alignItems: 'center' }}>
-      <div>
-        <div style={{ ...whyLabel(theme, size, t), marginBottom: `${8 * size}px` }}>Whispering Moss Soap · cost per bar</div>
-        {rows.map((r, i) => (
-          <div key={r.item} style={{ marginBottom: `${7 * size}px` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, marginBottom: `${3 * size}px` }}>
-              <span style={{ color: t.text, fontWeight: 500 }}>{r.item} <span style={{ color: t.textFaint, fontWeight: 400 }}>· {r.from}</span></span>
-              <span style={{ fontFamily: theme.fonts.mono, color: t.textMuted }}>${r.cost.toFixed(2)}</span>
+    <div style={{ position: 'absolute', inset: 0 }}>
+      {/* cost per bar */}
+      <motion.div initial={{ opacity: 0, x: -10 * u }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
+        style={{ position: 'absolute', left: W * 0.03, top: H * 0.06, width: W * (compact ? 0.36 : 0.27), zIndex: 3 }}>
+        <div style={whyMono(theme, u, 7, t.textFaint, { marginBottom: `${6 * u}px`, whiteSpace: 'nowrap' })}>Cost per bar</div>
+        {ING.map((x, i) => (
+          <div key={x.key} style={{ marginBottom: `${6 * u}px`, opacity: i < added ? 1 : 0.4, transition: 'opacity 0.4s ease' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * u}px`, marginBottom: `${3 * u}px` }}>
+              <div style={{ width: `${24 * u}px`, height: `${24 * u}px`, flexShrink: 0 }}><WhyImg name={x.key} Fallback={x.Icon} t={t} /></div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8 * u}px`, color: t.text, whiteSpace: 'nowrap' }}>{x.name}</div>
+                {!compact && <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6 * u}px`, color: t.textFaint, whiteSpace: 'nowrap' }}>{x.from}</div>}
+              </div>
+              <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * u}px`, color: t.textMuted }}>${x.cost.toFixed(2)}</span>
             </div>
-            <div style={{ height: `${4 * size}px`, borderRadius: '100px', background: t.bgAlt, overflow: 'hidden' }}>
-              <motion.div initial={{ width: 0 }} animate={{ width: `${(r.cost / 2.5) * 100}%` }} transition={{ delay: 0.35 + i * 0.18, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                style={{ height: '100%', borderRadius: '100px', background: t.accent }} />
+            <div style={{ height: `${4 * u}px`, borderRadius: '100px', background: t.bgAlt, overflow: 'hidden' }}>
+              <motion.div initial={false} animate={{ width: i < added ? `${(x.cost / 2.5) * 100}%` : '0%' }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }} style={{ height: '100%', borderRadius: '100px', background: `linear-gradient(90deg, ${t.accent}, ${t.accentLight || t.accent})` }} />
             </div>
           </div>
         ))}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: `1px solid ${t.border}`, paddingTop: `${5 * u}px` }}>
+          <span style={whyMono(theme, u, 7, t.textFaint)}>Cost</span>
+          <span style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${14 * u}px`, color: t.text }}><AnimNum value={total} prefix="$" decimals={2} ms={500} /></span>
+        </div>
+      </motion.div>
+
+      {/* the pot */}
+      <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 14, delay: 0.2 }}
+        style={{ position: 'absolute', left: cx - cs / 2, top: cy - cs / 2, width: cs, height: cs, zIndex: 2 }}>
+        {done && <motion.div initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: [0, 0.9, 0.5], scale: [0.6, 1.3, 1.15] }} transition={{ duration: 1.2 }} style={{ position: 'absolute', inset: '-18%', borderRadius: '50%', background: `radial-gradient(circle, ${t.accent}55, transparent 68%)` }} />}
+        <motion.div key={`wob-${added}`} animate={{ rotate: [0, -4, 4, -2, 0], scale: [1, 1.07, 1] }} transition={{ duration: 0.6 }} style={{ position: 'absolute', inset: 0 }}>
+          <WhyImg name="cauldron" Fallback={CookingPot} t={t} />
+        </motion.div>
+        {added > 0 && [0, 1, 2].map((i) => (
+          <motion.span key={`b-${added}-${i}`} initial={{ y: 0, opacity: 0.9, scale: 0.6 }} animate={{ y: -40 * u - i * 8 * u, opacity: 0, scale: 1.1 }} transition={{ duration: 0.9, delay: i * 0.1 }}
+            style={{ position: 'absolute', left: `${38 + i * 12}%`, top: '30%', width: `${7 * u}px`, height: `${7 * u}px`, borderRadius: '50%', border: `${1.5 * u}px solid ${t.positive || '#8DBF8A'}`, background: `${t.positive || '#8DBF8A'}33` }} />
+        ))}
+      </motion.div>
+
+      {/* the ingredient on its way into the pot */}
+      {flying >= 0 && (
+        <motion.div key={`fly-${flying}`} initial={{ left: ox - isz / 2, top: oy - isz / 2, scale: 0.7, opacity: 0 }}
+          animate={{ left: [ox - isz / 2, cx - isz / 2, cx - isz / 2], top: [oy - isz / 2, H * 0.17, cy - cs * 0.12 - isz / 2], scale: [0.7, 1, 0.3], opacity: [0, 1, 1] }}
+          transition={{ duration: 1.05 * k, times: [0, 0.5, 1], ease: 'easeInOut' }}
+          style={{ position: 'absolute', width: isz, height: isz, zIndex: 4 }}>
+          <WhyImg name={ING[flying].key} Fallback={ING[flying].Icon} t={t} />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 1, 0] }} transition={{ duration: 1.05 * k, times: [0, 0.25, 0.6, 0.8] }}
+            style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', padding: `${3 * u}px ${8 * u}px`, borderRadius: '100px', background: t.surface || t.bg, border: `1px solid ${t.border}`, boxShadow: `0 ${3 * u}px ${10 * u}px rgba(0,0,0,0.15)`, ...whyMono(theme, u, 7.5, t.text, { fontWeight: 700 }) }}>
+            {ING[flying].name} {'\u00B7'} ${ING[flying].cost.toFixed(2)}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* the result */}
+      <div style={{ position: 'absolute', left: rx - rsz / 2, top: ry - rsz / 2, width: rsz, zIndex: 3 }}>
+        <div style={{ width: rsz, height: rsz, position: 'relative' }}>
+          {!done && <div style={{ position: 'absolute', inset: '12%', borderRadius: '50%', border: `1.5px dashed ${t.border}` }} />}
+          {done && (
+            <motion.div initial={{ scale: 0.1, opacity: 0, x: (cx - rx), y: (cy - ry), rotate: -40 }} animate={{ scale: 1, opacity: 1, x: 0, y: 0, rotate: 0 }} transition={{ type: 'spring', stiffness: 150, damping: 13 }} style={{ position: 'absolute', inset: 0 }}>
+              <WhyImg name="soap-bar" Fallback={Droplets} t={t} />
+            </motion.div>
+          )}
+        </div>
+        {done && (
+          <motion.div initial={{ opacity: 0, y: 10 * u }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} style={{ textAlign: 'center' }}>
+            <div style={{ display: 'inline-block', padding: `${3 * u}px ${10 * u}px`, borderRadius: '100px', background: t.accent, color: onAccent, ...whyMono(theme, u, 8.5, onAccent, { fontWeight: 700 }) }}>${price.toFixed(2)} / bar</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${6 * u}px`, marginTop: `${6 * u}px` }}>
+              <svg width={34 * u} height={34 * u} viewBox="0 0 40 40" style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx="20" cy="20" r="15" fill="none" stroke={t.bgAlt} strokeWidth="6" />
+                <motion.circle cx="20" cy="20" r="15" fill="none" stroke={good} strokeWidth="6" strokeLinecap="round" initial={{ pathLength: 0 }} animate={{ pathLength: margin / 100 }} transition={{ duration: 1, delay: 0.7, ease: [0.16, 1, 0.3, 1] }} />
+              </svg>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${15 * u}px`, color: good, lineHeight: 1 }}><AnimNum value={margin} prefix="" suffix="%" ms={1000} /></div>
+                <div style={whyMono(theme, u, 6.5, t.textFaint)}>margin</div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
-      <div style={{ textAlign: 'center', borderLeft: `1px solid ${t.border}`, paddingLeft: `${12 * size}px` }}>
-        <div style={whyLabel(theme, size, t)}>Margin</div>
-        <div style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${26 * size}px`, color: t.positive || t.accent, lineHeight: 1.1, margin: `${4 * size}px 0` }}>
-          <CountUp to={margin} suffix="%" duration={1.4} delay={0.6} />
+
+      {/* start button, then status */}
+      <div data-demo="why-batch" style={{
+        position: 'absolute', left: cx, bottom: H * 0.05, transform: 'translateX(-50%)', zIndex: 5, display: 'flex', alignItems: 'center', gap: `${6 * u}px`,
+        padding: `${7 * u}px ${16 * u}px`, borderRadius: `${8 * u}px`, background: done ? (t.positive || t.accent) : t.accent, color: done ? '#fff' : onAccent,
+        boxShadow: `0 ${5 * u}px ${16 * u}px ${t.accent}55`, whiteSpace: 'nowrap', fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${9.5 * u}px`, transition: 'background 0.4s ease',
+      }}>
+        {done ? <><Check size={11 * u} strokeWidth={3} /> Batch complete</> : started ? 'Mixing\u2026' : '\u25B6 Start a batch'}
+      </div>
+
+      {nudge && (
+        <motion.div initial={{ opacity: 0, x: 24 * u, scale: 0.9 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 240, damping: 16 }}
+          style={{ position: 'absolute', right: W * 0.025, bottom: H * 0.04, maxWidth: W * (compact ? 0.5 : 0.3), zIndex: 6, display: 'flex', alignItems: 'center', gap: `${7 * u}px`, padding: `${6 * u}px ${9 * u}px`, borderRadius: `${10 * u}px`, background: t.surface || t.bg, border: `1px solid ${t.accent}`, boxShadow: `0 ${6 * u}px ${18 * u}px rgba(0,0,0,0.2)` }}>
+          <div style={{ width: `${30 * u}px`, height: `${30 * u}px`, flexShrink: 0 }}><WhyImg name="ember-dragon" Fallback={Sparkles} t={t} /></div>
+          <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * u}px`, color: t.text, lineHeight: 1.3 }}><b>Ember noticed:</b> mint oil is running low. <span style={{ color: t.accent, fontWeight: 700 }}>Reorder?</span></div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+// ── Service businesses: a week on the calendar ──
+function WhyService({ theme, u, box, k, cursorRef, wrapRef }) {
+  const t = theme.colors;
+  const onAccent = theme.isLight ? '#fff' : t.bg;
+  const good = t.positive || t.accent;
+  const W = box.w, H = box.h, compact = W < 520;
+  const cardW = compact ? W * 0.94 : W * 0.64, cardH = H * (compact ? 0.74 : 0.72), cardL = (W - cardW) / 2, cardT = H * 0.04;
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], hours = ['9', '10', '11', '12', '1', '2', '3'];
+  const gut = cardW * 0.1, headH = cardH * 0.13, colW = (cardW - gut) / 5, rowH = (cardH - headH) / hours.length;
+  const cx = (c) => gut + c * colW, cy = (r) => headH + r * rowH;
+  const [req, setReq] = useState(false), [accepted, setAccepted] = useState(false), [booked, setBooked] = useState(false);
+  const [conf, setConf] = useState(false), [paid, setPaid] = useState(false), [resched, setResched] = useState(false);
+  const [lifted, setLifted] = useState(false), [fit, setFit] = useState({ c: 1, r: 1 });
+  const [zoom, setZoom] = useState(false), [closed, setClosed] = useState(false), [blocked, setBlocked] = useState(false), [summary, setSummary] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    const isLive = () => live, w = (ms) => sleep(ms * k), mv = Math.max(500, 800 * k);
+    const click = (selector, onClick) => pointAndClick({ cursorRef, frameRef: wrapRef, scroll: false, isLive, moveMs: mv, selector, onClick });
+    (async () => {
+      await w(1500); if (!isLive()) return;
+      setReq(true);
+      await w(1300); if (!isLive()) return;
+      if (!(await click('[data-demo="why-accept"]', () => { setAccepted(true); setBooked(true); }))) return;
+      await w(600); if (!isLive()) return;
+      setConf(true);
+      await w(1000); if (!isLive()) return;
+      setPaid(true); setReq(false);
+      await w(1100); if (!isLive()) return;
+      if (!(await click('[data-demo="why-fitting"]', () => setLifted(true)))) return;       // pick up Tuesday's fitting...
+      setFit({ c: 2, r: 4 });                                                                // ...and drop it on Wednesday at 1
+      const tgt = wrapRef.current?.querySelector('[data-demo="why-resched-target"]');
+      if (tgt) await cursorRef.current?.moveTo(tgt, mv);
+      if (!isLive()) return;
+      setLifted(false); setResched(true);
+      await w(600); cursorRef.current?.hide(); if (!isLive()) return;
+      setZoom(true);
+      await w(1300); if (!isLive()) return;
+      setClosed(true);
+      await w(1200); if (!isLive()) return;
+      setBlocked(true);
+      await w(1700); if (!isLive()) return;
+      setBlocked(false); setSummary(true);
+    })();
+    return () => { live = false; };
+  }, []);
+
+  const evBox = (c, r, span = 1) => ({ left: cx(c) + 2 * u, top: cy(r) + 2 * u, width: colW - 4 * u, height: rowH * span - 4 * u });
+  const evStyle = (bg, border, color) => ({ position: 'absolute', borderRadius: `${6 * u}px`, padding: `${3 * u}px ${5 * u}px`, overflow: 'hidden', background: bg, border: `1px solid ${border}`, color, boxSizing: 'border-box' });
+  const evText = (label, sub, color) => (<><div style={{ fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${7.5 * u}px`, color, lineHeight: 1.15, whiteSpace: 'nowrap' }}>{label}</div>{sub && <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6 * u}px`, color: t.textMuted, whiteSpace: 'nowrap' }}>{sub}</div>}</>);
+  const chip = (show, node, delay = 0) => show && (
+    <motion.div initial={{ opacity: 0, y: 10 * u, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 280, damping: 17, delay }}
+      style={{ display: 'flex', alignItems: 'center', gap: `${5 * u}px`, padding: `${4 * u}px ${9 * u}px`, borderRadius: '100px', background: t.surface || t.bg, border: `1px solid ${good}`, boxShadow: `0 ${3 * u}px ${10 * u}px rgba(0,0,0,0.14)`, whiteSpace: 'nowrap', fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${7.5 * u}px`, color: t.text }}>
+      {node}
+    </motion.div>
+  );
+
+  return (
+    <div style={{ position: 'absolute', inset: 0 }}>
+      {!compact && (
+        <motion.div initial={{ opacity: 0, y: 24 * u }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} style={{ position: 'absolute', left: 0, width: W, bottom: -W * 0.075, zIndex: 1 }}>
+          <WhyImg name="desk-props" Fallback={Calendar} t={t} />
+        </motion.div>
+      )}
+
+      {/* the calendar */}
+      <motion.div initial={{ opacity: 0, y: 18 * u, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 160, damping: 18, delay: 0.2 }}
+        style={{ position: 'absolute', left: cardL, top: cardT, width: cardW, height: cardH, zIndex: 2, borderRadius: `${10 * u}px`, background: t.surface || t.bg, border: `1px solid ${t.border}`, boxShadow: `0 ${10 * u}px ${28 * u}px rgba(0,0,0,0.16)`, overflow: 'hidden' }}>
+        <div style={{ height: headH, display: 'flex', alignItems: 'center', background: t.bgAlt, borderBottom: `1px solid ${t.border}`, position: 'relative' }}>
+          <div style={{ width: gut, display: 'flex', justifyContent: 'center' }}><Calendar size={11 * u} color={t.accent} /></div>
+          {days.map((d) => <div key={d} style={{ width: colW, textAlign: 'center', ...whyMono(theme, u, 7.5, t.textMuted, { fontWeight: 700 }) }}>{d}</div>)}
         </div>
-        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, lineHeight: 1.7 }}>
-          Cost ${total.toFixed(2)}<br />Price ${price.toFixed(2)}
-        </div>
+        {hours.map((h, r) => (
+          <div key={h} style={{ position: 'absolute', left: 0, right: 0, top: cy(r), height: rowH, borderBottom: r < hours.length - 1 ? `1px solid ${t.border}66` : 'none' }}>
+            <span style={{ position: 'absolute', left: 0, width: gut, textAlign: 'center', top: 3 * u, ...whyMono(theme, u, 6, t.textFaint) }}>{h}{r < 3 ? 'a' : 'p'}</span>
+          </div>
+        ))}
+        {[1, 2, 3, 4].map((c) => <div key={c} style={{ position: 'absolute', top: headH, bottom: 0, left: cx(c), width: 1, background: `${t.border}66` }} />)}
+        <div data-demo="why-resched-target" style={{ position: 'absolute', ...evBox(2, 4), pointerEvents: 'none' }} />
+
+        {/* existing bookings */}
+        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.7 }} style={{ ...evStyle(`${t.accent}22`, t.accent, t.text), ...evBox(0, 1) }}>{evText('Consult', 'Ana', t.text)}</motion.div>
+        <motion.div data-demo="why-fitting" initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: lifted ? 1.1 : 1, ...evBox(fit.c, fit.r), boxShadow: lifted ? `0 ${8 * u}px ${18 * u}px rgba(0,0,0,0.3)` : '0 0 0 rgba(0,0,0,0)' }}
+          transition={{ opacity: { delay: 0.9 }, left: { type: 'spring', stiffness: 120, damping: 16 }, top: { type: 'spring', stiffness: 120, damping: 16 }, scale: { duration: 0.2 } }}
+          style={{ ...evStyle(`${t.accent}22`, t.accent, t.text), zIndex: lifted ? 5 : 1 }}>{evText('Fitting', resched ? 'Dee \u00B7 moved' : 'Dee', t.text)}</motion.div>
+        {zoom && (
+          <motion.div initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }} style={{ ...evStyle('#2D8CFF22', '#2D8CFF', t.text), ...evBox(2, 2) }}>
+            {evText('Team sync', 'Zoom call', t.text)}
+          </motion.div>
+        )}
+        {booked && (
+          <motion.div initial={{ opacity: 0, scale: 1.4, y: -14 * u }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 240, damping: 13 }} style={{ ...evStyle(t.accent, t.accent, onAccent), ...evBox(3, 5), boxShadow: `0 ${4 * u}px ${12 * u}px ${t.accent}66` }}>{evText('Consult', 'Mira', onAccent)}</motion.div>
+        )}
+        {closed && (
+          <motion.div initial={{ opacity: 0, x: 20 * u }} animate={{ opacity: 1, x: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 17 }}
+            style={{ ...evStyle(`repeating-linear-gradient(45deg, ${t.textFaint}30 0 6px, transparent 6px 12px)`, t.textFaint, t.text), ...evBox(4, 0, hours.length), display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: `${4 * u}px`, textAlign: 'center' }}>
+            <div style={{ width: `${Math.min(34 * u, colW * 0.7)}px`, height: `${Math.min(34 * u, colW * 0.7)}px` }}><WhyImg name="day-off" Fallback={Umbrella} t={t} /></div>
+            <div style={whyMono(theme, u, 6.5, t.text, { fontWeight: 700 })}>Closed</div>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6 * u}px`, color: t.textMuted }}>holiday</div>
+          </motion.div>
+        )}
+      </motion.div>
+
+      {/* the new booking request */}
+      {req && (
+        <motion.div initial={{ opacity: 0, x: 30 * u, scale: 0.92 }} animate={{ opacity: 1, x: 0, scale: accepted ? 0.96 : 1 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 240, damping: 17 }}
+          style={{ position: 'absolute', zIndex: 6, right: W * 0.02, top: H * 0.1, width: Math.min(W * (compact ? 0.62 : 0.3), 230 * u), padding: `${8 * u}px ${10 * u}px`, borderRadius: `${10 * u}px`, background: t.surface || t.bg, border: `1px solid ${accepted ? good : t.accent}`, boxShadow: `0 ${8 * u}px ${22 * u}px rgba(0,0,0,0.25)` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * u}px`, marginBottom: `${5 * u}px` }}>
+            <span style={{ width: `${18 * u}px`, height: `${18 * u}px`, borderRadius: '50%', background: `${t.accent}22`, color: t.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: theme.fonts.mono, fontWeight: 700, fontSize: `${8 * u}px` }}>M</span>
+            <span style={whyMono(theme, u, 6.5, accepted ? good : t.accent, { fontWeight: 700 })}>{accepted ? 'Accepted \u2713' : 'New booking request'}</span>
+          </div>
+          <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${9 * u}px`, color: t.text }}>Mira {'\u00B7'} Consult</div>
+          <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * u}px`, color: t.textMuted, marginBottom: `${7 * u}px` }}>Thu 2:00 PM</div>
+          {!accepted && (
+            <div style={{ display: 'flex', gap: `${6 * u}px` }}>
+              <span data-demo="why-accept" style={{ flex: 1, textAlign: 'center', padding: `${5 * u}px`, borderRadius: `${5 * u}px`, background: t.accent, color: onAccent, fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${8 * u}px` }}>Accept</span>
+              <span style={{ flex: 1, textAlign: 'center', padding: `${5 * u}px`, borderRadius: `${5 * u}px`, border: `1px solid ${t.border}`, color: t.textMuted, fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${8 * u}px` }}>Decline</span>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* "not available" when a client tries the holiday */}
+      {blocked && (
+        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: [0, 1, 1, 1, 1], scale: 1, x: [0, -7 * u, 7 * u, -5 * u, 5 * u, 0] }} transition={{ duration: 0.8 }}
+          style={{ position: 'absolute', zIndex: 6, left: cardL + cx(4) - 24 * u, top: cardT + headH + rowH * 3.3, padding: `${5 * u}px ${10 * u}px`, borderRadius: '100px', background: t.negative || '#DB3521', color: '#fff', boxShadow: `0 ${4 * u}px ${12 * u}px rgba(0,0,0,0.3)`, ...whyMono(theme, u, 7, '#fff', { fontWeight: 700 }), whiteSpace: 'nowrap' }}>
+          Fri {'\u00B7'} not available
+        </motion.div>
+      )}
+
+      {/* what happened, in one line each */}
+      <div style={{ position: 'absolute', left: W * 0.03, right: W * 0.03, bottom: H * 0.03, zIndex: 6, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: `${5 * u}px` }}>
+        {chip(conf, <><div style={{ width: `${16 * u}px`, height: `${16 * u}px` }}><WhyImg name="envelope" Fallback={Mail} t={t} /></div>Confirmation sent</>)}
+        {chip(paid, <><div style={{ width: `${16 * u}px`, height: `${16 * u}px` }}><WhyImg name="invoice-paid" Fallback={Receipt} t={t} /></div>Invoice #204 {'\u00B7'} $120 paid</>)}
+        {chip(resched, <><RefreshCw size={10 * u} color={good} />Rescheduled {'\u00B7'} client notified</>)}
+        {chip(summary, <><Check size={10 * u} color={good} strokeWidth={3} />3 booked {'\u00B7'} 1 rescheduled {'\u00B7'} $120 paid {'\u00B7'} one login</>)}
       </div>
     </div>
   );
 }
 
-// Service businesses — a booking lands on the calendar, then becomes a paid invoice.
-function WhyService({ theme, size }) {
+// ── Retailers: one merchant, one day, three places, one inventory ──
+function WhyRetail({ theme, u, box, k, cursorRef, wrapRef }) {
   const t = theme.colors;
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-  const taken = { Mon: [1], Tue: [0, 2], Wed: [1], Fri: [0] };
-  const [stage, setStage] = useState(0); // 0 empty, 1 booked, 2 confirmed, 3 paid
+  const onAccent = theme.isLight ? '#fff' : t.bg;
+  const good = t.positive || t.accent;
+  const W = box.w, H = box.h, compact = W < 520;
+  const scenes = [
+    { img: 'desk-scene',   a: 1.5,  time: '8:05 AM',  place: 'Home desk',      Icon: Sunrise, sky: ['#FFE3B8', '#FFF4DE'] },
+    { img: 'market-scene', a: 1.5,  time: '12:40 PM', place: 'Farmers market', Icon: Sun,     sky: ['#BFE0FF', '#EEF7FF'] },
+    { img: 'park-scene',   a: 1.27, time: '5:50 PM',  place: 'Evening walk',   Icon: Sunset,  sky: ['#FFC999', '#FFE9D0'] },
+  ];
+  const [sc, setSc] = useState(0);
+  const [stock, setStock] = useState(51);
+  const [pulse, setPulse] = useState(0);
+  const [toast, setToast] = useState('');
+  const [paid, setPaid] = useState(false);
+  const [final, setFinal] = useState(false);
+  const toastTimer = useRef(null);
+  const sell = (label) => { setStock((s) => s - 1); setPulse((p) => p + 1); setToast(label); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(''), 2300 * k); };
+
   useEffect(() => {
-    const ids = [setTimeout(() => setStage(1), 700), setTimeout(() => setStage(2), 1700), setTimeout(() => setStage(3), 2900)];
-    return () => ids.forEach(clearTimeout);
+    let live = true;
+    const isLive = () => live, w = (ms) => sleep(ms * k);
+    (async () => {
+      await w(2100); if (!isLive()) return;
+      sell('Online order #1051');
+      await w(2300); if (!isLive()) return;
+      setSc(1);
+      await w(1500); if (!isLive()) return;
+      if (!(await pointAndClick({ cursorRef, frameRef: wrapRef, scroll: false, isLive, moveMs: Math.max(500, 800 * k), selector: '[data-demo="why-charge"]', onClick: () => { setPaid(true); sell('Market sale'); } }))) return;
+      cursorRef.current?.hide();
+      await w(2300); if (!isLive()) return;
+      setSc(2);
+      await w(2200); if (!isLive()) return;
+      sell('Wholesale order');
+      await w(2000); if (!isLive()) return;
+      setFinal(true);
+    })();
+    return () => { live = false; clearTimeout(toastTimer.current); };
   }, []);
-  const slot = (filled, hot) => ({
-    height: `${11 * size}px`, borderRadius: `${3 * size}px`, marginBottom: `${4 * size}px`,
-    border: `1px solid ${hot ? t.accent : t.border}`,
-    background: hot ? t.accent : (filled ? `${t.textFaint}30` : 'transparent'),
-    transition: 'all 0.4s ease',
-  });
+
+  const S = scenes[sc];
+  const dev = sc === 0 ? 'laptop' : sc === 1 ? 'tablet' : 'phone';
+  const dw = dev === 'laptop' ? Math.min(W * (compact ? 0.5 : 0.4), 300 * u) : dev === 'tablet' ? Math.min(W * (compact ? 0.42 : 0.32), 230 * u) : Math.min(W * 0.2, 112 * u);
+  const sync = [{ Icon: Laptop, label: 'Desk' }, { Icon: Store, label: 'Stall' }, { Icon: Smartphone, label: 'Phone' }];
+
+  const numBlock = (big) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * u}px` }}>
+      <div style={{ width: `${(big ? 26 : 20) * u}px`, height: `${(big ? 26 : 20) * u}px`, flexShrink: 0 }}><WhyImg name="soap-bar" Fallback={Droplets} t={t} /></div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${(big ? 8 : 7) * u}px`, color: t.text, whiteSpace: 'nowrap' }}>Whispering Moss Soap</div>
+        <motion.div key={stock} initial={{ scale: 1.35, color: t.accent }} animate={{ scale: 1, color: t.text }} transition={{ duration: 0.5 }} style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${(big ? 22 : 17) * u}px`, lineHeight: 1.05, transformOrigin: 'left center' }}>{stock}</motion.div>
+        <div style={whyMono(theme, u, 5.5, t.textFaint)}>in stock</div>
+      </div>
+    </div>
+  );
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: `${14 * size}px`, alignItems: 'center' }}>
-      <div>
-        <div style={{ ...whyLabel(theme, size, t), marginBottom: `${8 * size}px` }}>This week · bookings</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: `${5 * size}px` }}>
-          {days.map((d) => (
-            <div key={d}>
-              <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.textFaint, textAlign: 'center', marginBottom: `${4 * size}px` }}>{d}</div>
-              {[0, 1, 2].map((r) => <div key={r} style={slot((taken[d] || []).includes(r), d === 'Thu' && r === 1 && stage >= 1)} />)}
+    <div style={{ position: 'absolute', inset: 0 }}>
+      {scenes.map((s, i) => (
+        <motion.div key={s.time} initial={false} animate={{ opacity: sc === i ? 1 : 0 }} transition={{ duration: 0.9 }}
+          style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, ${s.sky[0]}99 0%, ${s.sky[1]}55 70%, transparent 100%)` }}>
+          {(() => {
+            const iw = Math.min(W * 0.96, H * 0.9 * s.a);
+            return (
+              <div style={{ position: 'absolute', left: (W - iw) / 2, top: H * 0.03, width: iw, height: iw / s.a }}>
+                <WhyImg name={s.img} Fallback={s.Icon} t={t} />
+              </div>
+            );
+          })()}
+        </motion.div>
+      ))}
+
+      {/* when and where */}
+      <motion.div key={`when-${sc}`} initial={{ opacity: 0, x: -10 * u }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
+        style={{ position: 'absolute', left: W * 0.025, top: H * 0.04, zIndex: 5, display: 'flex', alignItems: 'center', gap: `${6 * u}px`, padding: `${5 * u}px ${11 * u}px`, borderRadius: '100px', background: t.surface || t.bg, border: `1px solid ${t.border}`, boxShadow: `0 ${3 * u}px ${10 * u}px rgba(0,0,0,0.14)` }}>
+        <S.Icon size={12 * u} color={t.accent} />
+        <span style={whyMono(theme, u, 7.5, t.text, { fontWeight: 700 })}>{S.time}</span>
+        <span style={{ fontFamily: theme.fonts.body, fontSize: `${8 * u}px`, color: t.textMuted }}>{S.place}</span>
+      </motion.div>
+
+      {/* the sale that just happened */}
+      {toast && (
+        <motion.div key={toast} initial={{ opacity: 0, y: -8 * u, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 16 }}
+          style={{ position: 'absolute', right: W * 0.025, top: H * 0.04, zIndex: 6, display: 'flex', alignItems: 'center', gap: `${6 * u}px`, padding: `${5 * u}px ${11 * u}px`, borderRadius: '100px', background: t.accent, color: onAccent, boxShadow: `0 ${4 * u}px ${14 * u}px ${t.accent}66`, ...whyMono(theme, u, 7.5, onAccent, { fontWeight: 700 }), whiteSpace: 'nowrap' }}>
+          {toast} {'\u00B7'} {'\u2212'}1
+        </motion.div>
+      )}
+
+      {/* the app, on whatever device she has with her */}
+      <motion.div key={`dev-${dev}`} initial={{ opacity: 0, y: 24 * u, scale: 0.92 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 170, damping: 17, delay: 0.5 }}
+        style={{ position: 'absolute', right: W * 0.03, bottom: H * 0.17, width: dw, zIndex: 4 }}>
+        {dev === 'laptop' && (
+          <div style={{ borderRadius: `${8 * u}px`, overflow: 'hidden', background: t.surface || t.bg, border: `1px solid ${t.border}`, boxShadow: `0 ${10 * u}px ${28 * u}px rgba(0,0,0,0.3)`, transform: 'perspective(900px) rotateY(-7deg) rotateX(2deg)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: `${4 * u}px`, padding: `${4 * u}px ${7 * u}px`, background: t.bgAlt, borderBottom: `1px solid ${t.border}` }}>
+              {[0, 1, 2].map((i) => <span key={i} style={{ width: `${4 * u}px`, height: `${4 * u}px`, borderRadius: '50%', background: t.border }} />)}
+              <span style={{ marginLeft: `${4 * u}px`, fontFamily: theme.fonts.mono, fontSize: `${5.5 * u}px`, color: t.textFaint }}>emberandmoss.shop/admin/inventory</span>
             </div>
+            <div style={{ padding: `${8 * u}px` }}>
+              {numBlock(true)}
+              <div style={{ marginTop: `${6 * u}px` }}>
+                {['Online store', 'Market stall (POS)', 'Wholesale'].map((c) => (
+                  <div key={c} style={{ display: 'flex', justifyContent: 'space-between', padding: `${3 * u}px ${5 * u}px`, borderTop: `1px solid ${t.border}`, fontFamily: theme.fonts.body, fontSize: `${6.5 * u}px`, color: t.textMuted }}>
+                    <span>{c}</span><span style={{ fontFamily: theme.fonts.mono, color: t.text }}>{stock} available</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        {dev === 'tablet' && (
+          <div style={{ borderRadius: `${12 * u}px`, padding: `${5 * u}px`, background: '#2A2230', boxShadow: `0 ${10 * u}px ${28 * u}px rgba(0,0,0,0.35)`, transform: 'perspective(900px) rotateY(-6deg)' }}>
+            <div style={{ borderRadius: `${8 * u}px`, background: t.surface || t.bg, padding: `${9 * u}px` }}>
+              <div style={whyMono(theme, u, 6, t.textFaint, { marginBottom: `${5 * u}px` })}>Market stall {'\u00B7'} POS</div>
+              {numBlock(false)}
+              <div data-demo="why-charge" style={{ marginTop: `${8 * u}px`, textAlign: 'center', padding: `${7 * u}px`, borderRadius: `${6 * u}px`, background: paid ? good : t.accent, color: paid ? '#fff' : onAccent, fontFamily: theme.fonts.body, fontWeight: 700, fontSize: `${8.5 * u}px`, transition: 'background 0.3s ease' }}>
+                {paid ? '\u2713 Paid' : 'Charge $12.00'}
+              </div>
+            </div>
+          </div>
+        )}
+        {dev === 'phone' && (
+          <div style={{ borderRadius: `${16 * u}px`, padding: `${4 * u}px`, background: '#2A2230', boxShadow: `0 ${10 * u}px ${28 * u}px rgba(0,0,0,0.35)`, transform: 'perspective(900px) rotateY(-8deg)' }}>
+            <div style={{ borderRadius: `${12 * u}px`, background: t.surface || t.bg, padding: `${9 * u}px ${7 * u}px ${12 * u}px` }}>
+              <div style={{ width: '30%', height: `${3 * u}px`, borderRadius: '100px', background: t.border, margin: `0 auto ${7 * u}px` }} />
+              {numBlock(false)}
+              <div style={{ marginTop: `${8 * u}px`, padding: `${5 * u}px ${6 * u}px`, borderRadius: `${6 * u}px`, background: `${t.accent}14`, border: `1px solid ${t.accent}55`, fontFamily: theme.fonts.body, fontSize: `${6 * u}px`, color: t.text, lineHeight: 1.3 }}>
+                <b>Synced</b> {'\u00B7'} same count as your desk and stall
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+
+      {/* the same number, everywhere, at once */}
+      <div style={{ position: 'absolute', left: '50%', bottom: H * 0.035, transform: 'translateX(-50%)', width: Math.min(W * 0.78, 420 * u), zIndex: 6 }}>
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ position: 'absolute', left: '8%', right: '8%', top: '50%', height: `${2 * u}px`, background: `${t.accent}44`, borderRadius: '2px' }} />
+          {pulse > 0 && (
+            <motion.span key={`pulse-${pulse}`} initial={{ left: '8%', opacity: 1 }} animate={{ left: '92%', opacity: [1, 1, 0] }} transition={{ duration: 0.9, ease: 'easeInOut' }}
+              style={{ position: 'absolute', top: '50%', width: `${8 * u}px`, height: `${8 * u}px`, marginTop: `${-4 * u}px`, marginLeft: `${-4 * u}px`, borderRadius: '50%', background: t.accent, boxShadow: `0 0 ${10 * u}px ${t.accent}` }} />
+          )}
+          {sync.map((d, i) => (
+            <motion.div key={`${d.label}-${pulse}`} animate={{ borderColor: pulse > 0 ? [t.accent, t.border] : t.border }} transition={{ duration: 1.1, delay: 0.25 + i * 0.25 }}
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: `${5 * u}px`, padding: `${5 * u}px ${10 * u}px`, borderRadius: '100px', background: t.surface || t.bg, border: `1px solid ${t.border}`, boxShadow: `0 ${3 * u}px ${10 * u}px rgba(0,0,0,0.12)` }}>
+              <d.Icon size={11 * u} color={t.accent} />
+              <span style={whyMono(theme, u, 6.5, t.textFaint)}>{d.label}</span>
+              <motion.span key={`${d.label}-${stock}`} initial={{ scale: 1.5, color: t.accent }} animate={{ scale: 1, color: t.text }} transition={{ duration: 0.5, delay: 0.25 + i * 0.25 }}
+                style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${11 * u}px` }}>{stock}</motion.span>
+            </motion.div>
           ))}
         </div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: `${6 * size}px` }}>
-        {[
-          { on: stage >= 1, Icon: Calendar, text: 'Consult · Thu 2:00 PM' },
-          { on: stage >= 2, Icon: Mail, text: 'Confirmation sent' },
-          { on: stage >= 3, Icon: CreditCard, text: 'Invoice #204 · $120 paid' },
-        ].map(({ on, Icon, text }) => (
-          <div key={text} style={{
-            display: 'flex', alignItems: 'center', gap: `${6 * size}px`, padding: `${5 * size}px ${7 * size}px`, borderRadius: `${5 * size}px`,
-            border: `1px solid ${on ? (t.positive || t.accent) : t.border}`, opacity: on ? 1 : 0.35, transition: 'all 0.4s ease',
-          }}>
-            <Icon size={9 * size} color={on ? (t.positive || t.accent) : t.textFaint} />
-            <span style={{ fontFamily: theme.fonts.body, fontSize: `${7 * size}px`, color: t.text }}>{text}</span>
-          </div>
-        ))}
+        {final && (
+          <motion.div initial={{ opacity: 0, y: 6 * u }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', marginTop: `${5 * u}px`, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: `${5 * u}px`, ...whyMono(theme, u, 7.5, good, { fontWeight: 700 }) }}>
+            <Check size={10 * u} strokeWidth={3} /> One inventory {'\u00B7'} every channel
+          </motion.div>
+        )}
       </div>
     </div>
   );
 }
-
-// Retailers — one inventory number; every channel sells from it and stays in sync.
-function WhyRetail({ theme, size }) {
-  const t = theme.colors;
-  const channels = ['Online store', 'Market stall (POS)', 'Wholesale'];
-  const [stock, setStock] = useState(54);
-  const [last, setLast] = useState(-1);
-  useEffect(() => {
-    const sale = (ms, ch) => setTimeout(() => { setStock((s) => s - 1); setLast(ch); }, ms);
-    const ids = [sale(900, 0), sale(2100, 1), sale(3300, 2)];
-    return () => ids.forEach(clearTimeout);
-  }, []);
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: `${14 * size}px`, alignItems: 'center' }}>
-      <div style={{ textAlign: 'center', padding: `${8 * size}px`, borderRadius: `${6 * size}px`, background: t.bgAlt }}>
-        <div style={whyLabel(theme, size, t)}>Whispering Moss Soap</div>
-        <motion.div key={stock} initial={{ scale: 1.25, opacity: 0.4 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.35 }}
-          style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${28 * size}px`, color: t.text, lineHeight: 1.15, margin: `${3 * size}px 0` }}>{stock}</motion.div>
-        <div style={{ fontFamily: theme.fonts.mono, fontSize: `${6.5 * size}px`, color: t.accent }}>in stock · one count</div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: `${6 * size}px` }}>
-        {channels.map((c, i) => (
-          <div key={c} style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${6 * size}px ${8 * size}px`, borderRadius: `${5 * size}px`,
-            border: `1px solid ${last === i ? t.accent : t.border}`, background: last === i ? `${t.accent}14` : 'transparent', transition: 'all 0.35s ease',
-          }}>
-            <span style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.text }}>{c}</span>
-            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: last === i ? t.accent : t.textFaint }}>
-              {last === i ? 'sale · −1' : `${stock} available`}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 
 // ── 10. live-demo — the climb ────────────────────────────────────────────────────
 // The last slide recaps the whole demo as a climb: a hiker walks a trail up the

@@ -89,7 +89,7 @@ const BASE_SLIDES = [
   {
     id: 9,
     slug: 'why',
-    autoMs: 19000,
+    autoMs: 42000,
     eyebrow: 'Why This Matters',
     headline: 'This isn\u2019t another website builder.',
     body: `${COMPANY.name} gives small businesses the infrastructure to operate online without piecing together a dozen systems \u2014 from launching a storefront to running the business behind it.`,
