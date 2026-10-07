@@ -11,17 +11,20 @@ import { Reveal, AmbientBackdrop, useSlidePace } from './motion.jsx';
 export default function SlideRenderer({ slide, visuals = {}, isFullscreen = false, animated = false, total }) {
   const { theme } = useTheme();
   const id = theme.id;
-  if (id === 'manuscript') return <ManuscriptSlide slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} />;
-  if (id === 'brutalist')  return <BrutalistSlide  slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} />;
-  if (id === 'editorial')  return <EditorialSlide  slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} />;
-  if (id === 'canadian')   return <CanadianSlide   slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} />;
+  // The self-playing demos (slides 1 and 4 especially) must run in EVERY theme while presenting,
+  // not just Showroom: phones start on the default theme, and used to show those slides frozen.
+  const autoDemo = !!(animated && isFullscreen);
+  if (id === 'manuscript') return <ManuscriptSlide slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo} />;
+  if (id === 'brutalist')  return <BrutalistSlide  slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo} />;
+  if (id === 'editorial')  return <EditorialSlide  slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo} />;
+  if (id === 'canadian')   return <CanadianSlide   slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo} />;
   if (id === 'showroom')   return <ShowroomSlide   slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} animated={animated} total={total} />;
   return null;
 }
 
 // ─── RIGHT-SIDE VISUAL SLOT ────────────────────────────────────────────────────
 
-function SlideVisual({ slideSlug, visuals, theme, isFullscreen, animated, slideId, autoMs }) {
+function SlideVisual({ slideSlug, visuals, theme, isFullscreen, animated, autoDemo = false, slideId, autoMs }) {
   // Fullscreen visuals were sized for a smaller footprint than a real
   // presentation actually gets — this one multiplier drives every mockup's
   // font/icon/spacing sizes, so raising it fixes "too small on desktop"
@@ -35,7 +38,7 @@ function SlideVisual({ slideSlug, visuals, theme, isFullscreen, animated, slideI
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
     position: 'relative', zIndex: 1,
   };
-  const visual = <Visual theme={theme} size={size} isFullscreen={isFullscreen} autoDemo={!!animated} paceMs={paceMs} />;
+  const visual = <Visual theme={theme} size={size} isFullscreen={isFullscreen} autoDemo={!!(animated || autoDemo)} paceMs={paceMs} />;
   if (!animated) return <div style={wrapStyle}>{visual}</div>;
   return <Reveal delay={0.25} y={28} scale={0.97} duration={0.8} style={wrapStyle}>{visual}</Reveal>;
 }
@@ -127,7 +130,7 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile, animated }) {
 }
 
 // ─── SHARED TWO-COLUMN / STACKED LAYOUT ───────────────────────────────────────
-function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBar, leftBorder, columns = '55% 45%', animated = false, rightBackdrop = null }) {
+function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBar, leftBorder, columns = '55% 45%', animated = false, autoDemo = false, rightBackdrop = null }) {
   const t = theme.colors;
   const isMobile = useIsMobile();
 
@@ -179,7 +182,7 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
           }}>
             {slide.tag}
           </div>
-          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} animated={animated} slideId={slide.id} autoMs={slide.autoMs} />
+          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} animated={animated} autoDemo={autoDemo} slideId={slide.id} autoMs={slide.autoMs} />
         </div>
       </div>
     );
@@ -215,22 +218,22 @@ function TwoCol({ slide, theme, visuals, isFullscreen, leftBg, rightBg, accentBa
         }}>
           {slide.tag}
         </div>
-        <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} animated={animated} slideId={slide.id} autoMs={slide.autoMs} />
+        <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} animated={animated} autoDemo={autoDemo} slideId={slide.id} autoMs={slide.autoMs} />
       </div>
     </div>
   );
 }
 
 // ── A: MANUSCRIPT ─────────────────────────────────────────────────────────────
-function ManuscriptSlide({ slide, theme, visuals, isFullscreen }) {
-  return <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen}
+function ManuscriptSlide({ slide, theme, visuals, isFullscreen, autoDemo = false }) {
+  return <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo}
     accentBar={`linear-gradient(90deg, ${theme.colors.accent}, transparent)`}
     rightBg={theme.colors.bgAlt}
   />;
 }
 
 // ── C: BRUTALIST ──────────────────────────────────────────────────────────────
-function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
+function BrutalistSlide({ slide, theme, visuals, isFullscreen, autoDemo = false }) {
   const t = theme.colors;
   const isMobile = useIsMobile();
 
@@ -266,7 +269,7 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
         </div>
         <div style={{ flex: '1 1 50%', padding: '14px 18px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', bottom: '8px', right: '12px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: '40px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
-          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} />
+          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={false} autoDemo={autoDemo} slideId={slide.id} autoMs={slide.autoMs} />
         </div>
       </div>
     );
@@ -288,7 +291,7 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
         </div>
         <div style={{ padding: isFullscreen ? '40px 48px' : '24px 24px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', bottom: '12px', right: '16px', fontFamily: theme.fonts.display, fontWeight: 900, fontSize: isFullscreen ? '72px' : '44px', color: t.bgDeep, lineHeight: 1, userSelect: 'none' }}>{slide.tag}</div>
-          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} />
+          <SlideVisual slideSlug={slide.slug} visuals={visuals} theme={theme} isFullscreen={isFullscreen} autoDemo={autoDemo} slideId={slide.id} autoMs={slide.autoMs} />
         </div>
       </div>
     </div>
@@ -296,12 +299,12 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen }) {
 }
 
 // ── D: EDITORIAL ──────────────────────────────────────────────────────────────
-function EditorialSlide({ slide, theme, visuals, isFullscreen }) {
+function EditorialSlide({ slide, theme, visuals, isFullscreen, autoDemo = false }) {
   const t = theme.colors;
   return (
     <div style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: '-20%', right: '-5%', width: '45%', height: '70%', background: `radial-gradient(ellipse, ${t.accent}06 0%, transparent 70%)`, pointerEvents: 'none' }} />
-      <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen}
+      <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo}
         leftBg={t.bg} rightBg={t.bgAlt}
         accentBar={`linear-gradient(90deg, ${t.accent}, transparent)`}
       />
@@ -310,8 +313,8 @@ function EditorialSlide({ slide, theme, visuals, isFullscreen }) {
 }
 
 // ── E: CANADIAN ───────────────────────────────────────────────────────────────
-function CanadianSlide({ slide, theme, visuals, isFullscreen }) {
-  return <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen}
+function CanadianSlide({ slide, theme, visuals, isFullscreen, autoDemo = false }) {
+  return <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo}
     leftBg={theme.colors.bg} rightBg={theme.colors.bgAlt}
     leftBorder={true}
   />;
