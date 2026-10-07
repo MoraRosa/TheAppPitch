@@ -22,6 +22,13 @@ import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, EMBER_MOSS_JOURNAL, EMBER_MOSS_T
 
 
 
+// Phone debugging aid: open the site with ?demoDebug in the address (e.g. .../#/pitch/demo?demoDebug)
+// and slides 1 and 4 print what their auto-tour is doing in a small green strip.
+const DEMO_DEBUG = typeof window !== 'undefined' && /demoDebug/.test(window.location.href);
+function DemoDebugChip({ text }) {
+  return <div style={{ position: 'absolute', left: 4, top: 4, right: 4, zIndex: 60, pointerEvents: 'none', background: 'rgba(0,0,0,0.8)', color: '#7CFFB2', fontFamily: 'monospace', fontSize: 10, lineHeight: 1.3, padding: '3px 6px', borderRadius: 4, wordBreak: 'break-all' }}>demo: {text || 'mounted'}</div>;
+}
+
 // ── 1. welcome — hero storefront frame ──────────────────────────────────────────
 // Ember & Moss is the example brand shown throughout the storefront-facing
 // slides — drop the real photos into /public/demo-assets/ember-moss/ (see
@@ -55,21 +62,30 @@ function MockupWelcome({ theme, size, isFullscreen, autoDemo = false, paceMs = 2
   const liveRef = useRef(true);
   const cursorRef = useRef(null);
   const contactRef = useRef(null);
-  const cancelAuto = () => { liveRef.current = false; cursorRef.current?.hide(); };
+  const [dbg, setDbg] = useState('');
+  const note = (m) => { if (DEMO_DEBUG) setDbg(m); };
+  const cancelAuto = (why) => { liveRef.current = false; cursorRef.current?.hide(); note(`stopped: ${typeof why === 'string' ? why : 'tap or click'}`); };
 
   useEffect(() => {
-    if (!autoDemo || !slideEntered) return;
+    if (!autoDemo || !slideEntered) { note(`not running: autoDemo=${autoDemo} entered=${slideEntered}`); return; }
     liveRef.current = true;
     setView({ type: 'home' }); setCart({});
     const frame = frameRef.current;
     const isLive = () => liveRef.current;
     const k = paceMs / 36000; // baseline tour (incl. contact form) is timed against a 36s slide
     const wait = (ms) => sleep(ms * k);
-    const glideTo = (to, ms) => glide(frameRef.current, to, Math.max(900, ms * k), isLive);
-    const click = (selector, onClick) => pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs: Math.max(500, 800 * k), onClick });
-    const stop = () => cancelAuto();
+    const glideTo = (to, ms) => { note(`scroll ${to}`); return glide(frameRef.current, to, Math.max(900, ms * k), isLive); };
+    const click = async (selector, onClick) => {
+      note(`click ${selector}`);
+      const ok = await pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs: Math.max(500, 800 * k), onClick });
+      if (!ok) note(`ended at ${selector} (${isLive() ? 'target not found' : 'cancelled'})`);
+      return ok;
+    };
+    const stop = () => cancelAuto('wheel scroll');
+    const born = performance.now();
+    const onTouchMove = () => { if (performance.now() - born > 1500) cancelAuto('finger scroll'); };
     frame?.addEventListener('wheel', stop, { passive: true });
-    frame?.addEventListener('touchstart', stop, { passive: true });
+    frame?.addEventListener('touchmove', onTouchMove, { passive: true });
 
     // click a form field, then type into it like a person would
     const fill = async (field, text, cps) => {
@@ -110,12 +126,12 @@ function MockupWelcome({ theme, size, isFullscreen, autoDemo = false, paceMs = 2
     return () => {
       liveRef.current = false;
       frame?.removeEventListener('wheel', stop);
-      frame?.removeEventListener('touchstart', stop);
+      frame?.removeEventListener('touchmove', onTouchMove);
     };
   }, [autoDemo, slideEntered, paceMs]);
 
   return (
-    <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill scrollRef={frameRef} overlay={<AutoCursor ref={cursorRef} theme={theme} size={size} />}>
+    <DeviceFrame theme={theme} size={size} url={EMBER_MOSS_BRAND.url} fill scrollRef={frameRef} overlay={<><AutoCursor ref={cursorRef} theme={theme} size={size} />{DEMO_DEBUG && <DemoDebugChip text={dbg} />}</>}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${12 * size}px` }}>
         <button onClick={() => { cancelAuto(); goHome(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${13 * size}px`, color: t.text }}>Ember &amp; Moss</button>
         <div style={{ display: 'flex', gap: `${10 * size}px`, alignItems: 'center' }}>
@@ -1124,10 +1140,12 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
   const liveRef = useRef(true);
   const cursorRef = useRef(null);
   const checkoutRef = useRef(null);
-  const cancelAuto = () => { liveRef.current = false; cursorRef.current?.hide(); };
+  const [dbg, setDbg] = useState('');
+  const note = (m) => { if (DEMO_DEBUG) setDbg(m); };
+  const cancelAuto = (why) => { liveRef.current = false; cursorRef.current?.hide(); note(`stopped: ${typeof why === 'string' ? why : 'tap or click'}`); };
   useEffect(() => { if (frameRef.current) frameRef.current.scrollTop = 0; }, [view]);   // every new page starts at the top
   useEffect(() => {
-    if (!autoDemo || !slideEntered) return;
+    if (!autoDemo || !slideEntered) { note(`not running: autoDemo=${autoDemo} entered=${slideEntered}`); return; }
     liveRef.current = true;
     setView('shop'); setCart({});
     const frame = frameRef.current;
@@ -1136,11 +1154,18 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
     // slide actually gets (real narration length once recorded, else autoMs).
     const k = paceMs / 46000;
     const wait = (ms) => sleep(ms * k);
-    const glideTo = (to, ms) => glide(frameRef.current, to, Math.max(900, ms * k), isLive);
-    const click = (selector, onClick) => pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs: Math.max(500, 800 * k), onClick });
-    const stop = () => cancelAuto();
+    const glideTo = (to, ms) => { note(`scroll ${to}`); return glide(frameRef.current, to, Math.max(900, ms * k), isLive); };
+    const click = async (selector, onClick) => {
+      note(`click ${selector}`);
+      const ok = await pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs: Math.max(500, 800 * k), onClick });
+      if (!ok) note(`ended at ${selector} (${isLive() ? 'target not found' : 'cancelled'})`);
+      return ok;
+    };
+    const stop = () => cancelAuto('wheel scroll');
+    const born = performance.now();
+    const onTouchMove = () => { if (performance.now() - born > 1500) cancelAuto('finger scroll'); };
     frame?.addEventListener('wheel', stop, { passive: true });
-    frame?.addEventListener('touchstart', stop, { passive: true });
+    frame?.addEventListener('touchmove', onTouchMove, { passive: true });
 
     // click a checkout field, then type into it like a person would
     const fill = async (field, text, cps) => {
@@ -1197,7 +1222,7 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
     return () => {
       liveRef.current = false;
       frame?.removeEventListener('wheel', stop);
-      frame?.removeEventListener('touchstart', stop);
+      frame?.removeEventListener('touchmove', onTouchMove);
     };
   }, [autoDemo, slideEntered, paceMs]);
 
@@ -1207,7 +1232,7 @@ function MockupCustomer({ theme, size, autoDemo = false, paceMs = 20000 }) {
   const isProductView = typeof view === 'object';
 
   return (
-    <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/${view === 'checkout' ? 'checkout' : view === 'cart' ? 'cart' : 'shop'}`} fill scrollRef={frameRef} overlay={<AutoCursor ref={cursorRef} theme={theme} size={size} />}>
+    <DeviceFrame theme={theme} size={size} url={`${EMBER_MOSS_BRAND.url}/${view === 'checkout' ? 'checkout' : view === 'cart' ? 'cart' : 'shop'}`} fill scrollRef={frameRef} overlay={<><AutoCursor ref={cursorRef} theme={theme} size={size} />{DEMO_DEBUG && <DemoDebugChip text={dbg} />}</>}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${10 * size}px` }}>
         <button data-demo="nav-shop" onClick={() => { cancelAuto(); setView('shop'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</button>
         <button data-demo="nav-cart" onClick={() => { cancelAuto(); setView(view === 'cart' ? 'shop' : 'cart'); }} style={{
@@ -1437,7 +1462,7 @@ function MockupMerchant({ theme, size, paceMs = 18000 }) {
     const click = (selector, onClick) => pointAndClick({ cursorRef, frameRef, selector, isLive, moveMs: Math.max(500, 800 * k), onClick });
     const stop = () => cancelAuto();
     frame?.addEventListener('wheel', stop, { passive: true });
-    frame?.addEventListener('touchstart', stop, { passive: true });
+    frame?.addEventListener('touchmove', stop, { passive: true });
 
     (async () => {
       await wait(900);
@@ -1462,7 +1487,7 @@ function MockupMerchant({ theme, size, paceMs = 18000 }) {
     return () => {
       liveRef.current = false;
       frame?.removeEventListener('wheel', stop);
-      frame?.removeEventListener('touchstart', stop);
+      frame?.removeEventListener('touchmove', stop);
     };
   }, [slideEntered, paceMs]);
   const goToTab = (i) => { cancelAuto(); setHot(null); setTab(i); };
@@ -1647,7 +1672,7 @@ function MockupThemeSwitch({ theme, size, paceMs = 18000 }) {
     };
     const stop = () => cancelAuto();
     frame?.addEventListener('wheel', stop, { passive: true });
-    frame?.addEventListener('touchstart', stop, { passive: true });
+    frame?.addEventListener('touchmove', stop, { passive: true });
 
     (async () => {
       await sleep(900 * k);
@@ -1669,7 +1694,7 @@ function MockupThemeSwitch({ theme, size, paceMs = 18000 }) {
     return () => {
       liveRef.current = false;
       frame?.removeEventListener('wheel', stop);
-      frame?.removeEventListener('touchstart', stop);
+      frame?.removeEventListener('touchmove', stop);
     };
   }, [slideEntered, paceMs]);
   const pickTheme = (candidate) => { cancelAuto(); setMt(candidate); };
@@ -2828,7 +2853,7 @@ function WhyService({ theme, u, box, k, cursorRef, wrapRef }) {
       <motion.div initial={{ opacity: 0, y: 18 * u, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 160, damping: 18, delay: 0.2 }}
         style={{ position: 'absolute', left: cardL, top: cardT, width: cardW, height: cardH, zIndex: 2, borderRadius: `${10 * u}px`, background: t.surface || t.bg, border: `1px solid ${t.border}`, boxShadow: `0 ${10 * u}px ${28 * u}px rgba(0,0,0,0.16)`, overflow: 'hidden' }}>
         <div style={{ height: headH, display: 'flex', alignItems: 'center', background: t.bgAlt, borderBottom: `1px solid ${t.border}`, position: 'relative' }}>
-          <div style={{ width: gut, display: 'flex', justifyContent: 'center' }}><Calendar size={11 * u} color={t.accent} /></div>
+          <div style={{ width: gut, display: 'flex', justifyContent: 'center' }}><div style={{ width: `${Math.min(gut * 0.8, 20 * u)}px`, height: `${Math.min(gut * 0.8, 20 * u)}px` }}><WhyImg name="calendar" Fallback={Calendar} t={t} /></div></div>
           {days.map((d) => <div key={d} style={{ width: colW, textAlign: 'center', ...whyMono(theme, u, 7.5, t.textMuted, { fontWeight: 700 }) }}>{d}</div>)}
         </div>
         {hours.map((h, r) => (
@@ -3254,6 +3279,11 @@ function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
               style={{ position: 'absolute', left: apex[0], top: apex[1] - 44 * u, transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: `${6 * u}px`, padding: `${4 * u}px ${12 * u}px`, borderRadius: '100px', background: t.accent, color: onAccent, boxShadow: `0 ${4 * u}px ${14 * u}px ${t.accent}66`, whiteSpace: 'nowrap', ...mono(8.5, onAccent, { fontWeight: 700 }) }}>
               <motion.span animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 1.4 }} style={{ width: `${6 * u}px`, height: `${6 * u}px`, borderRadius: '50%', background: '#3DDC84' }} />
               {COMPANY.name} {'\u00B7'} live now
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, scale: 0.3, y: 10 * u }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 12, delay: tSummit + 0.7 }}
+              style={{ position: 'absolute', left: apex[0] + 20 * u, top: apex[1] - 22 * u, width: `${40 * u}px`, height: `${46 * u}px`, zIndex: 4 }}>
+              <WhyImg name="ember-dragon" Fallback={Sparkles} t={t} />
             </motion.div>
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.6 }} style={{ position: 'absolute', left: 14 * u, top: 12 * u, ...mono(8, t.accent, { fontWeight: 700 }) }}>
