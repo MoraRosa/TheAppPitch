@@ -2797,7 +2797,7 @@ function WhyService({ theme, u, box, k, cursorRef, wrapRef }) {
   const [req, setReq] = useState(false), [accepted, setAccepted] = useState(false), [booked, setBooked] = useState(false);
   const [conf, setConf] = useState(false), [paid, setPaid] = useState(false), [resched, setResched] = useState(false);
   const [lifted, setLifted] = useState(false), [fit, setFit] = useState({ c: 1, r: 1 });
-  const [zoom, setZoom] = useState(false), [closed, setClosed] = useState(false), [blocked, setBlocked] = useState(false), [summary, setSummary] = useState(false);
+  const [zoom, setZoom] = useState(false), [zoomPop, setZoomPop] = useState(false), [closed, setClosed] = useState(false), [blocked, setBlocked] = useState(false), [summary, setSummary] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -2820,8 +2820,10 @@ function WhyService({ theme, u, box, k, cursorRef, wrapRef }) {
       if (!isLive()) return;
       setLifted(false); setResched(true);
       await w(600); cursorRef.current?.hide(); if (!isLive()) return;
-      setZoom(true);
-      await w(1300); if (!isLive()) return;
+      setZoom(true); setZoomPop(true);
+      await w(1400); if (!isLive()) return;
+      setZoomPop(false);
+      await w(400); if (!isLive()) return;
       setClosed(true);
       await w(1200); if (!isLive()) return;
       setBlocked(true);
@@ -2907,6 +2909,15 @@ function WhyService({ theme, u, box, k, cursorRef, wrapRef }) {
         </motion.div>
       )}
 
+      {/* the team call starting */}
+      {zoomPop && (
+        <motion.div initial={{ opacity: 0, scale: 0.4, y: 14 * u }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 14 }}
+          style={{ position: 'absolute', zIndex: 7, left: cardL + cx(2) - colW * 0.05, top: cardT + headH + rowH * 0.15, width: colW * 1.7 }}>
+          <WhyImg name="video-call" Fallback={Video} t={t} />
+          <div style={{ position: 'absolute', left: '50%', bottom: '-6%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', padding: `${3 * u}px ${9 * u}px`, borderRadius: '100px', background: '#2D8CFF', color: '#fff', boxShadow: `0 ${3 * u}px ${10 * u}px rgba(0,0,0,0.25)`, ...whyMono(theme, u, 6.5, '#fff', { fontWeight: 700 }) }}>Team sync {'\u00B7'} starting</div>
+        </motion.div>
+      )}
+
       {/* "not available" when a client tries the holiday */}
       {blocked && (
         <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: [0, 1, 1, 1, 1], scale: 1, x: [0, -7 * u, 7 * u, -5 * u, 5 * u, 0] }} transition={{ duration: 0.8 }}
@@ -2917,8 +2928,8 @@ function WhyService({ theme, u, box, k, cursorRef, wrapRef }) {
 
       {/* what happened, in one line each */}
       <div style={{ position: 'absolute', left: W * 0.03, right: W * 0.03, bottom: H * 0.03, zIndex: 6, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: `${5 * u}px` }}>
-        {chip(conf, <><div style={{ width: `${16 * u}px`, height: `${16 * u}px` }}><WhyImg name="envelope" Fallback={Mail} t={t} /></div>Confirmation sent</>)}
-        {chip(paid, <><div style={{ width: `${16 * u}px`, height: `${16 * u}px` }}><WhyImg name="invoice-paid" Fallback={Receipt} t={t} /></div>Invoice #204 {'\u00B7'} $120 paid</>)}
+        {chip(conf, <><div style={{ width: `${22 * u}px`, height: `${22 * u}px` }}><WhyImg name="envelope" Fallback={Mail} t={t} /></div>Confirmation sent</>)}
+        {chip(paid, <><div style={{ width: `${22 * u}px`, height: `${22 * u}px` }}><WhyImg name="invoice-paid" Fallback={Receipt} t={t} /></div>Invoice #204 {'\u00B7'} $120 paid</>)}
         {chip(resched, <><RefreshCw size={10 * u} color={good} />Rescheduled {'\u00B7'} client notified</>)}
         {chip(summary, <><Check size={10 * u} color={good} strokeWidth={3} />3 booked {'\u00B7'} 1 rescheduled {'\u00B7'} $120 paid {'\u00B7'} one login</>)}
       </div>
@@ -2972,11 +2983,11 @@ function WhyRetail({ theme, u, box, k, cursorRef, wrapRef }) {
   const dw = dev === 'laptop' ? Math.min(W * (compact ? 0.5 : 0.4), 300 * u) : dev === 'tablet' ? Math.min(W * (compact ? 0.42 : 0.32), 230 * u) : Math.min(W * 0.2, 112 * u);
   const sync = [{ Icon: Laptop, label: 'Desk' }, { Icon: Store, label: 'Stall' }, { Icon: Smartphone, label: 'Phone' }];
 
-  const numBlock = (big) => (
+  const numBlock = (big, short) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * u}px` }}>
       <div style={{ width: `${(big ? 26 : 20) * u}px`, height: `${(big ? 26 : 20) * u}px`, flexShrink: 0 }}><WhyImg name="soap-bar" Fallback={Droplets} t={t} /></div>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${(big ? 8 : 7) * u}px`, color: t.text, whiteSpace: 'nowrap' }}>Whispering Moss Soap</div>
+      <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+        <div style={{ fontFamily: theme.fonts.body, fontWeight: 600, fontSize: `${(big ? 8 : 7) * u}px`, color: t.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{short ? 'Moss Soap' : 'Whispering Moss Soap'}</div>
         <motion.div key={stock} initial={{ scale: 1.35, color: t.accent }} animate={{ scale: 1, color: t.text }} transition={{ duration: 0.5 }} style={{ fontFamily: theme.fonts.display, fontWeight: 800, fontSize: `${(big ? 22 : 17) * u}px`, lineHeight: 1.05, transformOrigin: 'left center' }}>{stock}</motion.div>
         <div style={whyMono(theme, u, 5.5, t.textFaint)}>in stock</div>
       </div>
@@ -3051,7 +3062,7 @@ function WhyRetail({ theme, u, box, k, cursorRef, wrapRef }) {
           <div style={{ borderRadius: `${16 * u}px`, padding: `${4 * u}px`, background: '#2A2230', boxShadow: `0 ${10 * u}px ${28 * u}px rgba(0,0,0,0.35)`, transform: 'perspective(900px) rotateY(-8deg)' }}>
             <div style={{ borderRadius: `${12 * u}px`, background: t.surface || t.bg, padding: `${9 * u}px ${7 * u}px ${12 * u}px` }}>
               <div style={{ width: '30%', height: `${3 * u}px`, borderRadius: '100px', background: t.border, margin: `0 auto ${7 * u}px` }} />
-              {numBlock(false)}
+              {numBlock(false, true)}
               <div style={{ marginTop: `${8 * u}px`, padding: `${5 * u}px ${6 * u}px`, borderRadius: `${6 * u}px`, background: `${t.accent}14`, border: `1px solid ${t.accent}55`, fontFamily: theme.fonts.body, fontSize: `${6 * u}px`, color: t.text, lineHeight: 1.3 }}>
                 <b>Synced</b> {'\u00B7'} same count as your desk and stall
               </div>
