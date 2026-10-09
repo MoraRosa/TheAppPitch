@@ -105,7 +105,7 @@ function PitchDeckPageInner({ deck }) {
               onMouseEnter={e => !isMobile && (e.currentTarget.style.borderColor = t.accent)}
               onMouseLeave={e => !isMobile && (e.currentTarget.style.borderColor = t.border)}
             >
-              <SlideRenderer slide={slide} visuals={deck.visuals} isFullscreen={false} total={deck.slides.length} />
+              <SlideRenderer slide={slide} visuals={deck.visuals} isFullscreen={false} previewDemo={!!deck.animated} total={deck.slides.length} />
             </motion.button>
           ))}
         </div>

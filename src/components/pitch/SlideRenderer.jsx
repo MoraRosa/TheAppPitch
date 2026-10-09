@@ -8,17 +8,18 @@ import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { COMPANY } from '../../data/config.js';
 import { Reveal, AmbientBackdrop, useSlidePace } from './motion.jsx';
 
-export default function SlideRenderer({ slide, visuals = {}, isFullscreen = false, animated = false, total }) {
+export default function SlideRenderer({ slide, visuals = {}, isFullscreen = false, animated = false, previewDemo = false, total }) {
   const { theme } = useTheme();
   const id = theme.id;
   // The self-playing demos (slides 1 and 4 especially) must run in EVERY theme while presenting,
   // not just Showroom: phones start on the default theme, and used to show those slides frozen.
-  const autoDemo = !!(animated && isFullscreen);
+  // previewDemo: the slide-grid thumbnails may also play the self-running tours (slides 1 and 4).
+  const autoDemo = !!(animated && isFullscreen) || !!previewDemo;
   if (id === 'manuscript') return <ManuscriptSlide slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo} />;
   if (id === 'brutalist')  return <BrutalistSlide  slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo} />;
   if (id === 'editorial')  return <EditorialSlide  slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo} />;
   if (id === 'canadian')   return <CanadianSlide   slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} autoDemo={autoDemo} />;
-  if (id === 'showroom')   return <ShowroomSlide   slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} animated={animated} total={total} />;
+  if (id === 'showroom')   return <ShowroomSlide   slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} animated={animated} autoDemo={autoDemo} total={total} />;
   return null;
 }
 
@@ -324,7 +325,7 @@ function CanadianSlide({ slide, theme, visuals, isFullscreen, autoDemo = false }
 // Visual-forward ratio (42/58) — the mockup is the point of this deck, so it
 // gets more room than the copy. A live-dot badge replaces the sharp accent
 // bars the investor themes use.
-function ShowroomSlide({ slide, theme, visuals, isFullscreen, animated = false, total }) {
+function ShowroomSlide({ slide, theme, visuals, isFullscreen, animated = false, autoDemo = false, total }) {
   const t = theme.colors;
   const isMobile = useIsMobile();
 
@@ -348,12 +349,12 @@ function ShowroomSlide({ slide, theme, visuals, isFullscreen, animated = false, 
         <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen}
           leftBg={t.bg} rightBg={t.bgAlt}
           columns={isMobile ? undefined : '42% 58%'}
-          animated={animated && isFullscreen}
+          animated={animated && isFullscreen} autoDemo={autoDemo}
           rightBackdrop={animated && isFullscreen ? <AmbientBackdrop theme={theme} /> : null}
         />
       </div>
     );
   }
 
-  return <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} leftBg={t.bg} rightBg={t.bgAlt} animated={animated && isFullscreen} />;
+  return <TwoCol slide={slide} theme={theme} visuals={visuals} isFullscreen={isFullscreen} leftBg={t.bg} rightBg={t.bgAlt} animated={animated && isFullscreen} autoDemo={autoDemo} />;
 }
