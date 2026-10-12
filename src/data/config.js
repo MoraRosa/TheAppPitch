@@ -3,7 +3,7 @@
 // To rename the app, change COMPANY.name here; it updates everywhere.
 
 import {
-  PLANS, TRANSACTION_FEE, ARPU_TODAY, ARPU_MIX, ASK, TRACTION_FACTS, BUILD,
+  PLANS, FREE_PLAN, TRIAL, THEMES, TRANSACTION_FEE, ARPU_TODAY, ARPU_MIX, ASK, TRACTION_FACTS, BUILD,
   UNIT_ECON_MODEL, MARKET_FACTS, USE_OF_FUNDS, MODULES, stageLadder,
 } from './facts.js';
 
@@ -43,6 +43,9 @@ export const TRACTION = {
 // ── Pricing ───────────────────────────────────────────────────────────────────
 const plan = id => PLANS.find(p => p.id === id);
 export const PRICING = {
+  free:           FREE_PLAN.name,
+  trialDays:      TRIAL.days,
+  trialPlans:     TRIAL.plans,
   starter:        plan('starter').display,
   growth:         plan('grow').display,
   pro:            plan('pro').display,
@@ -100,8 +103,9 @@ export const FUNDING = {
 // ── Platform / Tech ───────────────────────────────────────────────────────────
 export const PLATFORM = {
   stack:      ['React', 'Supabase', 'Stripe Connect', 'Vercel', 'Fastify'],
-  themes:     5,
-  themeNames: ['Manuscript', 'Brutalist', 'Editorial', 'Canadian', 'BARE'],
+  themes:     THEMES.liveCount,
+  themeNames: THEMES.storefront.map(t => t.name),
+  themeInProgress: THEMES.inProgress,
   modules:    MODULES,
   repoBase:   'https://github.com/MoraRosa',
 };

@@ -12,7 +12,20 @@
 // ── Product status (confirmed) ────────────────────────────────────────────────
 export const PRODUCT = {
   stage: 'MVP',
-  liveNow: ['Storefront', 'Cart & checkout', 'Shipping (connected)', 'Scheduling', 'Stripe Connect payments', 'Transaction fees'],
+  liveNow: ['Storefront', 'Cart & checkout', 'Shipping (connected)', 'Scheduling', 'Stripe Connect payments', 'Transaction fees', 'Custom domains'],
+};
+
+// Themes (confirmed). Each is a fully unique experience: no shared UI primitives or visual leakage between themes.
+// Storefront themes and admin themes are separate sets; the 5th storefront theme is in progress.
+export const THEMES = {
+  liveCount: 4,
+  inProgress: ['Soft Matter (claymorphism)'],
+  storefront: [
+    { name: 'Soft Pink',  for: 'beauty, skincare, lifestyle' },
+    { name: 'Editorial',  for: 'luxury, fashion, niche publishing' },
+    { name: 'Brutalism',  for: 'challenger brands: beauty, streetwear, snacks, tech accessories' },
+    { name: 'Axiom',      for: 'software, hardware, tools, design-forward brands' },
+  ],
 };
 
 // ── Traction (confirmed) ──────────────────────────────────────────────────────
@@ -46,7 +59,10 @@ export const PLANS = [
   { id: 'grow',    name: 'Grow',    price: 49.99, display: '$50' }, // show as $50
   { id: 'pro',     name: 'Pro',     price: 100,   display: '$100' },
 ];
-export const TRANSACTION_FEE = '0.5–1%'; // carried over from the earlier deck: confirm the live rate
+export const TRANSACTION_FEE = '0.5–1%'; // confirmed by Hikmah
+// Free plan (minimal storage) exists. Grow and Pro include a 3-day free trial.
+export const FREE_PLAN = { name: 'Free', price: 0, note: 'minimal storage' };
+export const TRIAL = { days: 3, plans: ['Grow', 'Pro'] };
 export const ARPU_TODAY = 30; // real: both paying merchants are on Starter
 // Illustrative mix: 60% Starter / 30% Grow / 10% Pro = $42.997, shown as $43
 export const ARPU_MIX = Math.round(0.6 * 30 + 0.3 * 49.99 + 0.1 * 100);
@@ -159,10 +175,9 @@ export const WORDING = {
 // ── Open questions (nothing below is assumed in the content) ──────────────────
 export const OPEN_QUESTIONS = [
   'Both paying merchants: consent to be shown on slides?',
-  'Live transaction fee rate (0.5-1% is carried over from the old deck).',
-  'Free-trial length (14 days was in the old plan; not re-confirmed).',
   'Source or removal of the $14B global SaaS figure.',
-  'Roadmap items still ahead: BARE theme, custom domains, GST/HST tax engine, extra themes, AI agent API.',
-  'API endpoint and table counts (23+, 21+) still accurate?',
+  'Roadmap items still ahead: GST/HST tax engine, 5th storefront theme (Soft Matter), AI agent API, US expansion.',
+  'Admin themes: how many exist today?',
+  'API endpoint and table counts (23+, 21+): re-count from the code, or drop them (the audience is non-technical).',
   'Grant use-of-funds split (amounts were not specified).',
 ];

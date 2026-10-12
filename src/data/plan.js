@@ -2,7 +2,7 @@
 // Single source of truth: all names/numbers come from config.js
 // To rename the app, update COMPANY.name in config.js — it updates everywhere.
 
-import { COMPANY, FOUNDER_INFO, TRACTION, PRICING, MARKET, STAGES, FUNDING, UNIT_ECON } from './config.js';
+import { COMPANY, FOUNDER_INFO, TRACTION, PRICING, MARKET, STAGES, FUNDING, UNIT_ECON, PLATFORM } from './config.js';
 import { WORDING } from './facts.js';
 
 const usd = n => `$${Math.round(n).toLocaleString()}`;
@@ -62,7 +62,7 @@ The result: small makers are overpaying for tools that were not designed for the
 
 When a merchant signs up for ${COMPANY.name}, they choose their business type, pick a theme, and are operational without setting up a single integration.
 
-The storefront is a fully themed customer-facing store powered by a curated theme engine — five radically isolated design universes. These are not color swaps. Each theme has its own typography, spacing, layout philosophy, animation system, component structure, and interaction design.
+The storefront is a fully themed customer-facing store powered by a curated theme engine — ${PLATFORM.themes} live, radically isolated design universes (${PLATFORM.themeNames.join(', ')}), with a fifth in progress. These are not color swaps. Each theme has its own typography, spacing, layout philosophy, animation system, component structure, and interaction design.
 
 The merchant back-office includes products, orders, and inventory; Pulse for ingredient management, supplier tracking, batch costing, and QuickBooks sync; Constellation CRM for customer profiles and engagement analytics; Compass for task and project management; and complete content management for blog, FAQ, legal, newsletter, emails, reviews, and messages.
 
@@ -81,7 +81,7 @@ The module system means merchants enable only what their business needs. The sid
       { type: 'label', text: 'How It Will Be Used' },
       { type: 'text', text: `Merchants access ${COMPANY.name} through a web browser on desktop or mobile. Buyers access the merchant's public storefront through a custom-branded URL. No app install required for either party. Merchants configure their store once and operate continuously from the dashboard.` },
       { type: 'label', text: 'How Price Is Established' },
-      { type: 'text', text: `Pricing is based on a tiered subscription model anchored to competitor pricing and the value of tools replaced. Plans are Starter ${PRICING.starter}, Grow ${PRICING.growth}, and Pro ${PRICING.pro} per month, set against the cost of the separate tools a merchant would otherwise stack together. The first paying merchants are the first real validation of that pricing.` },
+      { type: 'text', text: `Pricing is based on a tiered subscription model anchored to competitor pricing and the value of tools replaced. There is a free plan with minimal storage, and paid plans of Starter ${PRICING.starter}, Grow ${PRICING.growth}, and Pro ${PRICING.pro} per month. Grow and Pro include a ${PRICING.trialDays}-day free trial. Plans are set against the cost of the separate tools a merchant would otherwise stack together. The first paying merchants are the first real validation of that pricing.` },
       { type: 'label', text: 'Competitive Advantages' },
       { type: 'bullets', items: [
         `Production costing built in — Shopify has no native costing, so makers run a second app and keep two systems in sync`,
@@ -113,7 +113,7 @@ The module system means merchants enable only what their business needs. The sid
     number: "07",
     title: "Business Model",
     get content() {
-      return `Primary revenue comes from three subscription plans: Starter at ${PRICING.starter} per month, Grow at ${PRICING.growth} per month, and Pro at ${PRICING.pro} per month. Subscription revenue today is ${usd(TRACTION.mrr)} per month from ${TRACTION.paidUsers} paying merchants.
+      return `Primary revenue comes from subscription plans: a Free plan with minimal storage, then Starter at ${PRICING.starter} per month, Grow at ${PRICING.growth} per month, and Pro at ${PRICING.pro} per month. Grow and Pro include a ${PRICING.trialDays}-day free trial. Subscription revenue today is ${usd(TRACTION.mrr)} per month from ${TRACTION.paidUsers} paying merchants.
 
 Secondary revenue comes from a platform transaction fee (${PRICING.transactionFee}) on each sale processed through Stripe Connect — the same model as Shopify, and one that aligns platform revenue directly with merchant success. Transaction fees are live and tracked separately from subscriptions.
 
@@ -291,11 +291,11 @@ What is live: storefront, cart and checkout, connected shipping, scheduling, and
     id: "roadmap",
     number: "13",
     title: "Product Roadmap",
-    content: `Live now: multi-tenant architecture, dual authentication, REST API, merchant dashboard, storefront, cart and checkout, shipping, scheduling, Stripe Connect payments, Costing, Customers, Tasks, Email, and all content modules.
+    content: `Live now: ${PLATFORM.themes} storefront themes, custom domains, multi-tenant architecture, dual authentication, REST API, merchant dashboard, storefront, cart and checkout, shipping, scheduling, Stripe Connect payments, Costing, Customers, Tasks, Email, and all content modules.
 
 Growth stages (paying merchants): Stage 1 is ${n(ST1.payingUsers)}, Stage 2 is ${n(ST2.payingUsers)}, Stage 3 is ${n(ST3.payingUsers)}, and then we hire for marketing and branding.
 
-Product next: custom domain support, Canadian GST/HST tax engine, the BARE theme, and the remaining themes.
+Product next: a fifth storefront theme (Soft Matter, in progress) and the Canadian GST/HST tax engine. Custom domains are already live.
 
 Later: AI Agent API enabling ChatGPT or Claude to search inventory and place orders, an internal AI merchant assistant, and US market entry.`,
   },
