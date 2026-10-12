@@ -6,7 +6,7 @@ import { PLAN_SECTIONS } from '../data/plan.js';
 import { SLIDES } from '../data/slides.js';
 import { MILESTONES, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL, COMPETITOR_COST_STACK, MERCHANT_GROWTH } from '../data/financials.js';
 import { FOUNDER } from '../data/founder.js';
-import { COMPANY, COMPETITORS, FOUNDER_INFO, FUNDING, TRACTION, STAGES } from '../data/config.js';
+import { COMPANY, COMPETITORS, FOUNDER_INFO, FUNDING, TRACTION, STAGES, MARKET } from '../data/config.js';
 
 function hexToRgb(hex) {
   const c = (hex || '#888888').replace('#', '');
@@ -456,7 +456,7 @@ function drawCoverBold(doc, theme, meta) {
     [
       [`${TRACTION.activeUsers}`, 'ACTIVE USERS'],
       [`$${TRACTION.mrr}`, 'MRR TODAY'],
-      ['$14B+', 'GLOBAL TAM'],
+      [MARKET.globalPlatform2025.replace(' billion','B'), 'GLOBAL E-COM 2025'],
     ].forEach(([val, label], i) => {
       const sx = 14 + i * 62;
       doc.setFontSize(22);
@@ -552,7 +552,7 @@ function drawCoverBold(doc, theme, meta) {
     [
       [`${TRACTION.activeUsers}`, 'ACTIVE USERS'],
       [`$${TRACTION.mrr}`, 'MRR TODAY'],
-      ['$14B+', 'GLOBAL TAM'],
+      [MARKET.globalPlatform2025.replace(' billion','B'), 'GLOBAL E-COM 2025'],
     ].forEach(([val, label], i) => {
       const sy = 108 + i * 28;
       doc.setFontSize(20);
@@ -620,7 +620,7 @@ function drawCoverBold(doc, theme, meta) {
     [
       [`${TRACTION.activeUsers}`, 'ACTIVE USERS'],
       [`$${TRACTION.mrr}`, 'MRR TODAY'],
-      ['$14B+', 'GLOBAL TAM'],
+      [MARKET.globalPlatform2025.replace(' billion','B'), 'GLOBAL E-COM 2025'],
     ].forEach(([val, label], i) => {
       const sx = 14 + i * 62;
       doc.setFontSize(22);
@@ -731,7 +731,7 @@ function drawCoverEditorial(doc, theme, meta) {
   [
     [`${TRACTION.activeUsers}`, 'ACTIVE USERS'],
     [`$${TRACTION.mrr}`, 'MRR TODAY'],
-    ['$14B+', 'GLOBAL TAM'],
+    [MARKET.globalPlatform2025.replace(' billion','B'), 'GLOBAL E-COM 2025'],
   ].forEach(([val, label], i) => {
     const sx = 14 + i * 62;
     doc.setFontSize(20);

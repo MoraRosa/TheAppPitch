@@ -7,6 +7,7 @@ import { STAGE_TARGETS, WORDING } from './facts.js';
 
 const [S1, S2, S3] = STAGE_TARGETS.map(s => s.payingUsers.toLocaleString());
 const fmtK = n => `$${Math.round(n / 1000)}K`;
+const n = v => v.toLocaleString();
 
 export const SLIDES = [
   {
@@ -52,10 +53,10 @@ export const SLIDES = [
     id: 5,
     slug: "market",
     eyebrow: "Market Opportunity",
-    headline: `${MARKET.canadianSmallBiz} small employer businesses in Canada. ${MARKET.usSmallBiz} small businesses in the US.`,
-    body: `Small businesses are ${MARKET.canadianSmallShare} of Canadian employer businesses (${MARKET.canadianSmallBizNote}). In the US, ${MARKET.usNonEmployerNote}. ${COMPANY.name} starts with the makers and service providers who have been underserved by every tool built for someone else.`,
-    stat: { value: MARKET.canadianSmallShare, label: "of Canadian employer businesses are small (1–99 staff)" },
-    speakerNote: "Stay focused on the maker segment. That is the wedge. Sources: ISED Key Small Business Statistics 2024; SBA Office of Advocacy 2026.",
+    headline: `${MARKET.canadianSmallBiz} small employer businesses in Canada, plus ${MARKET.canadianNonEmployer} sole operators.`,
+    body: `Canada has ${MARKET.canadianSmallBiz} small employer businesses (${MARKET.canadianSmallShare} of employers) and ${MARKET.canadianNonEmployer} businesses with no employees. About ${n(MARKET.targetIndustries)} of the employer businesses sit in the industries ${COMPANY.name} serves: professional and health services, personal services, retail, and makers. The 4,000-merchant goal is under 1% of that group.`,
+    stat: { value: MARKET.canadianSmallBiz, label: "small employer businesses in Canada (Dec 2024)" },
+    speakerNote: "Stay focused on the maker segment. That is the wedge. The industry group is an upper bound by industry, not a count of exact fits. Sources: ISED Key Small Business Statistics 2025; Statistics Canada business counts Dec 2024.",
     tag: "05",
   },
   {

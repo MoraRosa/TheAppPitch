@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, FUNDING_BREAKDOWN_SMALL } from '../../../data/financials.js';
-import { COMPANY, COMPETITORS, TRACTION } from '../../../data/config.js';
+import { COMPANY, COMPETITORS, TRACTION, MARKET } from '../../../data/config.js';
 import { LIVE_SITES, PRODUCT } from '../../../data/facts.js';
 import { CountUp } from '../motion.jsx';
 
@@ -182,8 +182,8 @@ function VisualDifferentiator({ theme, size }) {
 function VisualMarket({ theme, size }) {
   const t = theme.colors;
   const rings = [
-    { label: 'TAM', sub: '$14B+ Global SaaS', r: 80 * size, opacity: 0.15 },
-    { label: 'SAM', sub: '1.07M CA small employers', r: 56 * size, opacity: 0.3 },
+    { label: 'TAM', sub: `${MARKET.globalPlatform2025} global e-commerce platforms`, r: 80 * size, opacity: 0.15 },
+    { label: 'SAM', sub: `${MARKET.canadianSmallBiz.replace(' million', 'M')} CA small employers`, r: 56 * size, opacity: 0.3 },
     { label: 'SOM', sub: '4,000 paying (Stage 3)', r: 32 * size, opacity: 0.7 },
   ];
   const svgSize = 180 * size;

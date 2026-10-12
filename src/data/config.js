@@ -4,7 +4,7 @@
 
 import {
   PLANS, FREE_PLAN, TRIAL, THEMES, TRANSACTION_FEE, ARPU_TODAY, ARPU_MIX, ASK, TRACTION_FACTS, BUILD,
-  UNIT_ECON_MODEL, MARKET_FACTS, USE_OF_FUNDS, MODULES, stageLadder,
+  UNIT_ECON_MODEL, MARKET_FACTS, TARGET_INDUSTRIES_TOTAL, USE_OF_FUNDS, MODULES, stageLadder,
 } from './facts.js';
 
 // ── Company ───────────────────────────────────────────────────────────────────
@@ -66,17 +66,25 @@ export const UNIT_ECON = {
   targets:     UNIT_ECON_MODEL.targets,
 };
 
-// ── Market (sourced) ──────────────────────────────────────────────────────────
+// ── Market (sourced; see facts.js and docs/market-research.md) ───────────────
 const m = MARKET_FACTS;
+const fmtM = n => `${(n / 1e6).toFixed(2)} million`;
 export const MARKET = {
-  canadianSmallBiz:    '1.07 million',
-  canadianSmallBizNote:`small employer businesses (1–99 employees), ${m.canadaSmallEmployers.year}`,
-  canadianSmallShare:  m.canadaSmallEmployers.share,
-  usSmallBiz:          '36.2 million',
-  usNonEmployerNote:   'about 30.4 million of them have no employees',
-  globalSaaSMarket:    m.globalSaaSMarket.value, // unsourced: see OPEN_QUESTIONS
-  saasMarketYear:      m.globalSaaSMarket.year,
-  sources:             [m.canadaSmallEmployers.source, m.usSmallBusinesses.source],
+  canadianSmallBiz:     fmtM(m.canada.smallEmployers.value),      // 1.08 million
+  canadianSmallBizNote: `small employer businesses (1–99 employees), ${m.canada.asOf}`,
+  canadianSmallShare:   m.canada.smallEmployers.share,
+  canadianNonEmployer:  fmtM(m.canada.nonEmployers.value),         // 3.48 million
+  canadianNonEmployerNote: m.canada.nonEmployers.note,
+  albertaSmallBiz:      m.canada.alberta.smallEmployers.toLocaleString(),
+  targetIndustries:     TARGET_INDUSTRIES_TOTAL,                   // 531,475
+  onlineSellingShare:   m.canada.onlineSelling.share,
+  onlineSellingYear:    m.canada.onlineSelling.year,
+  usSmallBiz:           '36.2 million',
+  usNonEmployerNote:    'about 30.4 million of them have no employees',
+  globalPlatform2025:   m.globalEcommercePlatform.y2025,
+  globalPlatform2030:   m.globalEcommercePlatform.y2030,
+  globalPlatformCagr:   m.globalEcommercePlatform.cagr,
+  sources:              [m.canada.smallEmployers.source, m.canada.nonEmployers.source, m.usSmallBusinesses.source, m.globalEcommercePlatform.source],
 };
 
 // ── Growth stages (paying merchants) ──────────────────────────────────────────

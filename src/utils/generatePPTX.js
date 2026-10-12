@@ -5,7 +5,7 @@
 import PptxGenJS from 'pptxgenjs';
 import { SLIDES } from '../data/slides.js';
 import { COMPETITOR_COST_STACK, FUNDING_BREAKDOWN_SMALL, MERCHANT_GROWTH } from '../data/financials.js';
-import { COMPANY, COMPETITORS, FUNDING } from '../data/config.js';
+import { COMPANY, COMPETITORS, FUNDING, MARKET } from '../data/config.js';
 
 export async function generatePitchDeckPPTX(theme) {
   const pptx = new PptxGenJS();
@@ -185,7 +185,7 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
           line: { color: accent, width: 0.5 },
         });
       });
-      [['TAM', '$14B+ Global SaaS'], ['SAM', '1.07M CA small employers'], ['SOM', '4,000 paying (Stage 3)']].forEach(([lbl, sub], i) => {
+      [['TAM', `${MARKET.globalPlatform2025} global e-commerce platforms`], ['SAM', `${MARKET.canadianSmallBiz.replace(' million','M')} CA small employers`], ['SOM', '4,000 paying (Stage 3)']].forEach(([lbl, sub], i) => {
         const y = H * 0.55 + i * 0.65;
         s.addText(lbl, { x: pad, y, w: 0.7, h: 0.4, fontSize: 8, color: accent, fontFace: 'Arial', bold: true, charSpacing: 1 });
         s.addText(sub, { x: pad + 0.75, y, w: rw - 0.8, h: 0.4, fontSize: 8, color: textMute, fontFace: 'Arial' });

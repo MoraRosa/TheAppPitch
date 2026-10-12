@@ -118,14 +118,38 @@ export const UNIT_ECON_MODEL = {
   targets: { ltvCacMin: 3, paybackMonthsMax: 12 }, // targets, not claims
 };
 
-// ── Market (researched, with sources) ─────────────────────────────────────────
+// ── Market (researched, with sources; see docs/market-research.md) ───────────
+const ISED = 'ISED, Key Small Business Statistics 2025 (ised-isde.canada.ca/site/sme-research-statistics/en/node/439)';
 export const MARKET_FACTS = {
-  canadaSmallEmployers: { value: 1074939, of: 1095251, share: '98.1%', year: 2023, note: 'employer businesses with 1-99 employees',
-    source: 'ISED, Key Small Business Statistics 2024 (ised-isde.canada.ca/smeresearch)' },
+  canada: {
+    asOf: 'December 2024',
+    smallEmployers: { value: 1079188, of: 1099521, share: '98.2%', note: 'employer businesses with 1-99 employees', source: ISED },
+    nonEmployers:   { value: 3480000, note: 'businesses with no employees and annual revenue above $30,000',
+      source: 'Statistics Canada, Canadian business counts, December 2024 (The Daily, 2025-02-14)' },
+    alberta:        { smallEmployers: 137182, source: ISED },
+    onlineSelling:  { share: '32%', year: 2021, note: 'of small businesses had online sales (33% of all businesses)',
+      source: 'Statistics Canada, Survey of Digital Technology and Internet Use, 2021 (article 13-605-X)' },
+  },
   usSmallBusinesses: { value: 36207130, share: '99.9%', nonEmployer: 30400000,
     source: 'SBA Office of Advocacy, FAQ About Small Business 2026 (advocacy.sba.gov); non-employer split from SBA 2025 Small Business Profile' },
-  globalSaaSMarket: { value: '$14 billion', year: 2027, source: null }, // UNSOURCED, carried over: verify or drop
+  // Closest published category to Peak. Analyst firms disagree on size because they define the market differently.
+  globalEcommercePlatform: { y2025: '$9.07 billion', y2030: '$16.5 billion', cagr: '12.7%',
+    source: 'MarketsandMarkets, via ResearchAndMarkets (Business Wire, Aug 2025)',
+    caveat: 'Other analyst firms publish different sizes (for example $6.1B in 2023 for "e-commerce software"), so show it as one estimate, not a fact.' },
 };
+
+// Canadian small EMPLOYER businesses (1-99 employees) in the industries where Peak's customer types sit.
+// This is an upper bound by industry, not a count of businesses that fit Peak: it includes some that do not (heavy manufacturing, care homes).
+// Non-employer businesses (sole operators) are not split by industry here; see OPEN_QUESTIONS.
+export const TARGET_INDUSTRIES = [
+  { industry: 'Professional, scientific and technical services', small: 150105 },
+  { industry: 'Health care and social assistance',               small: 119783 },
+  { industry: 'Other services (salons, repair, personal care)',  small: 103576 },
+  { industry: 'Retail trade',                                    small: 96799 },
+  { industry: 'Manufacturing (makers)',                          small: 44440 },
+  { industry: 'Arts, entertainment and recreation',              small: 16772 },
+];
+export const TARGET_INDUSTRIES_TOTAL = TARGET_INDUSTRIES.reduce((n, i) => n + i.small, 0); // 531,475
 
 // ── Benchmarks used in wording (researched) ───────────────────────────────────
 export const BENCHMARKS = {
@@ -183,7 +207,9 @@ export const WORDING = {
 
 // ── Open questions (nothing below is assumed in the content) ──────────────────
 export const OPEN_QUESTIONS = [
-  'Market sprint: source or replace the $14B global SaaS figure; size the Canadian maker and service-business segment.',
+  'Market: split non-employer businesses by industry (StatCan table 33-10-0765) to size the sole-operator segment.',
+  'Market: Alberta small employer businesses by industry (StatCan table 33-10-0764).',
+  'Market: the $9.07B global figure is one analyst estimate; decide whether to show it with the caveat or drop it.',
   'Does huchflex stay on its peakenterprise.ca subdomain or has it moved to its own domain?',
   'Roadmap items still ahead: GST/HST tax engine, 5th storefront theme (Soft Matter), AI agent API, US expansion.',
   'API endpoint and table counts (23+, 21+): re-count from the code, or drop them (the audience is non-technical).',
