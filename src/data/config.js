@@ -1,11 +1,11 @@
-// ─── SINGLE SOURCE OF TRUTH ────────────────────────────────────────────────────
-// Change anything here and it updates everywhere:
-// nav, footer, slides, plan, PDF download, PPTX download, financials page.
-//
-// When you have real market research data, update MARKET.
-// When you incorporate, update COMPANY.legalStructure.
-// When pricing is validated, update PRICING.
-// When beta grows, update TRACTION.betaMerchants.
+// ─── CONFIG ─────────────────────────────────────────────────────────────────────
+// Names, links and display shapes. Every number comes from facts.js.
+// To rename the app, change COMPANY.name here; it updates everywhere.
+
+import {
+  PLANS, TRANSACTION_FEE, ARPU_TODAY, ARPU_MIX, ASK, TRACTION_FACTS, BUILD,
+  UNIT_ECON_MODEL, MARKET_FACTS, USE_OF_FUNDS, MODULES, stageLadder,
+} from './facts.js';
 
 // ── Company ───────────────────────────────────────────────────────────────────
 export const COMPANY = {
@@ -29,80 +29,72 @@ export const FOUNDER_INFO = {
   linkedin: null, // add when ready
 };
 
-// ── Traction (update as you grow) ─────────────────────────────────────────────
+// ── Traction ──────────────────────────────────────────────────────────────────
 export const TRACTION = {
-  betaMerchants:  15,
-  apiEndpoints:   23,    // "23+ endpoints"
-  dbTables:       21,    // "21+ tables"
-  churn:          0,     // current churn
-  paidMarketing:  false, // true once you start paid ads
+  asOf:          TRACTION_FACTS.asOf,
+  activeUsers:   TRACTION_FACTS.activeUsers,
+  paidUsers:     TRACTION_FACTS.paidUsers,
+  mrr:           TRACTION_FACTS.mrr,
+  apiEndpoints:  BUILD.apiEndpoints,
+  dbTables:      BUILD.dbTables,
+  paidMarketing: TRACTION_FACTS.paidMarketing,
 };
 
 // ── Pricing ───────────────────────────────────────────────────────────────────
+const plan = id => PLANS.find(p => p.id === id);
 export const PRICING = {
-  starter:        '$29–49',
-  growth:         '$79–129',
-  enterprise:     'Custom',
-  arpu:           79,          // average revenue per user ($/month)
-  trialDays:      14,
-  transactionFee: '0.5–1%',   // platform fee on Stripe sales
+  starter:        plan('starter').display,
+  growth:         plan('grow').display,
+  pro:            plan('pro').display,
+  range:          `${plan('starter').display}–${plan('pro').display}`,
+  arpu:           ARPU_TODAY,   // real, today
+  arpuMix:        ARPU_MIX,     // illustrative 60/30/10 mix
+  transactionFee: TRANSACTION_FEE,
 };
 
-// ── Unit Economics ─────────────────────────────────────────────────────────────
+// ── Unit economics (modelled) ─────────────────────────────────────────────────
 export const UNIT_ECON = {
-  arpu:        79,      // $/month
-  churnRate:   0.05,    // 5% monthly churn
-  ltv:         1580,    // lifetime value ($)
-  cac:         150,     // customer acquisition cost ($)
-  ltvCacRatio: 10,      // LTV:CAC
+  arpu:        ARPU_TODAY,
+  arpuMix:     ARPU_MIX,
+  churnRate:   UNIT_ECON_MODEL.monthlyChurn,
+  ltv:         UNIT_ECON_MODEL.ltvToday,
+  ltvMix:      UNIT_ECON_MODEL.ltvMix,
+  cac:         UNIT_ECON_MODEL.cac,      // null: not yet measured
+  targets:     UNIT_ECON_MODEL.targets,
 };
 
-// ── Market (update with Business Link Alberta data when received) ──────────────
+// ── Market (sourced) ──────────────────────────────────────────────────────────
+const m = MARKET_FACTS;
 export const MARKET = {
-  canadianSmallBiz:  '3.8 million',   // Stats Canada
-  usSmallBiz:        '33 million',
-  globalSaaSMarket:  '$14 billion',   // projected by 2027
-  saasMarketYear:    2027,
-  targetCanadian:    100000,          // conservative target merchants
-  targetMrr:         79,              // $/month
-  targetArr:         '94.8M',         // CAD, Canada only at target
-  // ↓ Placeholders — fill in from Business Link research
-  albertaSmallBiz:   null,            // Alberta-specific count
-  albertaDigitalGap: null,            // % without online presence
-  primaryResearch:   null,            // survey data summary
+  canadianSmallBiz:    '1.07 million',
+  canadianSmallBizNote:`small employer businesses (1–99 employees), ${m.canadaSmallEmployers.year}`,
+  canadianSmallShare:  m.canadaSmallEmployers.share,
+  usSmallBiz:          '36.2 million',
+  usNonEmployerNote:   'about 30.4 million of them have no employees',
+  globalSaaSMarket:    m.globalSaaSMarket.value, // unsourced: see OPEN_QUESTIONS
+  saasMarketYear:      m.globalSaaSMarket.year,
+  sources:             [m.canadaSmallEmployers.source, m.usSmallBusinesses.source],
 };
 
-// ── Growth Milestones ─────────────────────────────────────────────────────────
-export const MILESTONES = {
-  y1: { merchants: 50,   arr: 47400,   note: 'Product-market fit, first cohort' },
-  y2: { merchants: 250,  arr: 237000,  note: 'First hire, second theme live' },
-  y3: { merchants: 1000, arr: 948000,  note: 'Near profitability or Series A' },
-};
+// ── Growth stages (paying merchants) ──────────────────────────────────────────
+export const STAGES = stageLadder();
 
-// ── Grant / Funding ───────────────────────────────────────────────────────────
+// ── Funding ───────────────────────────────────────────────────────────────────
+const split = (total, items) => items.map(i => ({ label: i.label, pct: i.pct, amount: Math.round(total * i.pct / 100) }));
 export const FUNDING = {
   currentGrant: {
-    name:   'Zensurance Small Business Grant',
-    amount: 10000,
-    breakdown: [
-      { label: 'Supabase hosting & infrastructure (beta period)', amount: 2500 },
-      { label: 'Email service, CDN & domain management',          amount: 1500 },
-      { label: 'Beta merchant onboarding support',                amount: 3000 },
-      { label: 'Initial paid merchant acquisition',               amount: 3000 },
-    ],
+    name:      'Grants',
+    amount:    ASK.grants,
+    goal:      USE_OF_FUNDS.grants.goal,
+    breakdown: split(ASK.grants, USE_OF_FUNDS.grants.items),
   },
   seedRound: {
-    min: 100000,
-    max: 150000,
-    breakdown: [
-      { label: 'Infrastructure & hosting (12 months)',   amount: 15000 },
-      { label: 'Developer hire (6-month contract)',      amount: 45000 },
-      { label: 'Customer success & onboarding hire',    amount: 40000 },
-      { label: 'Marketing & merchant acquisition',      amount: 25000 },
-      { label: 'Legal, accounting & compliance',        amount: 10000 },
-      { label: 'Operating reserve',                     amount: 15000 },
-    ],
+    min: ASK.investment,
+    max: ASK.investment,
+    goal:      USE_OF_FUNDS.investment.goal,
+    breakdown: split(ASK.investment, USE_OF_FUNDS.investment.items),
   },
+  illustrative: USE_OF_FUNDS.illustrative,
 };
 
 // ── Platform / Tech ───────────────────────────────────────────────────────────
@@ -110,7 +102,7 @@ export const PLATFORM = {
   stack:      ['React', 'Supabase', 'Stripe Connect', 'Vercel', 'Fastify'],
   themes:     5,
   themeNames: ['Manuscript', 'Brutalist', 'Editorial', 'Canadian', 'BARE'],
-  modules:    ['Pulse', 'Constellation', 'Compass', 'Storefront', 'Blog', 'Newsletter', 'FAQ', 'Legal', 'Reviews'],
+  modules:    MODULES,
   repoBase:   'https://github.com/MoraRosa',
 };
 
@@ -119,7 +111,7 @@ export const COMPETITORS = [
   { co: 'Shopify',     storefront: true,  crm: false, costing: false, price: '$30–300' },
   { co: 'Squarespace', storefront: true,  crm: false, costing: false, price: '$16–65'  },
   { co: 'Kajabi',      storefront: false, crm: false, costing: false, price: '$150–400'},
-  { co: COMPANY.name,  storefront: true,  crm: true,  costing: true,  price: PRICING.growth },
+  { co: COMPANY.name,  storefront: true,  crm: true,  costing: true,  price: PRICING.range },
 ];
 
 // ── Social & Links ────────────────────────────────────────────────────────────

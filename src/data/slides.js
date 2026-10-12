@@ -1,8 +1,12 @@
 // ─── PITCH DECK SLIDES ────────────────────────────────────────────────────────
 // Theme-agnostic. All visual decisions live in /themes.
-// To add a slide: push to this array. Nothing else needs to change.
+// Every number comes from facts.js (via config.js). Do not type figures in here.
 
-import { COMPANY } from './config.js';
+import { COMPANY, TRACTION, PRICING, MARKET, FUNDING } from './config.js';
+import { STAGE_TARGETS, WORDING } from './facts.js';
+
+const [S1, S2, S3] = STAGE_TARGETS.map(s => s.payingUsers.toLocaleString());
+const fmtK = n => `$${Math.round(n / 1000)}K`;
 
 export const SLIDES = [
   {
@@ -10,7 +14,7 @@ export const SLIDES = [
     slug: "hook",
     eyebrow: "Introduction",
     headline: "Small businesses are paying for 10 tools when one should do.",
-    body: `${COMPANY.name} is the complete business platform for small brands and makers. Built in Canada. 15 merchants already waiting.`,
+    body: `${COMPANY.name} is the complete business platform for small brands and makers. Built in Canada. Live today with ${TRACTION.activeUsers} active users and ${TRACTION.paidUsers} paying merchants.`,
     speakerNote: "Open with the core tension. Every person in this room knows a small business owner drowning in subscriptions.",
     tag: "01",
   },
@@ -29,7 +33,7 @@ export const SLIDES = [
     slug: "solution",
     eyebrow: "The Solution",
     headline: "One platform. One login. Operational in under an hour.",
-    body: "A merchant signs up, picks their business type, picks a theme, and has everything they need — storefront, CRM, production costing, task management — no additional accounts, no integrations, no maintenance.",
+    body: "A merchant signs up, picks their business type, picks a theme, and has everything they need — storefront, customers, costing, tasks, scheduling, email — no additional accounts, no integrations, no maintenance.",
     speakerNote: "This is the relief moment. Let it land. One login.",
     tag: "03",
   },
@@ -37,45 +41,45 @@ export const SLIDES = [
     id: 4,
     slug: "differentiator",
     eyebrow: "The Differentiator",
-    headline: "Pulse is the production costing engine no competitor has.",
-    body: `For a beauty brand on Shopify: ingredients go to a spreadsheet. Supplier management goes to a spreadsheet. Batch costing goes to a spreadsheet. For a beauty brand on ${COMPANY.name}: all of it, built in, visual, synced automatically.`,
-    speakerNote: "Pulse is the moat. Shopify has no equivalent at this price point.",
+    headline: "Costing, inventory, storefront and bookings in one database.",
+    body: WORDING.competition,
+    speakerNote: "Costing is the wedge. Shopify has no native production costing, and that gap is where makers lose hours every week.",
     tag: "04",
   },
   {
     id: 5,
     slug: "market",
     eyebrow: "Market Opportunity",
-    headline: "3.8 million small businesses in Canada. 33 million in the US.",
-    body: `${COMPANY.name} does not need 1% of this market to reach $5M ARR. It needs the slice of makers and service providers who have been underserved by every tool built for someone else.`,
-    stat: { value: "$14B+", label: "Global SaaS ecommerce market" },
-    speakerNote: "Stay focused on the maker segment. That is the wedge.",
+    headline: `${MARKET.canadianSmallBiz} small employer businesses in Canada. ${MARKET.usSmallBiz} small businesses in the US.`,
+    body: `Small businesses are ${MARKET.canadianSmallShare} of Canadian employer businesses (${MARKET.canadianSmallBizNote}). In the US, ${MARKET.usNonEmployerNote}. ${COMPANY.name} starts with the makers and service providers who have been underserved by every tool built for someone else.`,
+    stat: { value: MARKET.canadianSmallShare, label: "of Canadian employer businesses are small (1–99 staff)" },
+    speakerNote: "Stay focused on the maker segment. That is the wedge. Sources: ISED Key Small Business Statistics 2024; SBA Office of Advocacy 2026.",
     tag: "05",
   },
   {
     id: 6,
     slug: "model",
     eyebrow: "Business Model",
-    headline: "1,000 merchants at $79/month is $948K ARR by Year 3.",
-    body: "Subscription tiers from $29 to enterprise, plus a 0.5–1% platform fee on each transaction — revenue that scales directly with merchant success. LTV to CAC ratio of approximately 10 to 1.",
-    speakerNote: "The transaction fee aligns our incentives perfectly with the merchant's growth.",
+    headline: `Three plans, ${PRICING.starter} to ${PRICING.pro} a month, plus a fee on every sale.`,
+    body: `Starter ${PRICING.starter}, Grow ${PRICING.growth}, Pro ${PRICING.pro} per month, plus a platform fee on each Stripe transaction — revenue that grows with merchant success. Unit economics are modelled, not yet measured: our targets are an LTV to CAC of at least 3 to 1 and payback inside 12 months.`,
+    speakerNote: "Be upfront that CAC is not measured yet because there is no paid acquisition. Targets, not claims.",
     tag: "06",
   },
   {
     id: 7,
     slug: "traction",
     eyebrow: "Traction",
-    headline: "15 beta merchants. Zero paid marketing. One developer.",
-    body: "Multi-tenant architecture, dual authentication, full REST API with 23+ endpoints, merchant dashboard, Pulse, Constellation CRM, Compass task management — all built. Approaching first beta release.",
-    speakerNote: "One person built all of this. That is the signal.",
+    headline: `Live product. ${TRACTION.activeUsers} active users. ${TRACTION.paidUsers} paying. $${TRACTION.mrr} MRR.`,
+    body: `Storefront, cart and checkout, shipping, scheduling, and Stripe Connect payments are live, with transaction fees switched on. ${TRACTION.paidUsers} of ${TRACTION.activeUsers} active users have converted to paid — an early signal, not a conversion rate. Zero paid marketing. One developer.`,
+    speakerNote: "One person built and shipped all of this. Call 2 of 8 an early signal, because the sample is tiny.",
     tag: "07",
   },
   {
     id: 8,
     slug: "roadmap",
     eyebrow: "Roadmap",
-    headline: "Beta to 50 merchants to 250 merchants to US expansion.",
-    body: "Next 6 months: cart, Stripe Connect, first paying cohort. 6 to 12 months: scheduling module, 100+ merchants, first hire. 12 to 18 months: AI agent API, US market entry, 500+ merchants.",
+    headline: `${S1} paying merchants, then ${S2}, then ${S3}.`,
+    body: `Stage 1 is ${S1} paying merchants. Stage 2 is ${S2}. Stage 3 is ${S3}, and then we hire for marketing and branding. Milestones are earned, not dated.`,
     speakerNote: "Milestone-based, not date-based. Milestones are earned, dates are guessed.",
     tag: "08",
   },
@@ -83,8 +87,8 @@ export const SLIDES = [
     id: 9,
     slug: "competition",
     eyebrow: "Competition",
-    headline: "Shopify has no production costing. Squarespace has no back-office. Nobody has both.",
-    body: `${COMPANY.name} is the only platform combining a branded storefront, a full CRM, and a production costing engine in one subscription — without an app ecosystem that adds cost and integration friction at every step.`,
+    headline: "Shopify has no native costing. Squarespace has no back-office. Nobody has both.",
+    body: WORDING.competition,
     speakerNote: "Acknowledge what competitors do well, then name the specific gap only we fill.",
     tag: "09",
   },
@@ -92,9 +96,9 @@ export const SLIDES = [
     id: 10,
     slug: "ask",
     eyebrow: "The Ask",
-    headline: "This closes the gap between built and launched.",
-    body: "Built entirely by one Canadian developer. Infrastructure, onboarding, and first merchant cohort. The product is real — it just needs to ship. Fifteen merchants are already waiting.",
-    speakerNote: "End with the human story. One developer. Fifteen merchants waiting. The gap is not the product — the gap is the launch.",
+    headline: `${fmtK(FUNDING.currentGrant.amount)} in grants and $${(FUNDING.seedRound.min / 1e6).toFixed(0)}M from investors to reach ${S3} paying merchants.`,
+    body: `Grants take us from ${S1} to ${S2} paying merchants: product hardening, infrastructure, onboarding, first marketing tests. The investment takes us to ${S3} and funds our first hires, including brand and the rename.`,
+    speakerNote: "End with the human story. One developer, a live product, paying customers. The ask turns a working product into a company.",
     tag: "10",
   },
 ];

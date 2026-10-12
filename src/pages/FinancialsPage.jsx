@@ -3,16 +3,17 @@ import { useState } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useIsMobile } from '../hooks/useIsMobile.js';
+import { TRACTION, STAGES } from '../data/config.js';
 import { MERCHANT_GROWTH, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL, COMPETITOR_COST_STACK, MILESTONES } from '../data/financials.js';
 
 const CHART_TABS = ['MRR Growth', 'Merchant Growth', 'Funding Use', 'vs. Competition'];
 
 const UE_ITEMS = [
-  { label: 'ARPU / month', key: 'arpu',           format: v => `$${v}` },
+  { label: 'ARPU / month (modelled)', key: 'arpu',           format: v => `$${v}` },
   { label: 'LTV',          key: 'ltv',            format: v => `$${v.toLocaleString()}` },
-  { label: 'CAC',          key: 'cac',            format: v => `$${v}` },
-  { label: 'LTV : CAC',   key: 'ltvCacRatio',    format: v => `${v}×` },
-  { label: 'Payback',      key: 'paybackMonths',  format: v => `${v} mo` },
+  { label: 'CAC',          key: 'cac',            format: v => v == null ? 'Not yet measured' : `$${v}` },
+  { label: 'LTV : CAC',   key: 'ltvCacRatio',    format: v => v == null ? 'Target 3:1+' : `${v}×` },
+  { label: 'Payback',      key: 'paybackMonths',  format: v => v == null ? 'Target <12 mo' : `${v} mo` },
 ];
 
 export default function FinancialsPage() {
@@ -38,7 +39,7 @@ export default function FinancialsPage() {
           Financial Projections
         </p>
         <h1 style={{ fontFamily: theme.fonts.display, fontSize: theme.type.headSize, fontWeight: theme.type.headWeight, fontStyle: theme.type.headStyle, color: t.text }}>
-          From 15 beta merchants to $948K ARR.
+          From {TRACTION.paidUsers} paying merchants to {STAGES[STAGES.length - 1].payingUsers.toLocaleString()}.
         </h1>
       </div>
 

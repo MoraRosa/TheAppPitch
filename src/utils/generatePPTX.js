@@ -185,7 +185,7 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
           line: { color: accent, width: 0.5 },
         });
       });
-      [['TAM', '$14B+ Global SaaS'], ['SAM', '3.8M CA Businesses'], ['SOM', '100K Target']].forEach(([lbl, sub], i) => {
+      [['TAM', '$14B+ Global SaaS'], ['SAM', '1.07M CA small employers'], ['SOM', '4,000 paying (Stage 3)']].forEach(([lbl, sub], i) => {
         const y = H * 0.55 + i * 0.65;
         s.addText(lbl, { x: pad, y, w: 0.7, h: 0.4, fontSize: 8, color: accent, fontFace: 'Arial', bold: true, charSpacing: 1 });
         s.addText(sub, { x: pad + 0.75, y, w: rw - 0.8, h: 0.4, fontSize: 8, color: textMute, fontFace: 'Arial' });
@@ -194,9 +194,9 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
     }
 
     case 'model': {
-      s.addText('MRR GROWTH · 3 YEARS', { x: pad, y: contentY, w: rw - 0.3, h: 0.3, fontSize: 7, color: accent, fontFace: 'Arial', charSpacing: 2 });
+      s.addText('MRR BY STAGE · MODELLED', { x: pad, y: contentY, w: rw - 0.3, h: 0.3, fontSize: 7, color: accent, fontFace: 'Arial', charSpacing: 2 });
       // Simple bar chart approximation
-      const pts = MERCHANT_GROWTH.filter((_, i) => i % 3 === 0);
+      const pts = MERCHANT_GROWTH;
       const maxMrr = Math.max(...pts.map(p => p.mrr));
       const chartH = 3.5, chartW = rw - 0.6, barW = chartW / pts.length * 0.6;
       pts.forEach((p, i) => {
@@ -205,7 +205,7 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
         const y = contentY + 0.5 + chartH - bh;
         s.addShape(pptx.ShapeType.rect, { x, y, w: barW, h: bh, fill: { color: accent, transparency: 25 }, line: { color: accent, width: 0.5 } });
       });
-      s.addText('$79K MRR · Year 3', { x: pad, y: contentY + 4.3, w: rw - 0.3, h: 0.5, fontSize: 16, bold: true, color: accent, fontFace: 'Arial' });
+      s.addText(`$${Math.round(pts[pts.length - 1].mrr / 1000)}K MRR · Stage 3 (modelled)`, { x: pad, y: contentY + 4.3, w: rw - 0.3, h: 0.5, fontSize: 16, bold: true, color: accent, fontFace: 'Arial' });
       break;
     }
 

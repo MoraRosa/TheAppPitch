@@ -1,45 +1,37 @@
-// ─── FINANCIAL PROJECTIONS DATA ───────────────────────────────────────────────
-// Source: business plan projections (company name comes from config.js).
-// ARPU: $79/month. Monthly churn: 5%. CAC: ~$150. LTV: ~$1,580.
+// ─── FINANCIALS DATA ──────────────────────────────────────────────────────────
+// Derived from facts.js. Nothing here is typed in by hand.
+// "Modelled" values are projections from stated assumptions, not results.
 
+import { ARPU_TODAY, ARPU_MIX, TRACTION_FACTS, UNIT_ECON_MODEL, USE_OF_FUNDS, ASK, MRR_TRACKER, stageLadder } from './facts.js';
+
+export { MRR_TRACKER };
+
+// Today plus each stage, at the illustrative $43 mix ARPU (modelled).
 export const MERCHANT_GROWTH = [
-  { period: "Q1 Y1", merchants: 5,    mrr: 395,    arr: 4740 },
-  { period: "Q2 Y1", merchants: 15,   mrr: 1185,   arr: 14220 },
-  { period: "Q3 Y1", merchants: 30,   mrr: 2370,   arr: 28440 },
-  { period: "Q4 Y1", merchants: 50,   mrr: 3950,   arr: 47400 },
-  { period: "Q1 Y2", merchants: 80,   mrr: 6320,   arr: 75840 },
-  { period: "Q2 Y2", merchants: 130,  mrr: 10270,  arr: 123240 },
-  { period: "Q3 Y2", merchants: 190,  mrr: 15010,  arr: 180120 },
-  { period: "Q4 Y2", merchants: 250,  mrr: 19750,  arr: 237000 },
-  { period: "Q1 Y3", merchants: 400,  mrr: 31600,  arr: 379200 },
-  { period: "Q2 Y3", merchants: 600,  mrr: 47400,  arr: 568800 },
-  { period: "Q3 Y3", merchants: 800,  mrr: 63200,  arr: 758400 },
-  { period: "Q4 Y3", merchants: 1000, mrr: 79000,  arr: 948000 },
+  { period: 'Today', short: 'Today', merchants: TRACTION_FACTS.paidUsers, mrr: TRACTION_FACTS.mrr, arr: TRACTION_FACTS.mrr * 12, measured: true },
+  ...stageLadder().map(s => ({
+    period: s.label, short: `S${s.stage}`, merchants: s.payingUsers,
+    mrr: s.mrrHigh, arr: s.arrHigh, mrrLow: s.mrrLow, arrLow: s.arrLow, measured: false,
+  })),
 ];
 
-export const FUNDING_BREAKDOWN_SMALL = [
-  { label: "Infrastructure & Hosting",  amount: 2500,  pct: 25 },
-  { label: "Email, CDN, Domains",        amount: 1500,  pct: 15 },
-  { label: "Beta Merchant Onboarding",   amount: 3000,  pct: 30 },
-  { label: "Merchant Acquisition",       amount: 3000,  pct: 30 },
-];
+const toRows = (total, items) => items.map(i => ({ label: i.label, pct: i.pct, amount: Math.round(total * i.pct / 100) }));
+export const FUNDING_BREAKDOWN_SMALL = toRows(ASK.grants, USE_OF_FUNDS.grants.items);
+export const FUNDING_BREAKDOWN_LARGE = toRows(ASK.investment, USE_OF_FUNDS.investment.items);
 
-export const FUNDING_BREAKDOWN_LARGE = [
-  { label: "Infrastructure (12 mo)",     amount: 15000,  pct: 10 },
-  { label: "Developer Hire (6 mo)",      amount: 45000,  pct: 30 },
-  { label: "Customer Success Hire",      amount: 40000,  pct: 27 },
-  { label: "Marketing & Acquisition",    amount: 25000,  pct: 17 },
-  { label: "Legal & Compliance",         amount: 10000,  pct: 6 },
-  { label: "Operating Reserve",          amount: 15000,  pct: 10 },
-];
-
+// Modelled. CAC and payback are targets until paid acquisition produces real data.
 export const UNIT_ECONOMICS = {
-  arpu: 79,
-  monthlyChurn: 0.05,
-  ltv: 1580,
-  cac: 150,
-  ltvCacRatio: 10.5,
-  paybackMonths: 2,
+  modelled:      true,
+  arpu:          ARPU_TODAY,
+  arpuMix:       ARPU_MIX,
+  monthlyChurn:  UNIT_ECON_MODEL.monthlyChurn,
+  ltv:           UNIT_ECON_MODEL.ltvToday,
+  ltvMix:        UNIT_ECON_MODEL.ltvMix,
+  cac:           null,
+  ltvCacRatio:   null,
+  paybackMonths: null,
+  targetLtvCac:  UNIT_ECON_MODEL.targets.ltvCacMin,
+  targetPaybackMonths: UNIT_ECON_MODEL.targets.paybackMonthsMax,
 };
 
 export const COMPETITOR_COST_STACK = [
@@ -51,8 +43,8 @@ export const COMPETITOR_COST_STACK = [
   { tool: "Notion / Trello",        min: 15,  max: 50  },
 ];
 
-export const MILESTONES = [
-  { label: "Year 1", merchants: 50,   arr: 47400,   note: "Product-market fit, first cohort" },
-  { label: "Year 2", merchants: 250,  arr: 237000,  note: "First hire, second theme live" },
-  { label: "Year 3", merchants: 1000, arr: 948000,  note: "Near profitability or Series A" },
-];
+// Stage ladder as milestone cards (paying merchants, modelled ARR at the $43 mix).
+export const MILESTONES = stageLadder().map(s => ({
+  label: s.label, merchants: s.payingUsers, arr: s.arrHigh,
+  note: s.then || (s.stage === 1 ? 'First paying cohort' : 'Repeatable growth'),
+}));

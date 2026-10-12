@@ -2,6 +2,7 @@
 // Replace placeholder values with real content before presenting.
 
 import { COMPANY } from './config.js';
+import { LIVE_PROJECTS } from './facts.js';
 
 export const FOUNDER = {
   name: "Hikmah Adepoju",               // ← REPLACE
@@ -41,16 +42,8 @@ export const FOUNDER = {
       url: `https://${COMPANY.url}`,
       desc: "e-commerce platform. React 19, Supabase, Stripe, monorepo.",
     },
-    {
-      name: "Momentum",
-      url: "https://morarosa.github.io/Momentum",
-      desc: "Cross-platform productivity PWA + native iOS/Android app via Capacitor.",
-    },
-    {
-      name: "Mizzie",
-      url: "https://github.com/MoraRosa/Miss-Buzzie",
-      desc: "On-device AI business planning platform. Privacy-first, runs entirely in browser.",
-    },
+    // Projects live on Peak: add entries to LIVE_PROJECTS in facts.js (name, url, desc).
+    ...LIVE_PROJECTS,
   ],
 
   experience: [

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useIsMobile } from '../hooks/useIsMobile.js';
-import { COMPANY } from '../data/config.js';
+import { COMPANY, TRACTION } from '../data/config.js';
 
 export default function HomePage() {
   const { theme } = useTheme();
@@ -11,8 +11,8 @@ export default function HomePage() {
   const pad = isMobile ? '20px' : theme.space.pagePadding;
 
   const stats = [
-    { value: '15',     label: 'Beta merchants waiting' },
-    { value: '$948K', label: 'ARR projection · Year 3' },
+    { value: String(TRACTION.activeUsers), label: 'Active users on the live platform' },
+    { value: `$${TRACTION.mrr}`, label: `MRR today · ${TRACTION.paidUsers} paying merchants` },
     { value: '23+',   label: 'API endpoints built' },
     { value: '1',     label: 'Developer. No team yet.' },
   ];

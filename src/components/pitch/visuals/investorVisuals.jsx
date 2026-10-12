@@ -181,8 +181,8 @@ function VisualMarket({ theme, size }) {
   const t = theme.colors;
   const rings = [
     { label: 'TAM', sub: '$14B+ Global SaaS', r: 80 * size, opacity: 0.15 },
-    { label: 'SAM', sub: '3.8M CA Businesses', r: 56 * size, opacity: 0.3 },
-    { label: 'SOM', sub: '100K Target Year 5', r: 32 * size, opacity: 0.7 },
+    { label: 'SAM', sub: '1.07M CA small employers', r: 56 * size, opacity: 0.3 },
+    { label: 'SOM', sub: '4,000 paying (Stage 3)', r: 32 * size, opacity: 0.7 },
   ];
   const svgSize = 180 * size;
   return (
@@ -215,7 +215,7 @@ function VisualMarket({ theme, size }) {
 // ── Model: MRR growth chart — fully responsive SVG ───────────────────────────
 function VisualModel({ theme, size }) {
   const t = theme.colors;
-  const points = MERCHANT_GROWTH.filter((_, i) => i % 2 === 0);
+  const points = MERCHANT_GROWTH;
   const maxMrr = Math.max(...points.map(p => p.mrr));
   const VW = 200, VH = 90;
   const pathD = points.map((p, i) => {
@@ -257,14 +257,14 @@ function VisualModel({ theme, size }) {
       </svg>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: `${5 * size}px` }}>
-        {['Y1', 'Y2', 'Y3'].map(y => (
+        {MERCHANT_GROWTH.map(p => p.short).map(y => (
           <span key={y} style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.1em' }}>{y}</span>
         ))}
       </div>
       <div style={{ marginTop: `${14 * size}px`, fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${22 * size}px`, color: t.text }}>
-        $79K{' '}
+        ${Math.round(points[points.length - 1].mrr / 1000)}K{' '}
         <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent }}>
-          MRR · Y3
+          MRR · Stage 3 (modelled)
         </span>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { PLAN_SECTIONS } from '../data/plan.js';
 import { SLIDES } from '../data/slides.js';
 import { MILESTONES, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL, COMPETITOR_COST_STACK, MERCHANT_GROWTH } from '../data/financials.js';
 import { FOUNDER } from '../data/founder.js';
-import { COMPANY, COMPETITORS, FOUNDER_INFO, FUNDING, TRACTION, MILESTONES as CFG_MILESTONES } from '../data/config.js';
+import { COMPANY, COMPETITORS, FOUNDER_INFO, FUNDING, TRACTION, STAGES } from '../data/config.js';
 
 function hexToRgb(hex) {
   const c = (hex || '#888888').replace('#', '');
@@ -119,7 +119,7 @@ function drawRightDiff(doc, x, y, w, h, theme) {
 
 function drawRightModel(doc, x, y, w, h, theme) {
   const t = theme.colors;
-  const pts = MERCHANT_GROWTH.filter((_, i) => i % 2 === 0);
+  const pts = MERCHANT_GROWTH;
   const maxMrr = Math.max(...pts.map(p => p.mrr));
   const chartH = 50, chartW = w - 4;
   doc.setFontSize(6.5);
@@ -149,19 +149,19 @@ function drawRightModel(doc, x, y, w, h, theme) {
   });
   doc.setLineWidth(0.2);
   // Year labels
-  ['Y1','Y2','Y3'].forEach((lbl, i) => {
+  MERCHANT_GROWTH.map(p => p.short).forEach((lbl, i, arr) => {
     doc.setFontSize(6);
     doc.setTextColor(...hexToRgb(t.textFaint));
-    doc.text(lbl, x + (i / 2) * chartW, y + 10 + chartH + 5);
+    doc.text(lbl, x + (i / (arr.length - 1)) * chartW, y + 10 + chartH + 5);
   });
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...hexToRgb(t.text));
-  doc.text('$79K', x, y + 10 + chartH + 18);
+  doc.text(`$${Math.round(pts[pts.length - 1].mrr / 1000)}K`, x, y + 10 + chartH + 18);
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...hexToRgb(t.accent));
-  doc.text('MRR · Year 3', x + 22, y + 10 + chartH + 18);
+  doc.text('MRR · Stage 3 (modelled)', x + 22, y + 10 + chartH + 18);
 }
 
 function drawRightTraction(doc, x, y, w, h, theme) {
@@ -454,8 +454,8 @@ function drawCoverBold(doc, theme, meta) {
     doc.setLineWidth(0.3);
     doc.line(14, sy - 6, 196, sy - 6);
     [
-      [`${TRACTION.betaMerchants}`, 'BETA MERCHANTS'],
-      [`$${(CFG_MILESTONES.y3.arr / 1000).toFixed(0)}K`, 'ARR · YEAR 3'],
+      [`${TRACTION.activeUsers}`, 'ACTIVE USERS'],
+      [`$${TRACTION.mrr}`, 'MRR TODAY'],
       ['$14B+', 'GLOBAL TAM'],
     ].forEach(([val, label], i) => {
       const sx = 14 + i * 62;
@@ -550,8 +550,8 @@ function drawCoverBold(doc, theme, meta) {
     doc.line(rx, 92, 196, 92);
 
     [
-      [`${TRACTION.betaMerchants}`, 'BETA MERCHANTS'],
-      [`$${(CFG_MILESTONES.y3.arr / 1000).toFixed(0)}K`, 'ARR YEAR 3'],
+      [`${TRACTION.activeUsers}`, 'ACTIVE USERS'],
+      [`$${TRACTION.mrr}`, 'MRR TODAY'],
       ['$14B+', 'GLOBAL TAM'],
     ].forEach(([val, label], i) => {
       const sy = 108 + i * 28;
@@ -618,8 +618,8 @@ function drawCoverBold(doc, theme, meta) {
     const sy = by + 50;
     doc.line(14, sy - 4, 196, sy - 4);
     [
-      [`${TRACTION.betaMerchants}`, 'BETA MERCHANTS'],
-      [`$${(CFG_MILESTONES.y3.arr / 1000).toFixed(0)}K`, 'ARR · YEAR 3'],
+      [`${TRACTION.activeUsers}`, 'ACTIVE USERS'],
+      [`$${TRACTION.mrr}`, 'MRR TODAY'],
       ['$14B+', 'GLOBAL TAM'],
     ].forEach(([val, label], i) => {
       const sx = 14 + i * 62;
@@ -729,8 +729,8 @@ function drawCoverEditorial(doc, theme, meta) {
   doc.setLineWidth(0.25);
   doc.line(14, sy, 196, sy);
   [
-    [`${TRACTION.betaMerchants}`, 'BETA MERCHANTS'],
-    [`$${(CFG_MILESTONES.y3.arr / 1000).toFixed(0)}K`, 'ARR · YEAR 3'],
+    [`${TRACTION.activeUsers}`, 'ACTIVE USERS'],
+    [`$${TRACTION.mrr}`, 'MRR TODAY'],
     ['$14B+', 'GLOBAL TAM'],
   ].forEach(([val, label], i) => {
     const sx = 14 + i * 62;
@@ -931,12 +931,12 @@ export async function generateFinancialsPDF(theme) {
   doc.text('UNIT ECONOMICS', 14, 52);
 
   const ueRows = [
-    ['ARPU / month', `$${UNIT_ECONOMICS.arpu}`],
+    ['ARPU / month (modelled)', `$${UNIT_ECONOMICS.arpu}`],
     ['Monthly Churn', `${UNIT_ECONOMICS.monthlyChurn * 100}%`],
     ['Lifetime Value', `$${UNIT_ECONOMICS.ltv.toLocaleString()}`],
-    ['Customer Acquisition Cost', `$${UNIT_ECONOMICS.cac}`],
-    ['LTV : CAC', `${UNIT_ECONOMICS.ltvCacRatio}×`],
-    ['Payback Period', `${UNIT_ECONOMICS.paybackMonths} months`],
+    ['Customer Acquisition Cost', UNIT_ECONOMICS.cac == null ? 'Not yet measured' : `$${UNIT_ECONOMICS.cac}`],
+    ['LTV : CAC', UNIT_ECONOMICS.ltvCacRatio == null ? 'Target 3:1+' : `${UNIT_ECONOMICS.ltvCacRatio}×`],
+    ['Payback Period', UNIT_ECONOMICS.paybackMonths == null ? 'Target under 12 months' : `${UNIT_ECONOMICS.paybackMonths} months`],
   ];
 
   let y = 60;
@@ -958,7 +958,7 @@ export async function generateFinancialsPDF(theme) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...hexToRgb(t.accent));
-  doc.text('3-YEAR MILESTONES', 14, y);
+  doc.text('GROWTH STAGES (PAYING MERCHANTS, MODELLED)', 14, y);
   y += 8;
 
   MILESTONES.forEach(m => {
