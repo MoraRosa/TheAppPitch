@@ -7,6 +7,7 @@ import { SLIDES } from '../data/slides.js';
 import { MILESTONES, UNIT_ECONOMICS, FUNDING_BREAKDOWN_SMALL, COMPETITOR_COST_STACK, MERCHANT_GROWTH } from '../data/financials.js';
 import { FOUNDER } from '../data/founder.js';
 import { COMPANY, COMPETITORS, FOUNDER_INFO, FUNDING, TRACTION, STAGES, MARKET } from '../data/config.js';
+import { PRODUCT } from '../data/facts.js';
 
 function hexToRgb(hex) {
   const c = (hex || '#888888').replace('#', '');
@@ -166,17 +167,10 @@ function drawRightModel(doc, x, y, w, h, theme) {
 
 function drawRightTraction(doc, x, y, w, h, theme) {
   const t = theme.colors;
-  const items = [
-    { label: 'Multi-tenant DB', pct: 100 },
-    { label: 'Dual Auth', pct: 100 },
-    { label: 'REST API 23+ endpoints', pct: 100 },
-    { label: 'Pulse (Production)', pct: 100 },
-    { label: 'Stripe Connect', pct: 35 },
-    { label: 'Beta Launch', pct: 20 },
-  ];
+  const items = PRODUCT.liveNow.map(label => ({ label, pct: 100 }));
   doc.setFontSize(6.5);
   doc.setTextColor(...hexToRgb(t.accent));
-  doc.text('BUILD PROGRESS', x, y + 5);
+  doc.text('LIVE NOW', x, y + 5);
   let cy = y + 11;
   items.forEach(item => {
     doc.setFontSize(7);

@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, FUNDING_BREAKDOWN_SMALL } from '../../../data/financials.js';
-import { COMPANY, COMPETITORS, TRACTION, MARKET } from '../../../data/config.js';
+import { COMPANY, COMPETITORS, TRACTION, MARKET, PRICING, FUNDING, FOUNDER_INFO } from '../../../data/config.js';
 import { LIVE_SITES, PRODUCT } from '../../../data/facts.js';
 import { CountUp } from '../motion.jsx';
 
@@ -217,57 +217,50 @@ function VisualMarket({ theme, size }) {
 // ── Model: MRR growth chart — fully responsive SVG ───────────────────────────
 function VisualModel({ theme, size }) {
   const t = theme.colors;
+  const plans = [
+    { name: 'Free',    price: '$0',            note: 'Minimal storage' },
+    { name: 'Starter', price: PRICING.starter, note: 'Per month' },
+    { name: 'Grow',    price: PRICING.growth,  note: `${PRICING.trialDays}-day trial` },
+    { name: 'Pro',     price: PRICING.pro,     note: `${PRICING.trialDays}-day trial` },
+  ];
   const points = MERCHANT_GROWTH;
   const maxMrr = Math.max(...points.map(p => p.mrr));
-  const VW = 200, VH = 90;
-  const pathD = points.map((p, i) => {
-    const x = (i / (points.length - 1)) * VW;
-    const y = VH - (p.mrr / maxMrr) * VH * 0.88;
-    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-  }).join(' ');
-  const areaD = pathD + ` L ${VW} ${VH} L 0 ${VH} Z`;
-
+  const VW = 200, VH = 70;
+  const xy = (p, i) => [(i / (points.length - 1)) * VW, VH - (p.mrr / maxMrr) * VH * 0.88];
+  const pathD = points.map((p, i) => { const [x, y] = xy(p, i); return `${i === 0 ? 'M' : 'L'} ${x} ${y}`; }).join(' ');
+  const label = (txt, extra) => (
+    <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', textTransform: 'uppercase', ...extra }}>{txt}</div>
+  );
   return (
-    <div style={{ width: '100%' }}>
-      <div style={{
-        fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`,
-        color: t.accent, letterSpacing: '0.12em',
-        marginBottom: `${8 * size}px`, textTransform: 'uppercase',
-      }}>
-        MRR Growth · 3 Years
-      </div>
-
-      <svg
-        width="100%" height={`${110 * size}px`}
-        viewBox={`0 0 ${VW} ${VH}`}
-        preserveAspectRatio="none"
-        style={{ display: 'block' }}
-      >
-        <defs>
-          <linearGradient id="mrrGradV" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={t.accent} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={t.accent} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={areaD} fill="url(#mrrGradV)" />
-        <path d={pathD} fill="none" stroke={t.accent} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-        {points.map((p, i) => {
-          const x = (i / (points.length - 1)) * VW;
-          const y = VH - (p.mrr / maxMrr) * VH * 0.88;
-          return <circle key={i} cx={x} cy={y} r="3" fill={t.accent} vectorEffect="non-scaling-stroke" />;
-        })}
-      </svg>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: `${5 * size}px` }}>
-        {MERCHANT_GROWTH.map(p => p.short).map(y => (
-          <span key={y} style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.1em' }}>{y}</span>
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: `${10 * size}px` }}>
+      {label('Plans, per month')}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: `${6 * size}px` }}>
+        {plans.map((p, i) => (
+          <div key={p.name} style={{ padding: `${8 * size}px ${6 * size}px`, background: t.bgAlt, border: `1px solid ${i === 0 ? t.border : t.accent}`, borderRadius: theme.space.radius || '2px', textAlign: 'center', animation: `fadeSlideIn 0.35s ease ${i * 0.08}s both` }}>
+            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{p.name}</div>
+            <div style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${18 * size}px`, color: t.text, margin: `${3 * size}px 0` }}>{p.price}</div>
+            <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted }}>{p.note}</div>
+          </div>
         ))}
       </div>
-      <div style={{ marginTop: `${14 * size}px`, fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${22 * size}px`, color: t.text }}>
-        ${Math.round(points[points.length - 1].mrr / 1000)}K{' '}
-        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent }}>
-          MRR · Stage 3 (modelled)
-        </span>
+      <div style={{ fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px`, color: t.textMuted }}>
+        Plus a platform fee ({PRICING.transactionFee}) on every sale through Stripe.
+      </div>
+      {label('Paying merchants and MRR by stage (modelled)', { marginTop: `${4 * size}px` })}
+      <svg width="100%" height={`${70 * size}px`} viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" style={{ display: 'block' }}>
+        <path d={pathD + ` L ${VW} ${VH} L 0 ${VH} Z`} fill={t.accent} fillOpacity="0.15" />
+        <path d={pathD} fill="none" stroke={t.accent} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        {points.map((p, i) => { const [x, y] = xy(p, i); return <circle key={i} cx={x} cy={y} r="3" fill={t.accent} vectorEffect="non-scaling-stroke" />; })}
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        {points.map(p => (
+          <span key={p.period} style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textAlign: 'center' }}>
+            {p.short}<br />{p.merchants.toLocaleString()}
+          </span>
+        ))}
+      </div>
+      <div style={{ fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px`, color: t.textMuted, lineHeight: 1.5 }}>
+        Stage 3 is about ${Math.round(points[points.length - 1].mrr / 1000)}K MRR at a $${PRICING.arpuMix} average plan. CAC is not measured yet: targets are LTV:CAC of 3:1 or better and payback inside 12 months.
       </div>
     </div>
   );
@@ -317,43 +310,6 @@ function VisualTraction({ theme, size }) {
 }
 
 // ── Roadmap: horizontal timeline ──────────────────────────────────────────────
-function VisualRoadmap({ theme, size }) {
-  const t = theme.colors;
-  const phases = [
-    { label: 'Now', items: ['Cart + Payments', 'BARE Theme', 'Beta Launch'] },
-    { label: '6 mo', items: ['Scheduling', '100+ merchants', 'First Hire'] },
-    { label: '18 mo', items: ['AI Agent API', 'US Entry', '500+ merchants'] },
-  ];
-  return (
-    <div style={{ width: '100%' }}>
-      {phases.map((phase, i) => (
-        <div key={i} style={{
-          display: 'grid', gridTemplateColumns: `${40 * size}px 1fr`,
-          gap: `${10 * size}px`, marginBottom: `${14 * size}px`,
-          animation: `fadeSlideIn 0.4s ease ${i * 0.12}s both`,
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-            <div style={{
-              width: `${10 * size}px`, height: `${10 * size}px`,
-              borderRadius: '50%', background: i === 0 ? t.accent : t.border,
-              border: `2px solid ${t.accent}`, flexShrink: 0,
-            }} />
-            {i < phases.length - 1 && (
-              <div style={{ width: '1px', flex: 1, background: t.border, minHeight: `${20 * size}px` }} />
-            )}
-          </div>
-          <div>
-            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.1em', marginBottom: '4px' }}>{phase.label}</div>
-            {phase.items.map((item, j) => (
-              <div key={j} style={{ fontFamily: theme.fonts.body, fontSize: `${10 * size}px`, color: t.textMuted, lineHeight: 1.6 }}>— {item}</div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // ── Competition: comparison table ─────────────────────────────────────────────
 function VisualCompetition({ theme, size }) {
   const t = theme.colors;
@@ -379,7 +335,7 @@ function VisualCompetition({ theme, size }) {
         Platform Comparison
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto auto', gap: `${4 * size}px 8px`, alignItems: 'center' }}>
-        {['', 'Store', 'CRM', 'Costing', 'Price'].map((h, i) => (
+        {['', 'Store', 'Customers', 'Costing', 'Price'].map((h, i) => (
           <div key={i} style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: `1px solid ${t.border}`, paddingBottom: '4px' }}>{h}</div>
         ))}
         {rows.map((row, i) => (
@@ -410,31 +366,63 @@ function VisualCompetition({ theme, size }) {
 // ── Ask: funding breakdown ────────────────────────────────────────────────────
 function VisualAsk({ theme, size }) {
   const t = theme.colors;
-  const items = FUNDING_BREAKDOWN_SMALL;
-  const total = items.reduce((s, i) => s + i.amount, 0);
-  return (
-    <div style={{ width: '100%' }}>
-      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', marginBottom: `${10 * size}px`, textTransform: 'uppercase' }}>
-        $10K Grant Breakdown
+  const Block = ({ title, total, items, delay }) => (
+    <div style={{ marginBottom: `${14 * size}px` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: `${6 * size}px` }}>
+        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{title}</span>
+        <span style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${20 * size}px`, color: t.text }}>{total}</span>
       </div>
       {items.map((item, i) => (
-        <div key={i} style={{ marginBottom: `${8 * size}px`, animation: `fadeSlideIn 0.4s ease ${i * 0.08}s both` }}>
+        <div key={item.label} style={{ marginBottom: `${6 * size}px`, animation: `fadeSlideIn 0.4s ease ${delay + i * 0.07}s both` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-            <span style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: t.textMuted }}>{item.label}</span>
-            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: t.accent }}>${item.amount.toLocaleString()}</span>
+            <span style={{ fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px`, color: t.textMuted }}>{item.label}</span>
+            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8.5 * size}px`, color: t.accent }}>{item.pct}%</span>
           </div>
-          <div style={{ height: `${5 * size}px`, background: t.bgAlt, borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', width: `${(item.amount / total) * 100}%`,
-              background: t.accent, opacity: 0.8,
-            }} />
+          <div style={{ height: `${4 * size}px`, background: t.bgAlt, borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${item.pct}%`, background: t.accent, opacity: 0.85 }} />
           </div>
         </div>
       ))}
-      <div style={{ marginTop: `${12 * size}px`, paddingTop: `${8 * size}px`, borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.textFaint, letterSpacing: '0.1em' }}>TOTAL</span>
-        <span style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${20 * size}px`, color: t.accent }}>$10,000</span>
+    </div>
+  );
+  return (
+    <div style={{ width: '100%' }}>
+      <Block title="Grants: reach Stage 1 to 2" total={`$${(FUNDING.currentGrant.amount / 1000).toFixed(0)}K`} items={FUNDING.currentGrant.breakdown} delay={0} />
+      <Block title="Investment: reach Stage 3, first hires" total={`$${(FUNDING.seedRound.min / 1e6).toFixed(0)}M`} items={FUNDING.seedRound.breakdown} delay={0.3} />
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.08em' }}>
+        Investment split is an illustrative draft.
       </div>
+    </div>
+  );
+}
+
+// ── Team: founder + first hires ───────────────────────────────────────────
+function VisualTeam({ theme, size }) {
+  const t = theme.colors;
+  const initials = FOUNDER_INFO.name.split(' ').map(w => w[0]).join('').slice(0, 2);
+  const hires = ['Marketing', 'Branding (including the rename)', 'Engineering', 'Customer success'];
+  return (
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: `${12 * size}px` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: `${12 * size}px`, padding: `${12 * size}px`, background: t.bgAlt, border: `1px solid ${t.border}`, borderRadius: theme.space.radius || '2px' }}>
+        <div style={{ width: `${44 * size}px`, height: `${44 * size}px`, borderRadius: '50%', background: t.accent, color: theme.isLight ? '#fff' : t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: theme.fonts.display, fontWeight: 700, fontSize: `${16 * size}px`, flexShrink: 0 }}>{initials}</div>
+        <div>
+          <div style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${16 * size}px`, color: t.text }}>{FOUNDER_INFO.name}</div>
+          <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.accent, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{FOUNDER_INFO.title}</div>
+          <div style={{ fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px`, color: t.textMuted }}>{FOUNDER_INFO.location}</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${5 * size}px` }}>
+        {['Built the whole platform, solo', 'Runs Lumina, a live e-commerce brand', `${TRACTION.paidUsers} paying merchants`].map(c => (
+          <span key={c} style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textMuted, border: `1px solid ${t.border}`, borderRadius: '999px', padding: `${3 * size}px ${8 * size}px` }}>{c}</span>
+        ))}
+      </div>
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', textTransform: 'uppercase' }}>First hires, after Stage 3</div>
+      {hires.map((h, i) => (
+        <div key={h} style={{ display: 'flex', alignItems: 'center', gap: `${8 * size}px`, animation: `fadeSlideIn 0.35s ease ${i * 0.1}s both` }}>
+          <span style={{ width: `${7 * size}px`, height: `${7 * size}px`, borderRadius: '50%', border: `2px solid ${t.accent}`, flexShrink: 0 }} />
+          <span style={{ fontFamily: theme.fonts.body, fontSize: `${9.5 * size}px`, color: t.text }}>{h}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -447,7 +435,7 @@ export const INVESTOR_VISUALS = {
   market: VisualMarket,
   model: VisualModel,
   traction: VisualTraction,
-  roadmap: VisualRoadmap,
+  team: VisualTeam,
   competition: VisualCompetition,
   ask: VisualAsk,
 };

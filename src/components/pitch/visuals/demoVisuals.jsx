@@ -17,6 +17,7 @@ import { ProductDetailView, BlogPostView, ContactView, CONTACT_SEND_MS, Checkout
 import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
 import { ScrollReveal, CountUp, Reveal } from '../motion.jsx';
 import { COMPANY, PRICING } from '../../../data/config.js';
+import { STAGE_TARGETS, ASK, TRACTION_FACTS } from '../../../data/facts.js';
 import { COMPETITOR_COST_STACK } from '../../../data/financials.js';
 import { EMBER_MOSS_BRAND, EMBER_MOSS_PRODUCTS, EMBER_MOSS_JOURNAL, EMBER_MOSS_TESTIMONIALS, EMBER_MOSS_FAQ, STOREFRONT_THEME_SWATCHES } from '../../../data/decks/emberMoss.js';
 
@@ -3109,7 +3110,7 @@ function WhyRetail({ theme, u, box, k, cursorRef, wrapRef }) {
 // (browsers won't let a script open a tab by itself); Enter opens it too.
 const LIVE_URL = 'https://peakenterprise.ca/';
 
-function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
+function MockupLiveDemo({ theme, size, paceMs = 22000, names: namesProp, summitLabel, eyebrow, showAction = true }) {
   const t = theme.colors;
   const onAccent = theme.isLight ? '#fff' : t.bg;
   const slideEntered = useSlideEntered();
@@ -3127,7 +3128,7 @@ function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
   const k = paceMs / 22000;
 
   // the trail: base, six waypoints, summit
-  const names = ['Business', 'Storefront', 'Customer', 'Checkout', 'Dashboard', 'Order'];
+  const names = namesProp || ['Business', 'Storefront', 'Customer', 'Checkout', 'Dashboard', 'Order'];
   const sides = ['r', 'l', 'r', 'l', 'r', 'l'];
   const trail = [[0.17, 0.88], [0.27, 0.75], [0.37, 0.64], [0.34, 0.53], [0.45, 0.43], [0.43, 0.33], [0.49, 0.23], [0.52, 0.14]].map(([x, y]) => pt(x, y));
   const travel = 1.1 * k, hold = 0.35 * k, t0 = 1.5 * k;
@@ -3168,7 +3169,7 @@ function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
 
   // the cursor presses the live-site button once the summit is reached
   useEffect(() => {
-    if (!slideEntered) return undefined;
+    if (!slideEntered || !showAction) return undefined;
     let live = true;
     const isLive = () => live;
     let rel;
@@ -3184,7 +3185,7 @@ function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
 
   // Enter opens the live site (a real key press is allowed to open a tab; a script is not)
   useEffect(() => {
-    if (!slideEntered) return undefined;
+    if (!slideEntered || !showAction) return undefined;
     const onKey = (e) => { if (e.key === 'Enter' && !e.repeat) window.open(LIVE_URL, '_blank', 'noopener,noreferrer'); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -3289,7 +3290,7 @@ function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
             <motion.div initial={{ opacity: 0, y: 8 * u, scale: 0.8 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16, delay: tSummit + 0.3 }}
               style={{ position: 'absolute', left: apex[0], top: apex[1] - 44 * u, transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: `${6 * u}px`, padding: `${4 * u}px ${12 * u}px`, borderRadius: '100px', background: t.accent, color: onAccent, boxShadow: `0 ${4 * u}px ${14 * u}px ${t.accent}66`, whiteSpace: 'nowrap', ...mono(8.5, onAccent, { fontWeight: 700 }) }}>
               <motion.span animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 1.4 }} style={{ width: `${6 * u}px`, height: `${6 * u}px`, borderRadius: '50%', background: '#3DDC84' }} />
-              {COMPANY.name} {'\u00B7'} live now
+              {summitLabel || <>{COMPANY.name} {'\u00B7'} live now</>}
             </motion.div>
 
             <motion.div initial={{ opacity: 0, scale: 0.3, y: 10 * u }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 12, delay: tSummit + 0.7 }}
@@ -3298,14 +3299,14 @@ function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
             </motion.div>
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.6 }} style={{ position: 'absolute', left: 14 * u, top: 12 * u, ...mono(8, t.accent, { fontWeight: 700 }) }}>
-              From first idea to first order
+              {eyebrow || 'From first idea to first order'}
             </motion.div>
           </>
         )}
       </div>
 
       {/* ── the action strip: QR from the very first second, then the button ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: `${16 * u}px`, flexShrink: 0 }}>
+      <div style={{ display: showAction ? 'flex' : 'none', alignItems: 'center', gap: `${16 * u}px`, flexShrink: 0 }}>
         {slideEntered && (
           <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 15, delay: 0.5 }}
             style={{ position: 'relative', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${5 * u}px`, padding: `${9 * u}px`, background: '#fff', borderRadius: `${12 * u}px`, border: `1px solid ${t.border}`, boxShadow: `0 ${6 * u}px ${18 * u}px rgba(0,0,0,0.12)` }}>
@@ -3348,6 +3349,20 @@ function MockupLiveDemo({ theme, size, paceMs = 22000 }) {
       <AutoCursor ref={cursorRef} theme={theme} size={size} />
     </div>
   );
+}
+
+// Investor deck roadmap: the same mountain climb, with the funding stages as waypoints and no QR strip.
+export function RoadmapClimb(props) {
+  const [s1, s2, s3] = STAGE_TARGETS;
+  const names = [
+    `Today \u00B7 ${TRACTION_FACTS.paidUsers} paying`,
+    `Grants \u00B7 $${ASK.grants / 1000}K`,
+    `Stage 1 \u00B7 ${s1.payingUsers.toLocaleString()}`,
+    `Stage 2 \u00B7 ${s2.payingUsers.toLocaleString()}`,
+    `Investment \u00B7 $${ASK.investment / 1e6}M`,
+    `Stage 3 \u00B7 ${s3.payingUsers.toLocaleString()}`,
+  ];
+  return <MockupLiveDemo {...props} names={names} summitLabel="Then we hire" eyebrow="Milestones, not dates" showAction={false} />;
 }
 
 export const DEMO_VISUALS = {

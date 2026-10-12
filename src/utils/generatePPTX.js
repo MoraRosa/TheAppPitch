@@ -5,7 +5,8 @@
 import PptxGenJS from 'pptxgenjs';
 import { SLIDES } from '../data/slides.js';
 import { COMPETITOR_COST_STACK, FUNDING_BREAKDOWN_SMALL, MERCHANT_GROWTH } from '../data/financials.js';
-import { COMPANY, COMPETITORS, FUNDING, MARKET } from '../data/config.js';
+import { COMPANY, COMPETITORS, FUNDING, MARKET, TRACTION, STAGES } from '../data/config.js';
+import { PRODUCT } from '../data/facts.js';
 
 export async function generatePitchDeckPPTX(theme) {
   const pptx = new PptxGenJS();
@@ -210,15 +211,8 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
     }
 
     case 'traction': {
-      const items = [
-        { label: 'Multi-tenant DB', pct: 100 },
-        { label: 'Dual Auth', pct: 100 },
-        { label: 'REST API 23+ endpoints', pct: 100 },
-        { label: 'Pulse', pct: 100 },
-        { label: 'Stripe Connect', pct: 35 },
-        { label: 'Beta Launch', pct: 20 },
-      ];
-      s.addText('BUILD PROGRESS', { x: pad, y: contentY, w: rw - 0.3, h: 0.3, fontSize: 7, color: accent, fontFace: 'Arial', charSpacing: 2 });
+      const items = PRODUCT.liveNow.map(label => ({ label, pct: 100 }));
+      s.addText('LIVE NOW', { x: pad, y: contentY, w: rw - 0.3, h: 0.3, fontSize: 7, color: accent, fontFace: 'Arial', charSpacing: 2 });
       items.forEach((item, i) => {
         const y = contentY + 0.45 + i * 1.05;
         s.addText(item.label, { x: pad, y, w: rw * 0.7, h: 0.3, fontSize: 8, color: item.pct === 100 ? textMain : textMute, fontFace: 'Arial' });
@@ -231,9 +225,9 @@ function addRightVisual(s, pptx, slide, rx, rw, H, accent, textMute, textFaint, 
 
     case 'roadmap': {
       const phases = [
-        { label: 'NOW', items: 'Cart + Payments · BARE Theme · Beta Launch' },
-        { label: '6 MO', items: 'Scheduling · 100+ merchants · First Hire' },
-        { label: '18 MO', items: 'AI Agent API · US Entry · 500+ merchants' },
+        { label: 'TODAY', items: `${TRACTION.activeUsers} active users · ${TRACTION.paidUsers} paying · $${TRACTION.mrr} MRR` },
+        { label: 'GRANTS', items: `$${FUNDING.currentGrant.amount / 1000}K → Stage 1 (${STAGES[0].payingUsers}) to Stage 2 (${STAGES[1].payingUsers}) paying merchants` },
+        { label: 'INVESTMENT', items: `$${FUNDING.seedRound.min / 1e6}M → Stage 3 (${STAGES[2].payingUsers.toLocaleString()} paying), then hire marketing and branding` },
       ];
       phases.forEach((phase, i) => {
         const y = contentY + i * 2.1;

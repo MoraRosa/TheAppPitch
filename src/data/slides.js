@@ -2,7 +2,7 @@
 // Theme-agnostic. All visual decisions live in /themes.
 // Every number comes from facts.js (via config.js). Do not type figures in here.
 
-import { COMPANY, TRACTION, PRICING, MARKET, FUNDING } from './config.js';
+import { COMPANY, TRACTION, PRICING, MARKET, FUNDING, FOUNDER_INFO } from './config.js';
 import { STAGE_TARGETS, WORDING } from './facts.js';
 
 const [S1, S2, S3] = STAGE_TARGETS.map(s => s.payingUsers.toLocaleString());
@@ -81,6 +81,7 @@ export const SLIDES = [
   {
     id: 8,
     slug: "roadmap",
+    autoMs: 26000,
     eyebrow: "Roadmap",
     headline: `${S1} paying merchants, then ${S2}, then ${S3}.`,
     body: `Stage 1 is ${S1} paying merchants. Stage 2 is ${S2}. Stage 3 is ${S3}, and then we hire for marketing and branding. Milestones are earned, not dated.`,
@@ -101,9 +102,28 @@ export const SLIDES = [
     slug: "ask",
     eyebrow: "The Ask",
     headline: `${fmtK(FUNDING.currentGrant.amount)} in grants and $${(FUNDING.seedRound.min / 1e6).toFixed(0)}M from investors to reach ${S3} paying merchants.`,
-    body: `Grants take us from ${S1} to ${S2} paying merchants: product hardening, infrastructure, onboarding, first marketing tests. The investment takes us to ${S3} and funds our first hires, including brand and the rename.`,
+    body: `Grants take us from ${S1} to ${S2} paying merchants: product hardening, infrastructure, onboarding, first marketing tests. The investment takes us to ${S3} and funds our first hires, including brand and the rename. Grants are 50% development, 30% marketing and 20% business setup: accounting, legal and insurance.`,
     speakerNote: "End with the human story. One developer, a live product, paying customers. The ask turns a working product into a company.",
     tag: "10",
+  },
+  {
+    id: 11,
+    slug: "team",
+    eyebrow: "The Team",
+    headline: "One developer built it. The raise adds the first team.",
+    body: `${FOUNDER_INFO.name} designed, built and launched ${COMPANY.name} alone, and also runs Lumina, a live e-commerce brand. After Stage 3 we hire marketing and branding first, then engineering and customer success.`,
+    speakerNote: "Own the solo-founder risk out loud, then show the plan that removes it: the hires, in order.",
+    tag: "11",
+  },
+  {
+    id: 12,
+    slug: "close",
+    eyebrow: "Try it yourself",
+    headline: "Scan it. The platform is live.",
+    body: `${COMPANY.name} is live at ${COMPANY.url}. Scan the code or open the live site, and see the merchants already running on it.`,
+    autoMs: 22000,
+    speakerNote: "Leave the QR on screen. Let people scan while you take questions.",
+    tag: "12",
   },
 ];
 

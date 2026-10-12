@@ -5,7 +5,7 @@
 import { INVESTOR_SLIDES } from './investorSlides.js';
 import { DEMO_SLIDES } from './demoSlides.js';
 import { INVESTOR_VISUALS } from '../../components/pitch/visuals/investorVisuals.jsx';
-import { DEMO_VISUALS } from '../../components/pitch/visuals/demoVisuals.jsx';
+import { DEMO_VISUALS, RoadmapClimb } from '../../components/pitch/visuals/demoVisuals.jsx';
 
 export const DECKS = {
   investor: {
@@ -15,7 +15,13 @@ export const DECKS = {
     audience: 'Investors & grant reviewers',
     slides: INVESTOR_SLIDES,
     // Sprint 2: problem + solution reuse the animated demo components (flood, module cards).
-    visuals: { ...INVESTOR_VISUALS, problem: DEMO_VISUALS.problem, solution: DEMO_VISUALS.platform },
+    visuals: {
+      ...INVESTOR_VISUALS,
+      problem: DEMO_VISUALS.problem,
+      solution: DEMO_VISUALS.platform,
+      roadmap: RoadmapClimb,            // Sprint 3: the funding stages as a mountain climb
+      close: DEMO_VISUALS['live-demo'], // Sprint 3: closing slide with the QR
+    },
     suggestedTheme: 'canadian',
     animated: true,
   },

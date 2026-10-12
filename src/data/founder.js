@@ -11,7 +11,7 @@ export const FOUNDER = {
   bio: `A full-stack developer with 5 years of experience building production software. ${COMPANY.name} was built entirely solo, from database architecture to deployment because the tools small business owners actually need did not exist in one place, so the decision was to build them.`,
   // ← REPLACE bio with your real story
   
-  whyUnique: `Building ${COMPANY.name} from scratch | multi-tenant database, dual auth systems, production costing engine, five isolated theme systems | demonstrates not just technical ability but product thinking. This is not a prototype. It is a platform.`,
+  whyUnique: `Building ${COMPANY.name} from scratch | multi-tenant database, dual auth systems, production costing engine, isolated theme systems | demonstrates not just technical ability but product thinking. This is not a prototype. It is a platform.`,
 
   skills: [
     "React 18/19 + TypeScript",
