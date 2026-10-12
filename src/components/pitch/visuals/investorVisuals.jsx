@@ -4,7 +4,9 @@
 
 import React from 'react';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, FUNDING_BREAKDOWN_SMALL } from '../../../data/financials.js';
-import { COMPANY, COMPETITORS } from '../../../data/config.js';
+import { COMPANY, COMPETITORS, TRACTION } from '../../../data/config.js';
+import { LIVE_SITES, PRODUCT } from '../../../data/facts.js';
+import { CountUp } from '../motion.jsx';
 
 // ── Hook: animated big numbers ────────────────────────────────────────────────
 function VisualHook({ theme, size }) {
@@ -274,34 +276,42 @@ function VisualModel({ theme, size }) {
 // ── Traction: build progress ──────────────────────────────────────────────────
 function VisualTraction({ theme, size }) {
   const t = theme.colors;
-  const items = [
-    { label: 'Multi-tenant DB', pct: 100 },
-    { label: 'Dual Auth', pct: 100 },
-    { label: 'REST API (23+ endpoints)', pct: 100 },
-    { label: 'Pulse (Production)', pct: 100 },
-    { label: 'Constellation CRM', pct: 100 },
-    { label: 'Stripe Connect', pct: 35 },
-    { label: 'Beta Launch', pct: 20 },
-  ];
+  const stat = (to, label, prefix = '') => (
+    <div style={{ flex: 1, padding: `${10 * size}px ${8 * size}px`, background: t.bgAlt, border: `1px solid ${t.border}`, borderRadius: theme.space.radius || '2px', textAlign: 'center' }}>
+      <div style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${26 * size}px`, color: t.text, lineHeight: 1 }}>
+        <CountUp to={to} prefix={prefix} duration={1.4} />
+      </div>
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: `${5 * size}px` }}>{label}</div>
+    </div>
+  );
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: `${7 * size}px`, width: '100%' }}>
-      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', marginBottom: `${2 * size}px`, textTransform: 'uppercase' }}>Build progress</div>
-      {items.map((item, i) => (
-        <div key={i}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-            <span style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: item.pct === 100 ? t.text : t.textMuted }}>{item.label}</span>
-            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${9 * size}px`, color: item.pct === 100 ? t.accent : t.textFaint }}>{item.pct}%</span>
-          </div>
-          <div style={{ height: `${4 * size}px`, background: t.bgAlt, borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', width: `${item.pct}%`,
-              background: item.pct === 100 ? t.accent : `${t.accent}60`,
-              animation: `barGrow 0.5s ease ${i * 0.06}s both`,
-            }} />
-          </div>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: `${10 * size}px`, width: '100%' }}>
+      <div style={{ display: 'flex', gap: `${8 * size}px` }}>
+        {stat(TRACTION.activeUsers, 'Active users')}
+        {stat(TRACTION.paidUsers, 'Paying merchants')}
+        {stat(TRACTION.mrr, 'MRR', '$')}
+      </div>
+      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Live on the platform now</div>
+      {LIVE_SITES.map((site, i) => (
+        <a key={site.host} href={site.url} target="_blank" rel="noreferrer" style={{
+          display: 'flex', alignItems: 'center', gap: `${10 * size}px`, textDecoration: 'none',
+          padding: `${8 * size}px ${10 * size}px`, background: t.bgAlt, border: `1px solid ${t.border}`,
+          borderRadius: theme.space.radius || '2px', animation: `proofIn 0.4s ease ${0.15 * i}s both`,
+        }}>
+          <span style={{ width: `${8 * size}px`, height: `${8 * size}px`, borderRadius: '50%', background: t.positive || t.accent, flexShrink: 0 }} />
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: 'block', fontFamily: theme.fonts.body, fontSize: `${10 * size}px`, color: t.text }}>{site.name}</span>
+            <span style={{ display: 'block', fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{site.host}</span>
+          </span>
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: site.paying ? t.accent : t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{site.paying ? 'Paying' : 'Test account'}</span>
+        </a>
       ))}
-      <style>{`@keyframes barGrow { from { width: 0 } }`}</style>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${5 * size}px` }}>
+        {PRODUCT.liveNow.map(f => (
+          <span key={f} style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textMuted, border: `1px solid ${t.border}`, borderRadius: '999px', padding: `${3 * size}px ${8 * size}px` }}>{f}</span>
+        ))}
+      </div>
+      <style>{`@keyframes proofIn { from { opacity: 0; transform: translateY(6px) } }`}</style>
     </div>
   );
 }

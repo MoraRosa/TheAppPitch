@@ -105,6 +105,8 @@ export const PLATFORM = {
   stack:      ['React', 'Supabase', 'Stripe Connect', 'Vercel', 'Fastify'],
   themes:     THEMES.liveCount,
   themeNames: THEMES.storefront.map(t => t.name),
+  adminThemes: THEMES.adminCount,
+  adminThemeNames: THEMES.admin,
   themeInProgress: THEMES.inProgress,
   modules:    MODULES,
   repoBase:   'https://github.com/MoraRosa',

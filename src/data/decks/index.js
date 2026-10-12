@@ -14,8 +14,10 @@ export const DECKS = {
     tagline: 'The ask, the market, and the traction.',
     audience: 'Investors & grant reviewers',
     slides: INVESTOR_SLIDES,
-    visuals: INVESTOR_VISUALS,
+    // Sprint 2: problem + solution reuse the animated demo components (flood, module cards).
+    visuals: { ...INVESTOR_VISUALS, problem: DEMO_VISUALS.problem, solution: DEMO_VISUALS.platform },
     suggestedTheme: 'canadian',
+    animated: true,
   },
   demo: {
     id: 'demo',

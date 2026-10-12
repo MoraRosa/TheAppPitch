@@ -21,6 +21,7 @@ export const SLIDES = [
   {
     id: 2,
     slug: "problem",
+    autoMs: 24000,
     eyebrow: "The Problem",
     headline: "$160–850/month in tools that don't talk to each other.",
     body: "Shopify was built for retailers who buy and resell — not makers who track 40 ingredients, 8 suppliers, and 12 batch recipes before a product ever ships. The market handed them a website builder and told them to figure out the rest.",
@@ -31,6 +32,7 @@ export const SLIDES = [
   {
     id: 3,
     slug: "solution",
+    autoMs: 28000,
     eyebrow: "The Solution",
     headline: "One platform. One login. Operational in under an hour.",
     body: "A merchant signs up, picks their business type, picks a theme, and has everything they need — storefront, customers, costing, tasks, scheduling, email — no additional accounts, no integrations, no maintenance.",
@@ -68,9 +70,10 @@ export const SLIDES = [
   {
     id: 7,
     slug: "traction",
+    autoMs: 22000,
     eyebrow: "Traction",
     headline: `Live product. ${TRACTION.activeUsers} active users. ${TRACTION.paidUsers} paying. $${TRACTION.mrr} MRR.`,
-    body: `Storefront, cart and checkout, shipping, scheduling, and Stripe Connect payments are live, with transaction fees switched on. ${TRACTION.paidUsers} of ${TRACTION.activeUsers} active users have converted to paid — an early signal, not a conversion rate. Zero paid marketing. One developer.`,
+    body: `Storefront, cart and checkout, shipping, scheduling, custom domains, and Stripe Connect payments are live, with transaction fees switched on. First official user: September 2. ${TRACTION.paidUsers} of ${TRACTION.activeUsers} active users have converted to paid — an early signal, not a conversion rate. Zero paid marketing. One developer.`,
     speakerNote: "One person built and shipped all of this. Call 2 of 8 an early signal, because the sample is tiny.",
     tag: "07",
   },

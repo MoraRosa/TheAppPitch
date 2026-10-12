@@ -19,7 +19,9 @@ export const PRODUCT = {
 // Storefront themes and admin themes are separate sets; the 5th storefront theme is in progress.
 export const THEMES = {
   liveCount: 4,
+  adminCount: 3,
   inProgress: ['Soft Matter (claymorphism)'],
+  admin: ['Pink', 'Midnight Ledger', 'Bare'],
   storefront: [
     { name: 'Soft Pink',  for: 'beauty, skincare, lifestyle' },
     { name: 'Editorial',  for: 'luxury, fashion, niche publishing' },
@@ -31,6 +33,7 @@ export const THEMES = {
 // ── Traction (confirmed) ──────────────────────────────────────────────────────
 export const TRACTION_FACTS = {
   asOf: '2026-10',
+  firstUserDate: '2026-09-02', // first official user
   activeUsers: 8,
   paidUsers: 2,
   mrr: 60, // subscription revenue only; transaction fees are live but tracked separately
@@ -44,10 +47,17 @@ export const MRR_TRACKER = [
   { month: '2026-10', activeUsers: 8, paidUsers: 2, mrr: 60 },
 ];
 
-// Confirm both merchants consent to being shown before they appear on any slide.
+// Both paying merchants gave verbal consent to show their websites (and possibly logos). Not their names or numbers beyond that.
 export const PAYING_MERCHANTS = [
-  { name: 'Circle of Care Counselling', url: 'https://circleofcarecounselling.com', consentConfirmed: false },
-  { name: 'Huchflex', url: 'https://huchflex-p340.peakenterprise.ca', note: 'will move to the merchant\'s own domain', consentConfirmed: false },
+  { name: 'Circle of Care Counselling', url: 'https://circleofcarecounselling.com', consent: 'verbal: website, maybe logo' },
+  { name: 'Huchflex', url: 'https://huchflex-p340.peakenterprise.ca', note: 'will move to the merchant\'s own domain', consent: 'verbal: website, maybe logo' },
+];
+
+// Sites shown as product proof. Grolead is the founder's own test account (not paying), on a custom domain.
+export const LIVE_SITES = [
+  { name: 'Circle of Care Counselling', host: 'circleofcarecounselling.com', url: 'https://circleofcarecounselling.com', paying: true,  kind: 'Counselling practice' },
+  { name: 'Huchflex',                   host: 'huchflex-p340.peakenterprise.ca', url: 'https://huchflex-p340.peakenterprise.ca', paying: true,  kind: 'Paying merchant' },
+  { name: 'Grolead',                    host: 'grolead.com', url: 'https://grolead.com', paying: false, kind: 'Founder test account, custom domain' },
 ];
 
 // Projects live on Peak (replaces Momentum and Mizzie). Links and screenshots to come.
@@ -127,15 +137,14 @@ export const BENCHMARKS = {
 
 // ── Use of funds: ILLUSTRATIVE DRAFT (Hikmah to edit) ─────────────────────────
 export const USE_OF_FUNDS = {
-  illustrative: true,
+  illustrative: true, // applies to the investment split only; the grant split is the founder's own
   grants: {
     goal: 'Reach Stage 1-2 (40 to 400 paying merchants)',
-    // Split below is a placeholder; the plan only named the purposes, not the amounts.
+    // Founder's split: 50% development, 30% marketing, 20% business setup (paperwork, accounting, legal, insurance).
     items: [
-      { label: 'Product hardening',        pct: 30 },
-      { label: 'Infrastructure',           pct: 20 },
-      { label: 'Onboarding',               pct: 25 },
-      { label: 'First marketing tests',    pct: 25 },
+      { label: 'Development',                                   pct: 50 },
+      { label: 'Marketing',                                     pct: 30 },
+      { label: 'Business setup (accounting, legal, insurance)', pct: 20 },
     ],
   },
   investment: {
@@ -174,10 +183,8 @@ export const WORDING = {
 
 // ── Open questions (nothing below is assumed in the content) ──────────────────
 export const OPEN_QUESTIONS = [
-  'Both paying merchants: consent to be shown on slides?',
-  'Source or removal of the $14B global SaaS figure.',
+  'Market sprint: source or replace the $14B global SaaS figure; size the Canadian maker and service-business segment.',
+  'Does huchflex stay on its peakenterprise.ca subdomain or has it moved to its own domain?',
   'Roadmap items still ahead: GST/HST tax engine, 5th storefront theme (Soft Matter), AI agent API, US expansion.',
-  'Admin themes: how many exist today?',
   'API endpoint and table counts (23+, 21+): re-count from the code, or drop them (the audience is non-technical).',
-  'Grant use-of-funds split (amounts were not specified).',
 ];

@@ -281,7 +281,7 @@ Stage 3 targets ${n(ST3.payingUsers)} paying merchants through paid acquisition 
     number: "12",
     title: "Traction",
     get content() {
-      return `The product is live at MVP. ${TRACTION.activeUsers} users are actively using the platform and ${TRACTION.paidUsers} have converted to paid, for ${usd(TRACTION.mrr)} in monthly subscription revenue. ${TRACTION.paidUsers} of ${TRACTION.activeUsers} is an early signal, not a conversion rate. Transaction fees are on and tracked separately. No paid marketing has been used.
+      return `The product is live at MVP, and the first official user joined on September 2, 2026. ${TRACTION.activeUsers} users are actively using the platform and ${TRACTION.paidUsers} have converted to paid, for ${usd(TRACTION.mrr)} in monthly subscription revenue. ${TRACTION.paidUsers} of ${TRACTION.activeUsers} is an early signal, not a conversion rate. Transaction fees are on and tracked separately. No paid marketing has been used.
 
 What is live: storefront, cart and checkout, connected shipping, scheduling, and Stripe Connect payments. Multi-tenant database with Row-Level Security across ${TRACTION.dbTables}+ tables. Dual authentication covering merchants and buyers as completely separate identity pools. Fastify REST API with products, orders, customers, and inventory across ${TRACTION.apiEndpoints}+ endpoints. Merchant admin dashboard. Costing (Pulse) with ingredients, suppliers, batch costing, packaging design studio, QuickBooks integration, and financial dashboard. Customers (Constellation) with customer overview, segments, journey tracking, and engagement analytics. Tasks and calendar (Compass). Email, blog, FAQ, legal, newsletter, hero, banner, and reviews.`;
     },
@@ -291,7 +291,7 @@ What is live: storefront, cart and checkout, connected shipping, scheduling, and
     id: "roadmap",
     number: "13",
     title: "Product Roadmap",
-    content: `Live now: ${PLATFORM.themes} storefront themes, custom domains, multi-tenant architecture, dual authentication, REST API, merchant dashboard, storefront, cart and checkout, shipping, scheduling, Stripe Connect payments, Costing, Customers, Tasks, Email, and all content modules.
+    content: `Live now: ${PLATFORM.themes} storefront themes and ${PLATFORM.adminThemes} admin themes, custom domains, multi-tenant architecture, dual authentication, REST API, merchant dashboard, storefront, cart and checkout, shipping, scheduling, Stripe Connect payments, Costing, Customers, Tasks, Email, and all content modules.
 
 Growth stages (paying merchants): Stage 1 is ${n(ST1.payingUsers)}, Stage 2 is ${n(ST2.payingUsers)}, Stage 3 is ${n(ST3.payingUsers)}, and then we hire for marketing and branding.
 
@@ -306,7 +306,7 @@ Later: AI Agent API enabling ChatGPT or Claude to search inventory and place ord
     title: "Funding Requirements",
     get blocks() { return [
       { type: 'label', text: `The Raise — ${usd(FUNDING.currentGrant.amount)} in Grants + ${usd(FUNDING.seedRound.min)} from Investors` },
-      { type: 'text', text: `Grants of ${usd(FUNDING.currentGrant.amount)}: ${FUNDING.currentGrant.goal}. Illustrative use: ${FUNDING.currentGrant.breakdown.map(b => `${b.label.toLowerCase()} ${usd(b.amount)}`).join(', ')}.` },
+      { type: 'text', text: `Grants of ${usd(FUNDING.currentGrant.amount)}: ${FUNDING.currentGrant.goal}. Planned use: ${FUNDING.currentGrant.breakdown.map(b => `${b.label.toLowerCase()} ${usd(b.amount)}`).join(', ')}.` },
       { type: 'text', text: `Investment of ${usd(FUNDING.seedRound.min)}: ${FUNDING.seedRound.goal}. Illustrative split: ${FUNDING.seedRound.breakdown.map(b => `${b.label.toLowerCase()} ${b.pct}% (${usd(b.amount)})`).join(', ')}.` },
       { type: 'label', text: 'Long-Term Financing Plan' },
       { type: 'text', text: `Revenue-funded growth from subscriptions and transaction fees, with a possible later round to fund US market entry and AI feature development. ${FOUNDER_INFO.name} retains majority ownership through all funding stages.` },
