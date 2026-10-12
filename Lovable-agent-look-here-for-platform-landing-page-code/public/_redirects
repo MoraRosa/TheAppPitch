@@ -1,0 +1,27 @@
+# Cloudflare Pages routing rules for the platform project.
+#
+# The platform build emits two HTML entries (apps/platform/vite.config.js):
+#   index.html    -> marketing SPA   (root, theapp.com in prod)
+#   account.html  -> account SPA     (app.theapp.com in prod)
+#
+# In split-host production these are served from different origins so no
+# rewrites are needed. On Cloudflare Pages both files live under one
+# origin, so any navigation that lands inside the account SPA (e.g.
+# /account/login, /account/reset-password, deep links from password
+# recovery emails) must be rewritten to /account.html for the SPA shell
+# to load. The account router reads VITE_ACCOUNT_BASENAME=/account and
+# handles the rest client-side.
+#
+# Marketing SSG pages (/, /pricing, /blog/*, etc.) are pre-rendered to
+# their own index.html files by vite-react-ssg and are served directly
+# without rewrites, so a marketing catch-all would mask 404s and is
+# intentionally omitted.
+#
+# The bare /account URL is intentionally NOT listed here. Cloudflare
+# Pages serves dist/account.html for /account automatically AND
+# auto-strips .html extensions, so a `/account -> /account.html`
+# rewrite triggers an extension-strip back to /account and loops
+# (ERR_TOO_MANY_REDIRECTS). The /account/* rule below covers every
+# nested SPA route (/account/login, /account/reset-password, etc.).
+
+/account/*          /account.html   200

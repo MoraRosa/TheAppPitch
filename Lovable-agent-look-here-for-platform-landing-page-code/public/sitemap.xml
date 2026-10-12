@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Marketing sitemap -- SOFT-MODE FALLBACK.
+
+  This file ships verbatim into dist/ when `pnpm build` runs without
+  CMS_SSG_BASE_URL set (local smoke builds). In strict mode (CI / prod
+  build), scripts/build-cms-sitemap.mjs overwrites dist/sitemap.xml
+  with a generated file that enumerates every published detail page
+  (legal/<slug>, blog/<slug>, changelog/<slug>, docs/<slug>).
+
+  Keep the static routes below in sync with STATIC_ROUTE_DEFAULTS in
+  src/marketing/seo/sitemapBuilders.js -- the generator uses that array
+  for the static portion of the strict-mode output.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://theapp.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://theapp.com/pricing</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://theapp.com/trust</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://theapp.com/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://theapp.com/legal</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://theapp.com/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://theapp.com/changelog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://theapp.com/docs</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>
