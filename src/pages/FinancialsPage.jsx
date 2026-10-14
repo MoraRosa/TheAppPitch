@@ -45,16 +45,22 @@ export default function FinancialsPage() {
 
       {/* Unit economics — clean borders, no grid background */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)',
+        display: isMobile ? 'flex' : 'grid',
+        gridTemplateColumns: isMobile ? undefined : 'repeat(5, 1fr)',
+        // mobile: one swipeable row instead of two stacked rows
+        overflowX: isMobile ? 'auto' : 'visible',
+        scrollSnapType: isMobile ? 'x proximity' : undefined,
+        WebkitOverflowScrolling: 'touch',
         borderBottom: `1px solid ${t.border}`,
       }}>
         {UE_ITEMS.map((item, i) => (
           <div key={item.label} style={{
-            padding: isMobile ? '20px 12px' : '28px 32px',
+            padding: isMobile ? '20px 18px' : '28px 32px',
             borderRight: i < UE_ITEMS.length - 1 ? `1px solid ${t.border}` : 'none',
-            // On mobile, wrap to second row — add top border for row 2
-            borderTop: isMobile && i >= 3 ? `1px solid ${t.border}` : 'none',
+            flex: isMobile ? '0 0 auto' : undefined,
+            minWidth: isMobile ? '120px' : undefined,
+            whiteSpace: isMobile ? 'nowrap' : undefined,
+            scrollSnapAlign: isMobile ? 'start' : undefined,
           }}>
             <div style={{
               fontFamily: theme.fonts.display,
@@ -145,7 +151,7 @@ export default function FinancialsPage() {
               <BarChart data={FUNDING_BREAKDOWN_SMALL} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke={t.border} horizontal={false} />
                 <XAxis type="number" tickFormatter={v => `$${v.toLocaleString()}`} tick={{ fontFamily: theme.fonts.mono, fontSize: 8, fill: t.textMuted }} />
-                <YAxis type="category" dataKey="label" width={isMobile ? 120 : 180} tick={{ fontFamily: theme.fonts.body, fontSize: isMobile ? 9 : 11, fill: t.textMuted }} />
+                <YAxis type="category" dataKey="label" width={isMobile ? 88 : 130} tickLine={false} interval={0} tickFormatter={v => String(v).split(' (')[0]} tick={{ fontFamily: theme.fonts.body, fontSize: isMobile ? 9 : 11, fill: t.textMuted }} />
                 <Tooltip contentStyle={tooltipStyle} formatter={v => [`$${v.toLocaleString()}`, 'Amount']} />
                 <Bar dataKey="amount" fill={t.accent} radius={[0, 2, 2, 0]} />
               </BarChart>
@@ -167,21 +173,26 @@ export default function FinancialsPage() {
 
         {/* Milestones — clean borders, no grid background */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+          display: isMobile ? 'flex' : 'grid',
+          gridTemplateColumns: isMobile ? undefined : 'repeat(3, 1fr)',
+          overflowX: isMobile ? 'auto' : 'visible',
+          scrollSnapType: isMobile ? 'x mandatory' : undefined,
+          WebkitOverflowScrolling: 'touch',
           borderTop: `1px solid ${t.border}`,
         }}>
           {MILESTONES.map((m, i) => (
             <div key={m.label} style={{
-              padding: isMobile ? '24px 0' : '32px 40px',
-              borderRight: !isMobile && i < MILESTONES.length - 1 ? `1px solid ${t.border}` : 'none',
-              borderBottom: isMobile && i < MILESTONES.length - 1 ? `1px solid ${t.border}` : 'none',
+              padding: isMobile ? '24px 20px' : '32px 40px',
+              borderRight: i < MILESTONES.length - 1 ? `1px solid ${t.border}` : 'none',
+              flex: isMobile ? '0 0 72%' : undefined,
+              minWidth: isMobile ? '230px' : undefined,
+              scrollSnapAlign: isMobile ? 'start' : undefined,
             }}>
               <div style={{ fontFamily: theme.fonts.mono, fontSize: '9px', color: t.accent, letterSpacing: theme.type.monoTracking, marginBottom: '12px' }}>
                 {m.label.toUpperCase()}
               </div>
               <div style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: isMobile ? '22px' : '28px', color: t.text, marginBottom: '4px' }}>
-                {m.merchants} merchants
+                {m.merchants.toLocaleString()} merchants
               </div>
               <div style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: isMobile ? '18px' : '22px', color: t.accent, marginBottom: '12px' }}>
                 ${m.arr.toLocaleString()} ARR
