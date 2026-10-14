@@ -79,6 +79,8 @@ export const MARKET = {
   targetIndustries:     TARGET_INDUSTRIES_TOTAL,                   // 531,475
   onlineSellingShare:   m.canada.onlineSelling.share,
   onlineSellingYear:    m.canada.onlineSelling.year,
+  shopifyCanadaLow:     m.canada.shopifyStores.low.toLocaleString(),   // 131,033
+  shopifyCanadaHigh:    m.canada.shopifyStores.high.toLocaleString(),  // 170,307
   usSmallBiz:           '36.2 million',
   usNonEmployerNote:    'about 30.4 million of them have no employees',
   globalPlatform2025:   m.globalEcommercePlatform.y2025,

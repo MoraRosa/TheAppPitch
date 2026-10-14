@@ -41,6 +41,13 @@ This is an **upper bound by industry**. It includes businesses Peak does not fit
 - Theoretical ceiling: if every business in the industry group paid, subscriptions would be about **$191M a year at $30/month** or **$274M at the $43 mix**. Present this only as a ceiling, never as a forecast.
 - Online-selling adoption (32% of small businesses in 2021) supports the story that most small businesses are still not selling online, but the data is five years old. Statistics Canada has a 2024 table (33-10-0925) worth pulling before a final deck.
 
+## 4b. Scale check: Shopify stores in Canada
+
+- Third-party trackers count about **131,000 to 170,000 active Shopify stores in Canada** (StoreLeads; the higher figure is a 2026-06-01 pull reported by eightx.co). They differ because of date and definition. These are estimates, not Shopify's own numbers.
+- Stage 3 (4,000 paying merchants) is **about 2.3% to 3.1%** of that range.
+- Apparel is about 20% of Canadian Shopify stores; beauty and fitness is about 10% in the city-level reports.
+- Do not use the global "5.5 million Shopify stores" figure from search summaries: Shopify does not publish a store count, and the figure comes from third-party blogs.
+
 ## 5. Still to do
 
 1. Pull the non-employer split by industry and Alberta's industry split from StatCan.

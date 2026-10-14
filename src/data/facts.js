@@ -129,6 +129,9 @@ export const MARKET_FACTS = {
     alberta:        { smallEmployers: 137182, source: ISED },
     onlineSelling:  { share: '32%', year: 2021, note: 'of small businesses had online sales (33% of all businesses)',
       source: 'Statistics Canada, Survey of Digital Technology and Internet Use, 2021 (article 13-605-X)' },
+    // Third-party tracker estimates (StoreLeads), not Shopify's own numbers. Two published figures differ by date and definition.
+    shopifyStores:  { low: 131033, high: 170307, note: 'live / active Shopify stores in Canada',
+      source: 'StoreLeads (storeleads.app/reports/shopify/CA), and a StoreLeads pull dated 2026-06-01 reported by eightx.co' },
   },
   usSmallBusinesses: { value: 36207130, share: '99.9%', nonEmployer: 30400000,
     source: 'SBA Office of Advocacy, FAQ About Small Business 2026 (advocacy.sba.gov); non-employer split from SBA 2025 Small Business Profile' },
