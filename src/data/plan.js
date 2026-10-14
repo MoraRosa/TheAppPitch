@@ -104,8 +104,6 @@ The module system means merchants enable only what their business needs. The sid
       { type: 'text', text: `Canada has ${MARKET.canadianSmallBiz} ${MARKET.canadianSmallBizNote}, which is ${MARKET.canadianSmallShare} of all Canadian employer businesses (ISED, Key Small Business Statistics 2025). It also has ${MARKET.canadianNonEmployer} ${MARKET.canadianNonEmployerNote} (Statistics Canada, December 2024). Alberta has ${MARKET.albertaSmallBiz} small employer businesses. The United States has ${MARKET.usSmallBiz} small businesses, ${MARKET.usNonEmployerNote} (SBA Office of Advocacy, 2026).` },
       { type: 'text', text: `About ${n(MARKET.targetIndustries)} Canadian small employer businesses sit in the industries ${COMPANY.name} serves: professional, scientific and technical services, health care and social assistance, personal and other services, retail trade, manufacturing, and arts and recreation. This is an upper bound by industry, not a count of businesses that fit exactly, and it leaves out sole operators. About ${MARKET.onlineSellingShare} of Canadian small businesses reported online sales in ${MARKET.onlineSellingYear} (Statistics Canada). The closest published software category, global e-commerce platforms, is estimated at ${MARKET.globalPlatform2025} in 2025, growing to ${MARKET.globalPlatform2030} by 2030 (MarketsandMarkets); analyst firms define this market differently, so treat it as one estimate.` },
       { type: 'text', text: `${COMPANY.name} does not need a large share of this market. The growth plan is stage-based: Stage 1 is ${n(ST1.payingUsers)} paying merchants, Stage 2 is ${n(ST2.payingUsers)}, and Stage 3 is ${n(ST3.payingUsers)}, under 1% of the industry group above. At Stage 3, ${n(ST3.payingUsers)} paying merchants is ${usd(ST3.arrLow)} to ${usd(ST3.arrHigh)} in annual recurring revenue (modelled, at ${usd(PRICING.arpu)} to ${usd(PRICING.arpuMix)} average revenue per merchant per month).` },
-      { type: 'placeholder', text: `Alberta-specific market size, digital adoption rates, and small business count by industry — pending Business Link Alberta secondary research.` },
-      { type: 'placeholder', text: `Target market demographics (age, income, occupation, current tool spend, buying habits) — pending primary survey results.` },
     ]; },
   },
 
@@ -132,7 +130,6 @@ Unit economics (modelled, not measured): average revenue per merchant is ${usd(U
       { type: 'text', text: `Shopify is the largest ecommerce ecosystem but was built for retailers, not makers. It has no native ingredient management, batch costing, or CRM. Its app ecosystem adds cost and integration friction at every step.` },
       { type: 'text', text: `Squarespace is design-first and business-second. No ecommerce depth, no back-office tools, and booking requires third-party integration. Kajabi serves digital products and courses at $150–400/month — overkill for most small merchants with no physical ecommerce or production costing. HoneyBook and Dubsado serve service business CRM and invoicing but have no storefront or ecommerce capability.` },
       { type: 'text', text: `${COMPANY.name}'s advantages are integrated operations that work on day one, built-in production costing (Shopify has none natively), radically isolated theming, and AI-native architecture designed for external access from day one.` },
-      { type: 'placeholder', text: `Competitor market share, advertising spend, and distribution analysis — pending secondary market research.` },
     ]; },
   },
 
@@ -311,7 +308,6 @@ Later: AI Agent API enabling ChatGPT or Claude to search inventory and place ord
       { type: 'text', text: `Investment of ${usd(FUNDING.seedRound.min)}: ${FUNDING.seedRound.goal}. Illustrative split: ${FUNDING.seedRound.breakdown.map(b => `${b.label.toLowerCase()} ${b.pct}% (${usd(b.amount)})`).join(', ')}.` },
       { type: 'label', text: 'Long-Term Financing Plan' },
       { type: 'text', text: `Revenue-funded growth from subscriptions and transaction fees, with a possible later round to fund US market entry and AI feature development. ${FOUNDER_INFO.name} retains majority ownership through all funding stages.` },
-      { type: 'placeholder', text: `Pessimistic and ideal 3-year financial scenarios — pending survey pricing validation and Business Link market size data.` },
     ]; },
   },
 
