@@ -44,7 +44,7 @@ export default function FinancialsPage() {
       </div>
 
       {/* Unit economics — clean borders, no grid background */}
-      <div style={{
+      <div className="no-scrollbar" style={{
         display: isMobile ? 'flex' : 'grid',
         gridTemplateColumns: isMobile ? undefined : 'repeat(5, 1fr)',
         // mobile: one swipeable row instead of two stacked rows
@@ -86,12 +86,13 @@ export default function FinancialsPage() {
 
       {/* Chart tabs */}
       <div style={{ padding: `32px ${pad} 0` }}>
-        <div style={{
+        <div className="no-scrollbar" style={{
           display: 'flex',
           gap: isMobile ? '0' : '4px',
           marginBottom: '32px',
           borderBottom: `1px solid ${t.border}`,
           overflowX: isMobile ? 'auto' : 'visible',
+          overflowY: 'hidden', // the -1px tab overlap was creating a tiny vertical scrollbar
         }}>
           {CHART_TABS.map((label, i) => (
             <button key={label} onClick={() => setTab(i)} style={{
@@ -172,7 +173,7 @@ export default function FinancialsPage() {
         </div>
 
         {/* Milestones — clean borders, no grid background */}
-        <div style={{
+        <div className="no-scrollbar" style={{
           display: isMobile ? 'flex' : 'grid',
           gridTemplateColumns: isMobile ? undefined : 'repeat(3, 1fr)',
           overflowX: isMobile ? 'auto' : 'visible',
