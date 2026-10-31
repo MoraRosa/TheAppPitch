@@ -3110,7 +3110,9 @@ function WhyRetail({ theme, u, box, k, cursorRef, wrapRef }) {
 // (browsers won't let a script open a tab by itself); Enter opens it too.
 const LIVE_URL = 'https://peakenterprise.ca/';
 
-function MockupLiveDemo({ theme, size, paceMs = 22000, names: namesProp, summitLabel, eyebrow, showAction = true }) {
+const PIPPA_BASE = `${import.meta.env.BASE_URL || './'}pippa/`;
+
+function MockupLiveDemo({ theme, size, paceMs = 22000, names: namesProp, summitLabel, eyebrow, showAction = true, mascot = 'ember' }) {
   const t = theme.colors;
   const onAccent = theme.isLight ? '#fff' : t.bg;
   const slideEntered = useSlideEntered();
@@ -3272,11 +3274,18 @@ function MockupLiveDemo({ theme, size, paceMs = 22000, names: namesProp, summitL
               );
             })}
 
-            {/* the hiker */}
-            <motion.div initial={{ opacity: 0, left: trail[0][0] - 8 * u, top: trail[0][1] - 8 * u }}
-              animate={{ opacity: [0, 1, 1], left: hx.map((v) => v - 8 * u), top: hy.map((v) => v - 8 * u) }}
-              transition={{ delay: t0, duration: D, times, ease: eases, opacity: { delay: t0 - 0.3, duration: 0.3, times: [0, 0.5, 1] } }}
-              style={{ position: 'absolute', zIndex: 3, width: `${16 * u}px`, height: `${16 * u}px`, borderRadius: '50%', background: '#fff', border: `${3.5 * u}px solid ${t.accent}`, boxShadow: `0 0 0 ${4 * u}px ${t.accent}40, 0 ${3 * u}px ${8 * u}px rgba(0,0,0,0.3)` }} />
+            {/* the hiker (Pippa's head on the investor deck) */}
+            {(() => { const hs = mascot === 'pippa' ? 26 : 16; return (
+              <motion.div initial={{ opacity: 0, left: trail[0][0] - (hs / 2) * u, top: trail[0][1] - (hs / 2) * u }}
+                animate={{ opacity: [0, 1, 1], left: hx.map((v) => v - (hs / 2) * u), top: hy.map((v) => v - (hs / 2) * u) }}
+                transition={{ delay: t0, duration: D, times, ease: eases, opacity: { delay: t0 - 0.3, duration: 0.3, times: [0, 0.5, 1] } }}
+                style={{ position: 'absolute', zIndex: 3, width: `${hs * u}px`, height: `${hs * u}px`,
+                  ...(mascot === 'pippa'
+                    ? { filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.35))' }
+                    : { borderRadius: '50%', background: '#fff', border: `${3.5 * u}px solid ${t.accent}`, boxShadow: `0 0 0 ${4 * u}px ${t.accent}40, 0 ${3 * u}px ${8 * u}px rgba(0,0,0,0.3)` }) }}>
+                {mascot === 'pippa' && <img src={`${PIPPA_BASE}pippa-head.webp`} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />}
+              </motion.div>
+            ); })()}
 
             {/* summit: bloom, sparkles, and the live badge */}
             <motion.div initial={{ scale: 0.2, opacity: 0 }} animate={{ scale: [0.2, 3.2], opacity: [0.6, 0] }} transition={{ delay: tSummit, duration: 1.1, ease: 'easeOut' }}
@@ -3293,10 +3302,19 @@ function MockupLiveDemo({ theme, size, paceMs = 22000, names: namesProp, summitL
               {summitLabel || <>{COMPANY.name} {'\u00B7'} live now</>}
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.3, y: 10 * u }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 12, delay: tSummit + 0.7 }}
+            {mascot === 'pippa' ? (
+              <motion.div initial={{ opacity: 0, x: 80 * u, y: -12 * u }} animate={{ opacity: 1, x: 0, y: 0 }} transition={{ type: 'spring', stiffness: 80, damping: 14, delay: tSummit + 0.6 }}
+                style={{ position: 'absolute', left: apex[0] + 30 * u, top: apex[1] - 34 * u, width: `${96 * u}px`, height: `${54 * u}px`, zIndex: 4, pointerEvents: 'none' }}>
+                <motion.img src={`${PIPPA_BASE}pippa-plane.webp`} alt="" draggable={false}
+                  animate={{ y: [0, -5 * u, 0], rotate: [0, -2.5, 0] }} transition={{ repeat: Infinity, duration: 3.2, ease: 'easeInOut' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 6px 8px rgba(0,0,0,0.3))' }} />
+              </motion.div>
+            ) : (
+              <motion.div initial={{ opacity: 0, scale: 0.3, y: 10 * u }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 12, delay: tSummit + 0.7 }}
               style={{ position: 'absolute', left: apex[0] + 20 * u, top: apex[1] - 22 * u, width: `${40 * u}px`, height: `${46 * u}px`, zIndex: 4 }}>
               <WhyImg name="ember-dragon" Fallback={Sparkles} t={t} />
             </motion.div>
+            )}
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.6 }} style={{ position: 'absolute', left: 14 * u, top: 12 * u, ...mono(8, t.accent, { fontWeight: 700 }) }}>
               {eyebrow || 'From first idea to first order'}
@@ -3362,7 +3380,12 @@ export function RoadmapClimb(props) {
     `Investment \u00B7 $${ASK.investment / 1e6}M`,
     `Stage 3 \u00B7 ${s3.payingUsers.toLocaleString()}`,
   ];
-  return <MockupLiveDemo {...props} names={names} summitLabel="Then we hire" eyebrow="Milestones, not dates" showAction={false} />;
+  return <MockupLiveDemo {...props} names={names} summitLabel="Then we hire" eyebrow="Milestones, not dates" showAction={false} mascot="pippa" />;
+}
+
+// Investor deck closing slide: the same climb and QR, with Pippa instead of Ember.
+export function LiveDemoPippa(props) {
+  return <MockupLiveDemo {...props} mascot="pippa" />;
 }
 
 export const DEMO_VISUALS = {

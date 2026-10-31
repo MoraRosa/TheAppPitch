@@ -34,17 +34,26 @@ export const THEMES = {
 export const TRACTION_FACTS = {
   asOf: '2026-10',
   firstUserDate: '2026-09-02', // first official user
-  activeUsers: 8,
+  activeUsers: 12, // 8 on 13 Oct, 11 on 22 Oct, 12 on 30 Oct 2026
   paidUsers: 2,
   mrr: 60, // subscription revenue only; transaction fees are live but tracked separately
   paidMarketing: false,
-  // 2 of 8 is a tiny sample: describe it as an early signal, never as a conversion rate.
-  earlySignalNote: '2 of 8 active users converted to paid: an early signal, not a conversion rate.',
+  // 2 of 12 is a tiny sample: describe it as an early signal, never as a conversion rate.
+  earlySignalNote: '2 of 12 users are paying: an early signal, not a conversion rate.',
 };
 
 // One row per month. Add a row each month; the Financials page reads this.
 export const MRR_TRACKER = [
-  { month: '2026-10', activeUsers: 8, paidUsers: 2, mrr: 60 },
+  { month: '2026-10', activeUsers: 12, paidUsers: 2, mrr: 60 },
+];
+
+// Dated snapshots of user growth, for a growth chart later. Add one when you check the numbers.
+// Launch-week figures are approximate (first official user 2 Sept 2026; about a week after launch).
+export const USER_SNAPSHOTS = [
+  { when: 'launch week (about 9 Sep 2026)', users: 3,  paying: 1 },
+  { when: '2026-10-13',                      users: 8,  paying: 2 },
+  { when: '2026-10-22',                      users: 11, paying: 2 },
+  { when: '2026-10-30',                      users: 12, paying: 2 },
 ];
 
 // Both paying merchants gave verbal consent to show their websites (and possibly logos). Not their names or numbers beyond that.
@@ -53,11 +62,11 @@ export const PAYING_MERCHANTS = [
   { name: 'Huchflex', url: 'https://huchflex-p340.peakenterprise.ca', note: 'will move to the merchant\'s own domain', consent: 'verbal: website, maybe logo' },
 ];
 
-// Sites shown as product proof. Grolead is the founder's own test account (not paying), on a custom domain.
+// Sites shown as product proof. Lumina is the founder's own live business (not a paying account).
 export const LIVE_SITES = [
   { name: 'Circle of Care Counselling', host: 'circleofcarecounselling.com', url: 'https://circleofcarecounselling.com', paying: true,  kind: 'Counselling practice' },
   { name: 'Huchflex',                   host: 'huchflex-p340.peakenterprise.ca', url: 'https://huchflex-p340.peakenterprise.ca', paying: true,  kind: 'Paying merchant' },
-  { name: 'Grolead',                    host: 'grolead.com', url: 'https://grolead.com', paying: false, kind: 'Founder test account, custom domain' },
+  { name: 'Lumina',                     host: 'luminaco.skin', url: 'https://luminaco.skin', paying: false, tag: 'Founder brand', kind: 'Founder\'s own live business' },
 ];
 
 // Projects live on Peak (replaces Momentum and Mizzie). Links and screenshots to come.
@@ -92,7 +101,7 @@ export const STAGE_TARGETS = [
 ];
 
 // Sign-ups needed to reach each stage at a given sign-up-to-paid rate.
-// Rates are planning sensitivities, not measurements (we have 2 of 8).
+// Rates are planning sensitivities, not measurements (we have 2 of 12).
 export const CONVERSION_SENSITIVITY = [0.10, 0.20, 0.30];
 
 export function stageLadder() {
@@ -202,6 +211,7 @@ export const BUILD = { apiEndpoints: 23, dbTables: 21 };
 
 // ── Approved wording ──────────────────────────────────────────────────────────
 export const WORDING = {
+  oneDatabase: 'Peak puts costing, inventory, storefront, bookings and customers in one database, so there is nothing to sync.',
   competition:
     'Shopify has no native production costing, so makers add a separate costing app and keep two systems in sync. ' +
     'Peak puts costing, inventory, storefront, bookings and customers in one database, so there is nothing to sync.',

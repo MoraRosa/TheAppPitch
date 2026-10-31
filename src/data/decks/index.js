@@ -5,7 +5,7 @@
 import { INVESTOR_SLIDES } from './investorSlides.js';
 import { DEMO_SLIDES } from './demoSlides.js';
 import { INVESTOR_VISUALS } from '../../components/pitch/visuals/investorVisuals.jsx';
-import { DEMO_VISUALS, RoadmapClimb } from '../../components/pitch/visuals/demoVisuals.jsx';
+import { DEMO_VISUALS, RoadmapClimb, LiveDemoPippa } from '../../components/pitch/visuals/demoVisuals.jsx';
 
 export const DECKS = {
   investor: {
@@ -20,7 +20,9 @@ export const DECKS = {
       problem: DEMO_VISUALS.problem,
       solution: DEMO_VISUALS.platform,
       roadmap: RoadmapClimb,            // Sprint 3: the funding stages as a mountain climb
-      close: DEMO_VISUALS['live-demo'], // Sprint 3: closing slide with the QR
+      close: LiveDemoPippa,             // closing slide with the QR (Pippa)
+      differentiator: DEMO_VISUALS['storefront-theme'], // instant theme switching
+      competition: DEMO_VISUALS.portal,                 // the seams between tools
     },
     suggestedTheme: 'canadian',
     animated: true,

@@ -14,11 +14,11 @@ Last updated: October 2026. Update the status table and open questions at the en
 ## 1. Facts (confirmed by Hikmah)
 
 - Product is at **MVP**. Live: storefront, cart and checkout, connected shipping, scheduling, Stripe Connect payments, transaction fees (0.5-1%), custom domains.
-- First official user: **2 September 2026**. Today: **8 active users, 2 paying, $60 MRR** (subscriptions; fees tracked separately). 2 of 8 is an early signal, never a conversion rate.
+- First official user: **2 September 2026**. Today (30 Oct 2026): **12 users, 2 paying, $60 MRR** (subscriptions; fees tracked separately). Growth: 3 users and 1 paying in launch week, 8 and 2 on 13 Oct, 11 and 2 on 22 Oct, 12 and 2 on 30 Oct. 2 of 12 is an early signal, never a conversion rate.
 - Plans (per month): **Free** (minimal storage), **Starter $30, Grow $49.99 (show $50), Pro $100**. Grow and Pro have a **3-day trial**.
 - Themes: **4 storefront** (Soft Pink, Editorial, Brutalism, Axiom) + **3 admin** (Pink, Midnight Ledger, Bare). A 5th storefront theme (Soft Matter, claymorphism) is in progress. Every theme is a fully unique experience.
 - Modules (plain names first): Storefront, Products, Orders, Payments, Shipping, Scheduling, Customers (Constellation), Costing (Pulse), Tasks (Compass), Email, Content. Compass and Email are shipped.
-- Live sites for proof: circleofcarecounselling.com and huchflex-p340.peakenterprise.ca (both paying, **verbal consent to show their websites and maybe logos**), grolead.com (founder test account on a custom domain).
+- Live sites for proof: circleofcarecounselling.com and huchflex-p340.peakenterprise.ca (both paying, **verbal consent to show their websites and maybe logos**), luminaco.skin (the founder's own live business).
 - Raising **$100,000 in grants + $1,000,000 from investors.** No grants named on slides. Zensurance is not pursued.
 - **Stages are paying merchants:** Stage 1 = 40, Stage 2 = 400, Stage 3 = 4,000, then hire (marketing, branding).
 - Grant use: **50% development, 30% marketing, 20% business setup** (paperwork, accounting, legal, insurance). The $1M split is an illustrative draft.

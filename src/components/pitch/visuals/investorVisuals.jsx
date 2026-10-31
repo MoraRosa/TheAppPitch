@@ -2,10 +2,12 @@
 // Moved unchanged out of SlideRenderer.jsx. Exported as a slug → component map
 // so SlideRenderer can look decks up generically instead of switching by hand.
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, FUNDING_BREAKDOWN_SMALL } from '../../../data/financials.js';
 import { COMPANY, COMPETITORS, TRACTION, MARKET, PRICING, FUNDING, FOUNDER_INFO } from '../../../data/config.js';
-import { LIVE_SITES, PRODUCT } from '../../../data/facts.js';
+import { LIVE_SITES, PRODUCT, MARKET_FACTS, TARGET_INDUSTRIES_TOTAL, STAGE_TARGETS } from '../../../data/facts.js';
 import { CountUp } from '../motion.jsx';
 
 // ── Hook: animated big numbers ────────────────────────────────────────────────
@@ -178,38 +180,75 @@ function VisualDifferentiator({ theme, size }) {
   );
 }
 
-// ── Market: TAM/SAM/SOM rings ─────────────────────────────────────────────────
+// ── Market: rings to scale by area, dots filter down, counters tick up ─────
+function seeded(a) {
+  return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+const MARKET_DOTS = (() => {
+  const r = seeded(7), out = [];
+  for (let i = 0; i < 84; i++) { const ang = r() * Math.PI * 2, rad = Math.sqrt(r()) * 118; out.push({ x: 150 + Math.cos(ang) * rad, y: 150 + Math.sin(ang) * rad, rad }); }
+  return out;
+})();
+
 function VisualMarket({ theme, size }) {
   const t = theme.colors;
-  const rings = [
-    { label: 'TAM', sub: `${MARKET.globalPlatform2025} global e-commerce platforms`, r: 80 * size, opacity: 0.15 },
-    { label: 'SAM', sub: `${MARKET.canadianSmallBiz.replace(' million', 'M')} CA small employers`, r: 56 * size, opacity: 0.3 },
-    { label: 'SOM', sub: '4,000 paying (Stage 3)', r: 32 * size, opacity: 0.7 },
-  ];
-  const svgSize = 180 * size;
+  const entered = useSlideEntered();
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    if (!entered) return undefined;
+    setPhase(0);
+    const ids = [300, 2400, 5000, 7800].map((ms, i) => setTimeout(() => setPhase(i + 1), ms));
+    return () => ids.forEach(clearTimeout);
+  }, [entered]);
+
+  const employer = MARKET_FACTS.canada.smallEmployers.value;
+  const soleOps = MARKET_FACTS.canada.nonEmployers.value;
+  const stage3 = STAGE_TARGETS[STAGE_TARGETS.length - 1].payingUsers;
+  // radii are proportional to the square root of each count, so the AREAS are to scale
+  const R_OUT = 130, R_IN = R_OUT * Math.sqrt(TARGET_INDUSTRIES_TOTAL / employer), R_DOT = Math.max(5, R_OUT * Math.sqrt(stage3 / employer));
+  const fix = { transformBox: 'fill-box', transformOrigin: 'center' };
+
+  const Row = ({ show, color, big, label }) => !show ? null : (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+      style={{ display: 'flex', alignItems: 'baseline', gap: `${8 * size}px`, width: '100%' }}>
+      <span style={{ width: `${9 * size}px`, height: `${9 * size}px`, borderRadius: '50%', background: color, flexShrink: 0, alignSelf: 'center' }} />
+      <span style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${20 * size}px`, color: t.text, minWidth: `${74 * size}px` }}>{big}</span>
+      <span style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: t.textMuted }}>{label}</span>
+    </motion.div>
+  );
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${12 * size}px`, width: '100%' }}>
-      <svg width={svgSize} height={svgSize} viewBox={`0 0 180 180`}>
-        {rings.map((ring, i) => (
-          <circle key={i}
-            cx="90" cy="90" r={ring.r}
-            fill={t.accent}
-            fillOpacity={ring.opacity}
-            stroke={t.accent}
-            strokeWidth="1"
-            strokeOpacity="0.4"
-          />
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${10 * size}px` }}>
+      <svg viewBox="0 0 300 300" style={{ width: '100%', maxWidth: `${290 * size}px`, height: 'auto', display: 'block' }}>
+        <motion.circle cx="150" cy="150" r={R_OUT} fill={t.bgAlt} stroke={t.border} strokeWidth="1.5" style={fix}
+          initial={{ opacity: 0, scale: 0.6 }} animate={phase >= 1 ? { opacity: 1, scale: 1 } : {}} transition={{ type: 'spring', stiffness: 120, damping: 16 }} />
+        {MARKET_DOTS.map((d, i) => {
+          const inside = d.rad < R_IN - 4;
+          const target = phase >= 3 ? { opacity: inside ? 1 : 0.22, scale: inside ? 1.25 : 0.8, fill: inside ? t.accent : t.textFaint }
+            : phase >= 2 ? { opacity: 0.75, scale: 1, fill: t.textFaint } : {};
+          return <motion.circle key={i} cx={d.x} cy={d.y} r="3.2" style={fix} initial={{ opacity: 0, scale: 0, fill: t.textFaint }}
+            animate={target} transition={{ delay: phase >= 3 ? (inside ? (i % 12) * 0.03 : 0) : i * 0.018, duration: 0.4 }} />;
+        })}
+        <motion.circle cx="150" cy="150" r={R_IN} fill={`${t.accent}14`} stroke={t.accent} strokeWidth="2" strokeDasharray="5 4" style={fix}
+          initial={{ opacity: 0, scale: 0.4 }} animate={phase >= 3 ? { opacity: 1, scale: 1 } : {}} transition={{ type: 'spring', stiffness: 110, damping: 15 }} />
+        {phase >= 4 && [0, 1].map(i => (
+          <motion.circle key={i} cx="150" cy="150" r={R_DOT} fill="none" stroke={t.accent} strokeWidth="1.5" style={fix}
+            initial={{ opacity: 0.7, scale: 1 }} animate={{ opacity: 0, scale: 4.2 }} transition={{ repeat: Infinity, duration: 2.2, delay: i * 1.1, ease: 'easeOut' }} />
         ))}
+        <motion.circle cx="150" cy="150" r={R_DOT} fill={t.accent} style={fix}
+          initial={{ opacity: 0, scale: 0 }} animate={phase >= 4 ? { opacity: 1, scale: 1 } : {}} transition={{ type: 'spring', stiffness: 260, damping: 12 }} />
       </svg>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: `${4 * size}px`, width: '100%' }}>
-        {rings.map((ring, i) => (
-          <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <div style={{ width: `${10 * size}px`, height: `${10 * size}px`, background: t.accent, opacity: ring.opacity, borderRadius: '50%', flexShrink: 0 }} />
-            <span style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.1em', width: '32px' }}>{ring.label}</span>
-            <span style={{ fontFamily: theme.fonts.body, fontSize: `${9 * size}px`, color: t.textMuted }}>{ring.sub}</span>
-          </div>
-        ))}
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: `${6 * size}px` }}>
+        <Row show={phase >= 1} color={t.textFaint} big={<CountUp to={employer / 1e6} decimals={2} suffix="M" duration={1.6} />} label="small employer businesses in Canada" />
+        <Row show={phase >= 3} color={t.accent} big={<CountUp to={Math.round(TARGET_INDUSTRIES_TOTAL / 1000)} suffix="K" duration={1.4} />} label="in the industries Peak serves" />
+        <Row show={phase >= 4} color={t.accent} big={<CountUp to={stage3} duration={1.2} />} label="Stage 3 goal: under 1% of them" />
       </div>
+      {phase >= 2 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
+          style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: 'center' }}>
+          Plus {(soleOps / 1e6).toFixed(2)}M with no employees (not shown) · Rings to scale by area
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -296,7 +335,7 @@ function VisualTraction({ theme, size }) {
             <span style={{ display: 'block', fontFamily: theme.fonts.body, fontSize: `${10 * size}px`, color: t.text }}>{site.name}</span>
             <span style={{ display: 'block', fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{site.host}</span>
           </span>
-          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: site.paying ? t.accent : t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{site.paying ? 'Paying' : 'Test account'}</span>
+          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: site.paying ? t.accent : t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{site.paying ? 'Paying' : (site.tag || 'Live')}</span>
         </a>
       ))}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${5 * size}px` }}>

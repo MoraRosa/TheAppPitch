@@ -107,13 +107,13 @@ function SlideLeft({ slide, theme, isFullscreen, isMobile, animated }) {
               margin: ruleMargin,
               transformOrigin: 'left',
             }} />
-            <Rv animated={animated} delay={0.4} as="p" style={{
+            {slide.body && (<Rv animated={animated} delay={0.4} as="p" style={{
               fontFamily: theme.fonts.body,
               fontSize: bodySize, maxWidth: isFullscreen ? '46ch' : undefined,
               fontWeight: theme.type.bodyWeight, color: t.textMuted, lineHeight: 1.65,
             }}>
               {slide.body}
-            </Rv>
+            </Rv>)}
           </>
         )}
       </div>
@@ -265,7 +265,7 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen, autoDemo = false 
           <div style={{ padding: '20px 24px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '12px' }}>{slide.eyebrow}</p>
             <h2 style={{ fontFamily: theme.fonts.display, fontSize: 'clamp(18px, 4.5vw, 26px)', fontWeight: theme.type.displayWeight, color: t.text, lineHeight: 1.05, marginBottom: '12px', maxWidth: '480px' }}>{slide.headline}</h2>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: '13px', color: t.textMuted, lineHeight: 1.7, maxWidth: '440px', borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px' }}>{slide.body}</p>
+            {slide.body && <p style={{ fontFamily: theme.fonts.body, fontSize: '13px', color: t.textMuted, lineHeight: 1.7, maxWidth: '440px', borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px' }}>{slide.body}</p>}
           </div>
         </div>
         <div style={{ flex: '1 1 50%', padding: '14px 18px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
@@ -287,7 +287,7 @@ function BrutalistSlide({ slide, theme, visuals, isFullscreen, autoDemo = false 
           <div style={{ padding: isFullscreen ? '40px 56px' : '24px 32px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <p style={{ fontFamily: theme.fonts.mono, fontSize: theme.type.monoSize, color: t.accent, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: isFullscreen ? '20px' : '10px' }}>{slide.eyebrow}</p>
             <h2 style={{ fontFamily: theme.fonts.display, fontSize: isFullscreen ? 'clamp(22px, 2.8vw, 36px)' : 'clamp(16px, 2.4vw, 28px)', fontWeight: theme.type.displayWeight, color: t.text, lineHeight: 1.05, marginBottom: isFullscreen ? '24px' : '12px', maxWidth: '480px' }}>{slide.headline}</h2>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: isFullscreen ? 'clamp(12px, 1.3vw, 15px)' : 'clamp(10px, 1.1vw, 13px)', color: t.textMuted, lineHeight: 1.7, maxWidth: '440px', borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px' }}>{slide.body}</p>
+            {slide.body && <p style={{ fontFamily: theme.fonts.body, fontSize: isFullscreen ? 'clamp(12px, 1.3vw, 15px)' : 'clamp(10px, 1.1vw, 13px)', color: t.textMuted, lineHeight: 1.7, maxWidth: '440px', borderLeft: `3px solid ${t.accent}`, paddingLeft: '16px' }}>{slide.body}</p>}
           </div>
         </div>
         <div style={{ padding: isFullscreen ? '40px 48px' : '24px 24px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
