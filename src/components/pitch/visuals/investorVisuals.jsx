@@ -231,10 +231,10 @@ function VisualMarket({ theme, size }) {
         })}
         <motion.circle cx="150" cy="150" r={R_IN} fill={`${t.accent}14`} stroke={t.accent} strokeWidth="2" strokeDasharray="5 4" style={fix}
           initial={{ opacity: 0, scale: 0.4 }} animate={phase >= 3 ? { opacity: 1, scale: 1 } : {}} transition={{ type: 'spring', stiffness: 110, damping: 15 }} />
-        {phase >= 4 && [0, 1].map(i => (
-          <motion.circle key={i} cx="150" cy="150" r={R_DOT} fill="none" stroke={t.accent} strokeWidth="1.5" style={fix}
-            initial={{ opacity: 0.7, scale: 1 }} animate={{ opacity: 0, scale: 4.2 }} transition={{ repeat: Infinity, duration: 2.2, delay: i * 1.1, ease: 'easeOut' }} />
-        ))}
+        {phase >= 4 && (
+          <motion.circle cx="150" cy="150" r={R_DOT} fill="none" stroke={t.accent} strokeWidth="1.5" style={fix}
+            initial={{ opacity: 0.7, scale: 1 }} animate={{ opacity: 0, scale: 2.6 }} transition={{ duration: 1.1, ease: 'easeOut' }} />
+        )}
         <motion.circle cx="150" cy="150" r={R_DOT} fill={t.accent} style={fix}
           initial={{ opacity: 0, scale: 0 }} animate={phase >= 4 ? { opacity: 1, scale: 1 } : {}} transition={{ type: 'spring', stiffness: 260, damping: 12 }} />
       </svg>

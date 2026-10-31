@@ -3274,18 +3274,11 @@ function MockupLiveDemo({ theme, size, paceMs = 22000, names: namesProp, summitL
               );
             })}
 
-            {/* the hiker (Pippa's head on the investor deck) */}
-            {(() => { const hs = mascot === 'pippa' ? 26 : 16; return (
-              <motion.div initial={{ opacity: 0, left: trail[0][0] - (hs / 2) * u, top: trail[0][1] - (hs / 2) * u }}
-                animate={{ opacity: [0, 1, 1], left: hx.map((v) => v - (hs / 2) * u), top: hy.map((v) => v - (hs / 2) * u) }}
-                transition={{ delay: t0, duration: D, times, ease: eases, opacity: { delay: t0 - 0.3, duration: 0.3, times: [0, 0.5, 1] } }}
-                style={{ position: 'absolute', zIndex: 3, width: `${hs * u}px`, height: `${hs * u}px`,
-                  ...(mascot === 'pippa'
-                    ? { filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.35))' }
-                    : { borderRadius: '50%', background: '#fff', border: `${3.5 * u}px solid ${t.accent}`, boxShadow: `0 0 0 ${4 * u}px ${t.accent}40, 0 ${3 * u}px ${8 * u}px rgba(0,0,0,0.3)` }) }}>
-                {mascot === 'pippa' && <img src={`${PIPPA_BASE}pippa-head.webp`} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />}
-              </motion.div>
-            ); })()}
+            {/* the hiker */}
+            <motion.div initial={{ opacity: 0, left: trail[0][0] - 8 * u, top: trail[0][1] - 8 * u }}
+              animate={{ opacity: [0, 1, 1], left: hx.map((v) => v - 8 * u), top: hy.map((v) => v - 8 * u) }}
+              transition={{ delay: t0, duration: D, times, ease: eases, opacity: { delay: t0 - 0.3, duration: 0.3, times: [0, 0.5, 1] } }}
+              style={{ position: 'absolute', zIndex: 3, width: `${16 * u}px`, height: `${16 * u}px`, borderRadius: '50%', background: '#fff', border: `${3.5 * u}px solid ${t.accent}`, boxShadow: `0 0 0 ${4 * u}px ${t.accent}40, 0 ${3 * u}px ${8 * u}px rgba(0,0,0,0.3)` }} />
 
             {/* summit: bloom, sparkles, and the live badge */}
             <motion.div initial={{ scale: 0.2, opacity: 0 }} animate={{ scale: [0.2, 3.2], opacity: [0.6, 0] }} transition={{ delay: tSummit, duration: 1.1, ease: 'easeOut' }}
