@@ -57,7 +57,7 @@ export const SLIDES = [
     autoMs: 22000,
     eyebrow: "Market Opportunity",
     headline: `${MARKET.canadianSmallBiz} small employer businesses in Canada, plus ${MARKET.canadianNonEmployer} sole operators.`,
-    body: `Canada has ${MARKET.canadianSmallBiz} small employer businesses and ${MARKET.canadianNonEmployer} with no employees. About ${k(MARKET.targetIndustries)} of the employers sit in industries ${COMPANY.name} serves. Our ${S3}-merchant goal is under 1% of them.`,
+    body: `About ${k(MARKET.targetIndustries)} of them sit in industries ${COMPANY.name} serves. Our ${S3}-merchant goal is under 1% of that group.`,
     stat: { value: MARKET.canadianSmallBiz, label: "small employer businesses in Canada (Dec 2024)" },
     speakerNote: "The 531,000 is an upper bound by industry, not a count of exact fits. Sources: ISED Key Small Business Statistics 2025; Statistics Canada business counts, Dec 2024.",
     tag: "05",

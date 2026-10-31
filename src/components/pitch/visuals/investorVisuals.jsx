@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
+import { CANADA_GRID } from '../../../data/canadaGrid.js';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, FUNDING_BREAKDOWN_SMALL } from '../../../data/financials.js';
 import { COMPANY, COMPETITORS, TRACTION, MARKET, PRICING, FUNDING, FOUNDER_INFO } from '../../../data/config.js';
 import { LIVE_SITES, PRODUCT, MARKET_FACTS, TARGET_INDUSTRIES_TOTAL, STAGE_TARGETS } from '../../../data/facts.js';
@@ -180,15 +181,80 @@ function VisualDifferentiator({ theme, size }) {
   );
 }
 
-// ── Market: rings to scale by area, dots filter down, counters tick up ─────
+// ── Market: a 3D field of tiles in the shape of Canada, with Peak rising out of Alberta ──
+// One tile is about 1,000 small employer businesses. About half tint as "industries Peak serves";
+// four towers (the 4,000 Stage 3 goal) grow at Calgary.
 function seeded(a) {
   return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
-const MARKET_DOTS = (() => {
-  const r = seeded(7), out = [];
-  for (let i = 0; i < 84; i++) { const ang = r() * Math.PI * 2, rad = Math.sqrt(r()) * 118; out.push({ x: 150 + Math.cos(ang) * rad, y: 150 + Math.sin(ang) * rad, rad }); }
-  return out;
+const MS = 9, MK = 0.68, MTH = MS * MK, MPAD = 16; // tile size, tilt squash, row height, padding
+const MW = CANADA_GRID.cols * MS + MPAD * 2, MH = CANADA_GRID.rows * MTH + MPAD * 2;
+const PEAK_OFFSETS = [[0, 0, 78], [1, 0, 92], [0, 1, 64], [1, 1, 82]]; // col, row, tower height
+// Four mountains (the 4,000 goal), back row first. Positions are offsets from the 2x2 tile block at Calgary.
+const PEAK_RANGE = [{ dx: -14, row: 0, H: 62 }, { dx: 6, row: 0, H: 86 }, { dx: -4, row: 1, H: 50 }, { dx: 18, row: 1, H: 70 }];
+const TILES = (() => {
+  const { flat, peak } = CANADA_GRID;
+  const pk = new Set(PEAK_OFFSETS.map(([a, b]) => `${peak[0] + a},${peak[1] + b}`));
+  const list = [];
+  for (let i = 0; i < flat.length; i += 2) list.push({ c: flat[i], r: flat[i + 1], pk: pk.has(`${flat[i]},${flat[i + 1]}`) });
+  const rnd = seeded(11), pool = list.filter(x => !x.pk);
+  for (let k = pool.length - 1; k > 0; k--) { const j = Math.floor(rnd() * (k + 1)); [pool[k], pool[j]] = [pool[j], pool[k]]; }
+  const share = TARGET_INDUSTRIES_TOTAL / MARKET_FACTS.canada.smallEmployers.value; // about 49%
+  pool.slice(0, Math.round(list.length * share)).forEach((x, n) => { x.ind = true; x.rank = n; });
+  return list.sort((x, y) => x.r - y.r || x.c - y.c); // back to front
 })();
+
+const MarketTiles = React.memo(function MarketTiles({ phase, t }) {
+  return (
+    <g>
+      {TILES.map((tl, i) => {
+        const lit = phase >= 3 && tl.ind;
+        const d2 = lit ? tl.rank * 0.0022 : 0;
+        return (
+          <rect key={i} x={MPAD + tl.c * MS} y={MPAD + tl.r * MTH} width={MS * 0.84} height={MTH * 0.84} rx="1"
+            fill={lit ? `${t.accent}88` : `${t.text}2E`}
+            style={{ opacity: phase >= 1 ? 1 : 0, transform: lit ? 'translateY(-2px)' : 'translateY(0)',
+              transition: `opacity .35s ${tl.c * 0.012}s, fill .5s ${d2}s, transform .5s ${d2}s` }} />
+        );
+      })}
+    </g>
+  );
+});
+
+function MarketPeaks({ active, t }) {
+  const [f, setF] = useState(0);
+  useEffect(() => {
+    if (!active) { setF(0); return undefined; }
+    let raf, t0 = null;
+    const step = (ts) => { if (t0 === null) t0 = ts; const p = Math.min(1, (ts - t0) / 1300); setF(1 - Math.pow(1 - p, 3)); if (p < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [active]);
+  if (!active || f <= 0) return null;
+  const [pc, pr] = CANADA_GRID.peak;
+  const bw = 38, dh = MTH * 0.9; // mountain base width, tile depth
+  const baseX = MPAD + (pc + 1) * MS; // centre of the 2x2 block at Calgary
+  let top = null;
+  const peaks = PEAK_RANGE.map(({ dx, row, H }, i) => {
+    const cx = baseX + dx, yb = MPAD + (pr + row) * MTH + dh, h = H * f, ay = yb - h;
+    if (!top || H > top.H) top = { H, x: cx, y: ay };
+    return (
+      <g key={i}>
+        <polygon points={`${cx - bw / 2},${yb} ${cx},${yb} ${cx},${ay}`} fill={t.accent} fillOpacity="0.92" />
+        <polygon points={`${cx},${yb} ${cx + bw / 2},${yb} ${cx},${ay}`} fill={t.accent} fillOpacity="0.55" />
+      </g>
+    );
+  });
+  return (
+    <g>
+      {peaks}
+      {f > 0.97 && (
+        <text x={top.x} y={top.y - 9} textAnchor="middle" fill={t.text} fontSize="13" fontWeight="600"
+          style={{ paintOrder: 'stroke', stroke: t.bg, strokeWidth: 4, strokeLinejoin: 'round' }}>Peak, Stage 3: 4,000</text>
+      )}
+    </g>
+  );
+}
 
 function VisualMarket({ theme, size }) {
   const t = theme.colors;
@@ -197,16 +263,13 @@ function VisualMarket({ theme, size }) {
   useEffect(() => {
     if (!entered) return undefined;
     setPhase(0);
-    const ids = [300, 2400, 5000, 7800].map((ms, i) => setTimeout(() => setPhase(i + 1), ms));
+    const ids = [200, 1800, 2600, 5200].map((ms, i) => setTimeout(() => setPhase(i + 1), ms));
     return () => ids.forEach(clearTimeout);
   }, [entered]);
 
   const employer = MARKET_FACTS.canada.smallEmployers.value;
   const soleOps = MARKET_FACTS.canada.nonEmployers.value;
   const stage3 = STAGE_TARGETS[STAGE_TARGETS.length - 1].payingUsers;
-  // radii are proportional to the square root of each count, so the AREAS are to scale
-  const R_OUT = 130, R_IN = R_OUT * Math.sqrt(TARGET_INDUSTRIES_TOTAL / employer), R_DOT = Math.max(5, R_OUT * Math.sqrt(stage3 / employer));
-  const fix = { transformBox: 'fill-box', transformOrigin: 'center' };
 
   const Row = ({ show, color, big, label }) => !show ? null : (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
@@ -218,27 +281,12 @@ function VisualMarket({ theme, size }) {
   );
 
   return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${10 * size}px` }}>
-      <svg viewBox="0 0 300 300" style={{ width: '100%', maxWidth: `${290 * size}px`, height: 'auto', display: 'block' }}>
-        <motion.circle cx="150" cy="150" r={R_OUT} fill={t.bgAlt} stroke={t.border} strokeWidth="1.5" style={fix}
-          initial={{ opacity: 0, scale: 0.6 }} animate={phase >= 1 ? { opacity: 1, scale: 1 } : {}} transition={{ type: 'spring', stiffness: 120, damping: 16 }} />
-        {MARKET_DOTS.map((d, i) => {
-          const inside = d.rad < R_IN - 4;
-          const target = phase >= 3 ? { opacity: inside ? 1 : 0.22, scale: inside ? 1.25 : 0.8, fill: inside ? t.accent : t.textFaint }
-            : phase >= 2 ? { opacity: 0.75, scale: 1, fill: t.textFaint } : {};
-          return <motion.circle key={i} cx={d.x} cy={d.y} r="3.2" style={fix} initial={{ opacity: 0, scale: 0, fill: t.textFaint }}
-            animate={target} transition={{ delay: phase >= 3 ? (inside ? (i % 12) * 0.03 : 0) : i * 0.018, duration: 0.4 }} />;
-        })}
-        <motion.circle cx="150" cy="150" r={R_IN} fill={`${t.accent}14`} stroke={t.accent} strokeWidth="2" strokeDasharray="5 4" style={fix}
-          initial={{ opacity: 0, scale: 0.4 }} animate={phase >= 3 ? { opacity: 1, scale: 1 } : {}} transition={{ type: 'spring', stiffness: 110, damping: 15 }} />
-        {phase >= 4 && (
-          <motion.circle cx="150" cy="150" r={R_DOT} fill="none" stroke={t.accent} strokeWidth="1.5" style={fix}
-            initial={{ opacity: 0.7, scale: 1 }} animate={{ opacity: 0, scale: 2.6 }} transition={{ duration: 1.1, ease: 'easeOut' }} />
-        )}
-        <motion.circle cx="150" cy="150" r={R_DOT} fill={t.accent} style={fix}
-          initial={{ opacity: 0, scale: 0 }} animate={phase >= 4 ? { opacity: 1, scale: 1 } : {}} transition={{ type: 'spring', stiffness: 260, damping: 12 }} />
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${8 * size}px` }}>
+      <svg viewBox={`0 0 ${MW} ${MH}`} style={{ width: '100%', maxWidth: `${420 * size}px`, height: 'auto', display: 'block' }}>
+        <MarketTiles phase={phase} t={t} />
+        <MarketPeaks active={phase >= 4} t={t} />
       </svg>
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: `${6 * size}px` }}>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: `${5 * size}px` }}>
         <Row show={phase >= 1} color={t.textFaint} big={<CountUp to={employer / 1e6} decimals={2} suffix="M" duration={1.6} />} label="small employer businesses in Canada" />
         <Row show={phase >= 3} color={t.accent} big={<CountUp to={Math.round(TARGET_INDUSTRIES_TOTAL / 1000)} suffix="K" duration={1.4} />} label="in the industries Peak serves" />
         <Row show={phase >= 4} color={t.accent} big={<CountUp to={stage3} duration={1.2} />} label="Stage 3 goal: under 1% of them" />
@@ -246,7 +294,7 @@ function VisualMarket({ theme, size }) {
       {phase >= 2 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
           style={{ fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: 'center' }}>
-          Plus {(soleOps / 1e6).toFixed(2)}M with no employees (not shown) · Rings to scale by area
+          One tile is about 1,000 businesses · Plus {(soleOps / 1e6).toFixed(2)}M with no employees, not shown
         </motion.div>
       )}
     </div>
