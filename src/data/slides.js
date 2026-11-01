@@ -45,7 +45,7 @@ export const SLIDES = [
     id: 4,
     slug: "differentiator",
     autoMs: 18000,
-    eyebrow: "Built In",
+    eyebrow: "The Differentiator",
     headline: "Run a product business or a service business. Everything is built in.",
     body: "Costing, bookkeeping, team management, email and instant theme switching, all in one platform.",
     speakerNote: "Product or service, it is all here. Click through the themes: one click and the whole store changes.",
@@ -122,7 +122,7 @@ export const SLIDES = [
   {
     id: 12,
     slug: "close",
-    eyebrow: "Try it yourself",
+    eyebrow: "The Close",
     headline: "Scan it. The platform is live.",
     body: `${COMPANY.name} is live at ${COMPANY.url}. Scan the code or open the live site, and see the merchants already running on it.`,
     autoMs: 22000,
