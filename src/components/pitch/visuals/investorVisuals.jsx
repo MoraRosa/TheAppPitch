@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
 import { MarketField3D } from './MarketField3D.jsx';
+import { ModelBlocks3D } from './ModelBlocks3D.jsx';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, FUNDING_BREAKDOWN_SMALL } from '../../../data/financials.js';
 import { COMPANY, COMPETITORS, TRACTION, MARKET, PRICING, FUNDING, FOUNDER_INFO } from '../../../data/config.js';
 import { LIVE_SITES, PRODUCT, MARKET_FACTS, TARGET_INDUSTRIES_TOTAL, STAGE_TARGETS } from '../../../data/facts.js';
@@ -182,57 +183,6 @@ function VisualDifferentiator({ theme, size }) {
 }
 
 // ── Model: MRR growth chart — fully responsive SVG ───────────────────────────
-function VisualModel({ theme, size }) {
-  const t = theme.colors;
-  const plans = [
-    { name: 'Free',    price: '$0',            note: 'Minimal storage' },
-    { name: 'Starter', price: PRICING.starter, note: 'Per month' },
-    { name: 'Grow',    price: PRICING.growth,  note: `${PRICING.trialDays}-day trial` },
-    { name: 'Pro',     price: PRICING.pro,     note: `${PRICING.trialDays}-day trial` },
-  ];
-  const points = MERCHANT_GROWTH;
-  const maxMrr = Math.max(...points.map(p => p.mrr));
-  const VW = 200, VH = 70;
-  const xy = (p, i) => [(i / (points.length - 1)) * VW, VH - (p.mrr / maxMrr) * VH * 0.88];
-  const pathD = points.map((p, i) => { const [x, y] = xy(p, i); return `${i === 0 ? 'M' : 'L'} ${x} ${y}`; }).join(' ');
-  const label = (txt, extra) => (
-    <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', textTransform: 'uppercase', ...extra }}>{txt}</div>
-  );
-  return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: `${10 * size}px` }}>
-      {label('Plans, per month')}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: `${6 * size}px` }}>
-        {plans.map((p, i) => (
-          <div key={p.name} style={{ padding: `${8 * size}px ${6 * size}px`, background: t.bgAlt, border: `1px solid ${i === 0 ? t.border : t.accent}`, borderRadius: theme.space.radius || '2px', textAlign: 'center', animation: `fadeSlideIn 0.35s ease ${i * 0.08}s both` }}>
-            <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{p.name}</div>
-            <div style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${18 * size}px`, color: t.text, margin: `${3 * size}px 0` }}>{p.price}</div>
-            <div style={{ fontFamily: theme.fonts.body, fontSize: `${7.5 * size}px`, color: t.textMuted }}>{p.note}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{ fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px`, color: t.textMuted }}>
-        Plus a platform fee ({PRICING.transactionFee}) on every sale through Stripe.
-      </div>
-      {label('Paying merchants and MRR by stage (modelled)', { marginTop: `${4 * size}px` })}
-      <svg width="100%" height={`${70 * size}px`} viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" style={{ display: 'block' }}>
-        <path d={pathD + ` L ${VW} ${VH} L 0 ${VH} Z`} fill={t.accent} fillOpacity="0.15" />
-        <path d={pathD} fill="none" stroke={t.accent} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-        {points.map((p, i) => { const [x, y] = xy(p, i); return <circle key={i} cx={x} cy={y} r="3" fill={t.accent} vectorEffect="non-scaling-stroke" />; })}
-      </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        {points.map(p => (
-          <span key={p.period} style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textFaint, letterSpacing: '0.06em', textAlign: 'center' }}>
-            {p.short}<br />{p.merchants.toLocaleString()}
-          </span>
-        ))}
-      </div>
-      <div style={{ fontFamily: theme.fonts.body, fontSize: `${8.5 * size}px`, color: t.textMuted, lineHeight: 1.5 }}>
-        Stage 3 is about ${Math.round(points[points.length - 1].mrr / 1000)}K MRR at a $${PRICING.arpuMix} average plan. CAC is not measured yet: targets are LTV:CAC of 3:1 or better and payback inside 12 months.
-      </div>
-    </div>
-  );
-}
-
 // ── Traction: build progress ──────────────────────────────────────────────────
 function VisualTraction({ theme, size }) {
   const t = theme.colors;
@@ -400,7 +350,7 @@ export const INVESTOR_VISUALS = {
   solution: VisualSolution,
   differentiator: VisualDifferentiator,
   market: MarketField3D,
-  model: VisualModel,
+  model: ModelBlocks3D,
   traction: VisualTraction,
   team: VisualTeam,
   competition: VisualCompetition,

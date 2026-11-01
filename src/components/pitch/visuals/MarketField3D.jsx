@@ -18,21 +18,21 @@ const THETA = (-28 * Math.PI) / 180;       // rotation about the vertical axis
 const ELEV = (42 * Math.PI) / 180;         // camera elevation above the plane
 const COS_T = Math.cos(THETA), SIN_T = Math.sin(THETA), SIN_E = Math.sin(ELEV), COS_E = Math.cos(ELEV);
 const GAP = 0.07, BASE_H = 0.55, RISER_H = 0.95; // tile gap, slab height, riser height (cell units)
-export const MARKET_T_END = 8.2;           // seconds until everything has landed
+export const MARKET_T_END = 8.9;           // seconds until everything has landed
 
-const clamp01 = v => Math.max(0, Math.min(1, v));
-const eo3 = p => 1 - Math.pow(1 - p, 3);
-const eoBack = p => { const c = 1.35; const x = p - 1; return 1 + (c + 1) * x * x * x + c * x * x; };
+export const clamp01 = v => Math.max(0, Math.min(1, v));
+export const eo3 = p => 1 - Math.pow(1 - p, 3);
+export const eoBack = p => { const c = 1.35; const x = p - 1; return 1 + (c + 1) * x * x * x + c * x * x; };
 
-function hexToRgb(c, fb) {
+export function hexToRgb(c, fb) {
   if (typeof c === 'string') {
     const m = /^#?([0-9a-f]{6}|[0-9a-f]{3})/i.exec(c.trim());
     if (m) { let h = m[1]; if (h.length === 3) h = h.split('').map(x => x + x).join(''); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }
   }
   return fb;
 }
-const mix = (a, b, p) => [a[0] + (b[0] - a[0]) * p, a[1] + (b[1] - a[1]) * p, a[2] + (b[2] - a[2]) * p];
-const css = (a, al = 1) => `rgba(${Math.round(a[0])},${Math.round(a[1])},${Math.round(a[2])},${al})`;
+export const mix = (a, b, p) => [a[0] + (b[0] - a[0]) * p, a[1] + (b[1] - a[1]) * p, a[2] + (b[2] - a[2]) * p];
+export const css = (a, al = 1) => `rgba(${Math.round(a[0])},${Math.round(a[1])},${Math.round(a[2])},${al})`;
 function seeded(a) { return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
 // light direction in view space (upper left, in front, above)
@@ -42,18 +42,20 @@ const rotN = (nx, ny) => [nx * COS_T - ny * SIN_T, nx * SIN_T + ny * COS_T];
 const SHADE_TOP = shade(0, 0, 1);
 const SHADE_S = shade(...rotN(0, 1), 0), SHADE_W = shade(...rotN(-1, 0), 0), SHADE_E = shade(...rotN(1, 0), 0);
 
-// The mountains (the 4,000 goal): offsets from the 2x2 block at Calgary, half base, height, delay
+// The mountains (the 4,000 goal) rise coast to coast, starting in Calgary: city, half base, height, delay
 const PEAKS = [
-  { dx: -2.2, dy: -1.1, hb: 2.1, H: 10.0, d: 5.30 },
-  { dx: 0.6, dy: -1.3, hb: 2.5, H: 13.5, d: 5.50 },
-  { dx: -1.0, dy: 1.2, hb: 1.9, H: 8.5, d: 5.70 },
-  { dx: 2.6, dy: 0.9, hb: 2.2, H: 11.0, d: 5.90 },
+  { city: 'calgary', hb: 2.2, H: 11.0, d: 5.30 },
+  { city: 'vancouver', hb: 1.9, H: 8.0, d: 5.65 },
+  { city: 'winnipeg', hb: 1.9, H: 7.5, d: 6.00 },
+  { city: 'toronto', hb: 2.6, H: 13.5, d: 6.35 },
+  { city: 'montreal', hb: 2.3, H: 11.0, d: 6.70 },
+  { city: 'halifax', hb: 1.8, H: 7.0, d: 7.05 },
 ];
 
 let GEO = null;
 function buildGeo() {
   if (GEO) return GEO;
-  const { cols, rows, flat, peak } = CANADA_GRID;
+  const { cols, rows, flat, cities } = CANADA_GRID;
   const cx = cols / 2, cy = rows / 2;
   const rot = (x, y) => [(x - cx) * COS_T - (y - cy) * SIN_T, (x - cx) * SIN_T + (y - cy) * COS_T];
   const cells = [];
@@ -73,9 +75,8 @@ function buildGeo() {
   pool.slice(0, want).forEach((k, n) => { k.ind = true; const nx = (k.xr - minX) / (maxX - minX); k.d2 = 2.85 + nx * 0.8 + (n / want) * 0.9; });
   cells.sort((a, b) => a.yr - b.yr);
 
-  const bc = rot(peak[0] + 1, peak[1] + 1); // centre of the 2x2 block at Calgary, rotated
   const peaks = PEAKS.map(p => {
-    const px = peak[0] + 1 + p.dx, py = peak[1] + 1 + p.dy, hb = p.hb;
+    const [px, py] = cities[p.city], hb = p.hb;
     const m = rot(px, py);
     return { ...p, px, py, yr: m[1],
       C: [rot(px - hb, py - hb), rot(px + hb, py - hb), rot(px + hb, py + hb), rot(px - hb, py + hb)], A: m };
@@ -123,7 +124,7 @@ function shadowLayer(geo, pal) {
   return cv;
 }
 
-function hull(pts) { // convex hull (monotone chain)
+export function hull(pts) { // convex hull (monotone chain)
   const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
   const lo = [], up = [];
@@ -209,13 +210,13 @@ export function drawMarketFrame(ctx, theme, T) {
   });
 
   // label above the tallest mountain
-  const la = clamp01((T - 7.0) / 0.6);
+  const la = clamp01((T - 7.8) / 0.6);
   if (la > 0) {
     const tall = geo.peaks.reduce((a, b) => (b.H > a.H ? b : a));
     const X = SX(tall.A[0]), Y = SY(tall.A[1], BASE_H + tall.H) - 12;
     ctx.globalAlpha = la; ctx.textAlign = 'center'; ctx.font = `600 13px ${theme.fonts.body || 'sans-serif'}`;
-    ctx.lineJoin = 'round'; ctx.lineWidth = 5; ctx.strokeStyle = css(pal.bg); ctx.strokeText('Peak, Stage 3: 4,000', X, Y);
-    ctx.fillStyle = css(pal.tx); ctx.fillText('Peak, Stage 3: 4,000', X, Y); ctx.globalAlpha = 1;
+    ctx.lineJoin = 'round'; ctx.lineWidth = 5; ctx.strokeStyle = css(pal.bg); ctx.strokeText('Stage 3: 4,000', X, Y);
+    ctx.fillStyle = css(pal.tx); ctx.fillText('Stage 3: 4,000', X, Y); ctx.globalAlpha = 1;
   }
 }
 
@@ -238,7 +239,6 @@ export function MarketField3D({ theme, size = 1 }) {
       U.n1.textContent = `${(employerM * eo3(clamp01((T - 0.35) / 1.7))).toFixed(2)}M`;
       U.n2.textContent = `${Math.round(industriesK * eo3(clamp01((T - 2.9) / 1.5)))}K`;
       U.n3.textContent = Math.round(stage3 * eo3(clamp01((T - 5.4) / 1.4))).toLocaleString();
-      U.cap.style.opacity = eo3(clamp01((T - 1.8) / 0.8));
     };
     const frame = (T) => { drawMarketFrame(ctx, theme, T); setUI(T); };
     const reduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -270,9 +270,6 @@ export function MarketField3D({ theme, size = 1 }) {
         {mkRow(1, t.textFaint, 'small employer businesses in Canada')}
         {mkRow(2, t.accent, 'in the industries Peak serves')}
         {mkRow(3, t.accent, 'Stage 3 goal: under 1% of them')}
-      </div>
-      <div ref={el => { ui.current.cap = el; }} style={{ opacity: 0, fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: 'center' }}>
-        One tile is about 1,000 businesses · Plus {(MARKET_FACTS.canada.nonEmployers.value / 1e6).toFixed(2)}M with no employees, not shown
       </div>
     </div>
   );
