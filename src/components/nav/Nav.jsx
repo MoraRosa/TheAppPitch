@@ -14,6 +14,7 @@ const DESKTOP_LINKS = [
   { to: '/about',       label: 'About'         },
   { to: '/pitch',       label: 'Pitch Deck'    },
   { to: '/plan',        label: 'Business Plan' },
+  { to: '/icp',         label: 'ICP'           },
   { to: '/financials',  label: 'Financials'    },
   { to: '/downloads',   label: 'Downloads'     },
 ];
