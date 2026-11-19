@@ -114,7 +114,7 @@ export function drawTractionFrame(ctx, theme, T, images = {}, make = makeBrowser
   ctx.closePath(); ctx.clip();
   [...FRAMES, ...COUNTERS].forEach(c => {
     const g = eoBack(clamp01((T - c.d) / 1.0)); if (g <= 0.02) return;
-    const H = c.H * Math.min(1, g), sd = [0.5, 0.42], L = H * 0.5;
+    const H = c.H * Math.min(1, g), sd = [0.3, -0.5], L = H * 0.5;
     const pts = [[c.x, c.y], [c.x + c.w, c.y], [c.x + c.w, c.y + c.dep], [c.x, c.y + c.dep]];
     const all = [...pts.map(([x, y]) => Pt(x, y, PLAT.h)), ...pts.map(([x, y]) => Pt(x + sd[0] * L, y + sd[1] * L, PLAT.h))];
     poly(hull(all), css(mix(pal.tx, [0, 0, 0], 0.5), 0.2));
