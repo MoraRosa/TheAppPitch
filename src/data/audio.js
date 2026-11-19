@@ -15,8 +15,9 @@ const BASE = import.meta.env.BASE_URL || './';
 export const DECK_AUDIO = {
   investor: {
     dir: 'downloads/audio',
-    // Existing clip lengths — used only as the timer fallback if a file fails.
-    fallbackMs: [32000, 31000, 34000, 42000, 32000, 26000, 25000, 21000, 21000, 21000],
+    // Clip lengths (regenerated Nov 2026) - used only as the timer fallback if a file fails.
+    // Slides 11 and 12 have no clip: they use the default timer.
+    fallbackMs: [34000, 30000, 32500, 31000, 29500, 25500, 24500, 18500, 23500, 68500],
   },
   demo: {
     dir: 'downloads/audio/demo',
