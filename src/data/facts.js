@@ -32,19 +32,20 @@ export const THEMES = {
 
 // ── Traction (confirmed) ──────────────────────────────────────────────────────
 export const TRACTION_FACTS = {
-  asOf: '2026-10',
+  asOf: '2026-11',
   firstUserDate: '2026-09-02', // first official user
-  activeUsers: 12, // 8 on 13 Oct, 11 on 22 Oct, 12 on 30 Oct 2026
-  paidUsers: 2,
-  mrr: 60, // subscription revenue only; transaction fees are live but tracked separately
+  activeUsers: 20, // 8 on 13 Oct, 11 on 22 Oct, 12 on 30 Oct, 20 on 18 Nov 2026
+  paidUsers: 4,
+  mrr: 120, // subscription revenue only (4 x $30 Starter, gross); about $114 after Stripe fees; no tax charged (sole proprietor under the GST threshold); transaction fees tracked separately
   paidMarketing: false,
-  // 2 of 12 is a tiny sample: describe it as an early signal, never as a conversion rate.
-  earlySignalNote: '2 of 12 users are paying: an early signal, not a conversion rate.',
+  // 4 of 20 is a tiny sample: describe it as an early signal, never as a conversion rate.
+  earlySignalNote: '4 of 20 users are paying: an early signal, not a conversion rate.',
 };
 
 // One row per month. Add a row each month; the Financials page reads this.
 export const MRR_TRACKER = [
   { month: '2026-10', activeUsers: 12, paidUsers: 2, mrr: 60 },
+  { month: '2026-11', activeUsers: 20, paidUsers: 4, mrr: 120 }, // 18 Nov 2026
 ];
 
 // Dated snapshots of user growth, for a growth chart later. Add one when you check the numbers.
@@ -54,19 +55,26 @@ export const USER_SNAPSHOTS = [
   { when: '2026-10-13',                      users: 8,  paying: 2 },
   { when: '2026-10-22',                      users: 11, paying: 2 },
   { when: '2026-10-30',                      users: 12, paying: 2 },
+  { when: '2026-11-18',                      users: 20, paying: 4 },
 ];
 
-// Both paying merchants gave verbal consent to show their websites (and possibly logos). Not their names or numbers beyond that.
+// Paying merchants (4, all on Starter). Circle of Care gave verbal consent to show their website and maybe logo.
+// Sirie Limitless replaced Huchflex (that merchant changed course). Consent for Sirie, Bruce Tails and Julz Creations: to confirm.
 export const PAYING_MERCHANTS = [
   { name: 'Circle of Care Counselling', url: 'https://circleofcarecounselling.com', consent: 'verbal: website, maybe logo' },
-  { name: 'Huchflex', url: 'https://huchflex-p340.peakenterprise.ca', note: 'will move to the merchant\'s own domain', consent: 'verbal: website, maybe logo' },
+  { name: 'Sirie Limitless', url: 'https://sirielc.org', consent: 'to confirm (new business name)' },
+  { name: 'Bruce Tails', url: 'https://bruce-tails-r8g.peakenterprise.ca', consent: 'to confirm' },
+  { name: 'Julz Creations', url: 'https://www.julzzcreations.ca', consent: 'to confirm' },
 ];
 
 // Sites shown as product proof. Lumina is the founder's own live business (not a paying account).
+// `shot` (optional): a screenshot in public/proof/ (e.g. 'circle-of-care.jpg'); the traction visual draws it on the frame when set.
 export const LIVE_SITES = [
-  { name: 'Circle of Care Counselling', host: 'circleofcarecounselling.com', url: 'https://circleofcarecounselling.com', paying: true,  kind: 'Counselling practice' },
-  { name: 'Huchflex',                   host: 'huchflex-p340.peakenterprise.ca', url: 'https://huchflex-p340.peakenterprise.ca', paying: true,  kind: 'Paying merchant' },
-  { name: 'Lumina',                     host: 'luminaco.skin', url: 'https://luminaco.skin', paying: false, tag: 'Founder brand', kind: 'Founder\'s own live business' },
+  { name: 'Circle of Care', host: 'circleofcarecounselling.com', url: 'https://circleofcarecounselling.com', paying: true,  kind: 'Counselling practice', shot: null },
+  { name: 'Sirie', host: 'sirielc.org', url: 'https://sirielc.org', paying: true,  kind: 'Paying merchant', shot: null },
+  { name: 'Bruce Tails', host: 'bruce-tails-r8g.peakenterprise.ca', url: 'https://bruce-tails-r8g.peakenterprise.ca', paying: true,  kind: 'Paying merchant', shot: null },
+  { name: 'Julz Creations', host: 'julzzcreations.ca', url: 'https://www.julzzcreations.ca', paying: true,  kind: 'Paying merchant', shot: null },
+  { name: 'Lumina', host: 'luminaco.skin', url: 'https://luminaco.skin', paying: false, tag: 'Founder brand', kind: 'Founder\'s own live business', shot: null },
 ];
 
 // Projects live on Peak (replaces Momentum and Mizzie). Links and screenshots to come.
@@ -101,7 +109,7 @@ export const STAGE_TARGETS = [
 ];
 
 // Sign-ups needed to reach each stage at a given sign-up-to-paid rate.
-// Rates are planning sensitivities, not measurements (we have 2 of 12).
+// Rates are planning sensitivities, not measurements (we have 4 of 20).
 export const CONVERSION_SENSITIVITY = [0.10, 0.20, 0.30];
 
 export function stageLadder() {
@@ -223,7 +231,7 @@ export const OPEN_QUESTIONS = [
   'Market: split non-employer businesses by industry (StatCan table 33-10-0765) to size the sole-operator segment.',
   'Market: Alberta small employer businesses by industry (StatCan table 33-10-0764).',
   'Market: the $9.07B global figure is one analyst estimate; decide whether to show it with the caveat or drop it.',
-  'Does huchflex stay on its peakenterprise.ca subdomain or has it moved to its own domain?',
+  'Consent to show Sirie, Bruce Tails and Julz Creations (website, maybe logo): confirm with each merchant.',
   'Roadmap items still ahead: GST/HST tax engine, 5th storefront theme (Soft Matter), AI agent API, US expansion.',
   'API endpoint and table counts (23+, 21+): re-count from the code, or drop them (the audience is non-technical).',
 ];

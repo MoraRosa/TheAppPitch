@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
 import { MarketField3D } from './MarketField3D.jsx';
 import { ModelBlocks3D } from './ModelBlocks3D.jsx';
+import { TractionWall3D } from './TractionWall3D.jsx';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, FUNDING_BREAKDOWN_SMALL } from '../../../data/financials.js';
 import { COMPANY, COMPETITORS, TRACTION, MARKET, PRICING, FUNDING, FOUNDER_INFO } from '../../../data/config.js';
 import { LIVE_SITES, PRODUCT, MARKET_FACTS, TARGET_INDUSTRIES_TOTAL, STAGE_TARGETS } from '../../../data/facts.js';
@@ -183,49 +184,6 @@ function VisualDifferentiator({ theme, size }) {
 }
 
 // ── Model: MRR growth chart — fully responsive SVG ───────────────────────────
-// ── Traction: build progress ──────────────────────────────────────────────────
-function VisualTraction({ theme, size }) {
-  const t = theme.colors;
-  const stat = (to, label, prefix = '') => (
-    <div style={{ flex: 1, padding: `${10 * size}px ${8 * size}px`, background: t.bgAlt, border: `1px solid ${t.border}`, borderRadius: theme.space.radius || '2px', textAlign: 'center' }}>
-      <div style={{ fontFamily: theme.fonts.display, fontStyle: theme.type.displayStyle, fontWeight: theme.type.displayWeight, fontSize: `${26 * size}px`, color: t.text, lineHeight: 1 }}>
-        <CountUp to={to} prefix={prefix} duration={1.4} />
-      </div>
-      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: `${5 * size}px` }}>{label}</div>
-    </div>
-  );
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: `${10 * size}px`, width: '100%' }}>
-      <div style={{ display: 'flex', gap: `${8 * size}px` }}>
-        {stat(TRACTION.activeUsers, 'Active users')}
-        {stat(TRACTION.paidUsers, 'Paying merchants')}
-        {stat(TRACTION.mrr, 'MRR', '$')}
-      </div>
-      <div style={{ fontFamily: theme.fonts.mono, fontSize: `${8 * size}px`, color: t.accent, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Live on the platform now</div>
-      {LIVE_SITES.map((site, i) => (
-        <a key={site.host} href={site.url} target="_blank" rel="noreferrer" style={{
-          display: 'flex', alignItems: 'center', gap: `${10 * size}px`, textDecoration: 'none',
-          padding: `${8 * size}px ${10 * size}px`, background: t.bgAlt, border: `1px solid ${t.border}`,
-          borderRadius: theme.space.radius || '2px', animation: `proofIn 0.4s ease ${0.15 * i}s both`,
-        }}>
-          <span style={{ width: `${8 * size}px`, height: `${8 * size}px`, borderRadius: '50%', background: t.positive || t.accent, flexShrink: 0 }} />
-          <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: 'block', fontFamily: theme.fonts.body, fontSize: `${10 * size}px`, color: t.text }}>{site.name}</span>
-            <span style={{ display: 'block', fontFamily: theme.fonts.mono, fontSize: `${7.5 * size}px`, color: t.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{site.host}</span>
-          </span>
-          <span style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: site.paying ? t.accent : t.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{site.paying ? 'Paying' : (site.tag || 'Live')}</span>
-        </a>
-      ))}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${5 * size}px` }}>
-        {PRODUCT.liveNow.map(f => (
-          <span key={f} style={{ fontFamily: theme.fonts.mono, fontSize: `${7 * size}px`, color: t.textMuted, border: `1px solid ${t.border}`, borderRadius: '999px', padding: `${3 * size}px ${8 * size}px` }}>{f}</span>
-        ))}
-      </div>
-      <style>{`@keyframes proofIn { from { opacity: 0; transform: translateY(6px) } }`}</style>
-    </div>
-  );
-}
-
 // ── Roadmap: horizontal timeline ──────────────────────────────────────────────
 // ── Competition: comparison table ─────────────────────────────────────────────
 function VisualCompetition({ theme, size }) {
@@ -351,7 +309,7 @@ export const INVESTOR_VISUALS = {
   differentiator: VisualDifferentiator,
   market: MarketField3D,
   model: ModelBlocks3D,
-  traction: VisualTraction,
+  traction: TractionWall3D,
   team: VisualTeam,
   competition: VisualCompetition,
   ask: VisualAsk,

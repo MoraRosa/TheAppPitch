@@ -14,11 +14,11 @@ Last updated: October 2026. Update the status table and open questions at the en
 ## 1. Facts (confirmed by Hikmah)
 
 - Product is at **MVP**. Live: storefront, cart and checkout, connected shipping, scheduling, Stripe Connect payments, transaction fees (0.5-1%), custom domains.
-- First official user: **2 September 2026**. Today (30 Oct 2026): **12 users, 2 paying, $60 MRR** (subscriptions; fees tracked separately). Growth: 3 users and 1 paying in launch week, 8 and 2 on 13 Oct, 11 and 2 on 22 Oct, 12 and 2 on 30 Oct. 2 of 12 is an early signal, never a conversion rate.
+- First official user: **2 September 2026**. Today (18 Nov 2026): **20 users, 4 paying, $120 MRR** (4 x $30 Starter, gross; about $114 after Stripe fees; no tax charged; fees tracked separately). Growth: 3 users and 1 paying in launch week, 8 and 2 on 13 Oct, 11 and 2 on 22 Oct, 12 and 2 on 30 Oct, 20 and 4 on 18 Nov. 4 of 20 is an early signal, never a conversion rate.
 - Plans (per month): **Free** (minimal storage), **Starter $30, Grow $49.99 (show $50), Pro $100**. Grow and Pro have a **3-day trial**.
 - Themes: **4 storefront** (Soft Pink, Editorial, Brutalism, Axiom) + **3 admin** (Pink, Midnight Ledger, Bare). A 5th storefront theme (Soft Matter, claymorphism) is in progress. Every theme is a fully unique experience.
 - Modules (plain names first): Storefront, Products, Orders, Payments, Shipping, Scheduling, Customers (Constellation), Costing (Pulse), Tasks (Compass), Email, Content. Compass and Email are shipped.
-- Live sites for proof: circleofcarecounselling.com and huchflex-p340.peakenterprise.ca (both paying, **verbal consent to show their websites and maybe logos**), luminaco.skin (the founder's own live business).
+- Live sites for proof: circleofcarecounselling.com (verbal consent to show website and maybe logo), sirielc.org (Sirie Limitless, replaced Huchflex), bruce-tails-r8g.peakenterprise.ca and julzzcreations.ca (all paying; consent for these three to confirm), luminaco.skin (the founder's own live business).
 - Raising **$100,000 in grants + $1,000,000 from investors.** No grants named on slides. Zensurance is not pursued.
 - **Stages are paying merchants:** Stage 1 = 40, Stage 2 = 400, Stage 3 = 4,000, then hire (marketing, branding).
 - Grant use: **50% development, 30% marketing, 20% business setup** (paperwork, accounting, legal, insurance). The $1M split is an illustrative draft.
@@ -93,7 +93,7 @@ Goal: reach the demo deck's level of storytelling and polish, in a style that pr
 
 ## 8. Open questions
 
-- Does huchflex stay on its peakenterprise.ca subdomain or has it moved to its own domain?
+- Consent to show Sirie, Bruce Tails and Julz Creations (website, maybe logo): confirm with each merchant.
 - Screenshots and logos for the live sites (consent covers websites and maybe logos).
 - Sole-operator split by industry (StatCan table 33-10-0765) and Alberta by industry (33-10-0764).
 - Show the $9.07B global figure with its caveat, or drop it?
