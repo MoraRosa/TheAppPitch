@@ -59,7 +59,6 @@ export default function Footer() {
         {[
           { to: '/pitch',      label: 'Pitch'       },
           { to: '/plan',       label: 'Plan'         },
-          { to: '/icp',        label: 'ICP'          },
           { to: '/financials', label: 'Financials'   },
           { to: '/downloads',  label: 'Downloads'    },
         ].map(({ to, label }) => (

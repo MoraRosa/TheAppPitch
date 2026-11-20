@@ -97,8 +97,27 @@ The module system means merchants enable only what their business needs. The sid
   },
 
   {
-    id: "market",
+    id: "icp",
     number: "06",
+    title: "Ideal Customer Profile",
+    get blocks() { return [
+      { type: 'callout', text: `${COMPANY.name}'s ideal customer is a non-technical owner of a small product or service business who is tired of stitching tools together and wants one system they can run themselves.` },
+      { type: 'text', text: `This is the customer ${COMPANY.name} is built for, and the one the MVP already supports. All ${TRACTION.activeUsers} people who have signed up fit this profile, and everyone who has shown interest so far is non-technical. Everyone on a paid plan came to ${COMPANY.name} because of the problem below.` },
+      { type: 'rows', items: [
+        { title: 'Who',                 text: 'Non-technical owner-operators of small product or service businesses with 1 to 5 people, in Canada, starting in Alberta.' },
+        { title: 'Role',                text: 'The owner, who also runs the website, orders, email and bookkeeping.' },
+        { title: 'Trigger',             text: 'Ease of use, and consolidating several tools into one login.' },
+        { title: 'Pain',                text: 'Three or more disconnected tools, or outgrowing a WordPress, Shopify or Wix site.' },
+        { title: 'Current alternative', text: 'Shopify, WordPress, Wix, Mailchimp and spreadsheets stitched together.' },
+        { title: 'Fit signals',         text: 'Uses three or more tools, is moving off WordPress, Shopify or Wix, and sells products or services directly to customers.' },
+        { title: 'Not a fit today',     text: 'Technical owners, who feel little pain juggling several tools; businesses with 20 or more staff; and enterprise.' },
+      ] },
+    ]; },
+  },
+
+  {
+    id: "market",
+    number: "07",
     title: "Market Opportunity",
     get blocks() { return [
       { type: 'text', text: `Canada has ${MARKET.canadianSmallBiz} ${MARKET.canadianSmallBizNote}, which is ${MARKET.canadianSmallShare} of all Canadian employer businesses (ISED, Key Small Business Statistics 2025). It also has ${MARKET.canadianNonEmployer} ${MARKET.canadianNonEmployerNote} (Statistics Canada, December 2024). Alberta has ${MARKET.albertaSmallBiz} small employer businesses. The United States has ${MARKET.usSmallBiz} small businesses, ${MARKET.usNonEmployerNote} (SBA Office of Advocacy, 2026).` },
@@ -109,7 +128,7 @@ The module system means merchants enable only what their business needs. The sid
 
   {
     id: "model",
-    number: "07",
+    number: "08",
     title: "Business Model",
     get content() {
       return `Primary revenue comes from subscription plans: a Free plan with minimal storage, then Starter at ${PRICING.starter} per month, Grow at ${PRICING.growth} per month, and Pro at ${PRICING.pro} per month. Grow and Pro include a ${PRICING.trialDays}-day free trial. Subscription revenue today is ${usd(TRACTION.mrr)} per month from ${TRACTION.paidUsers} paying merchants.
@@ -124,7 +143,7 @@ Unit economics (modelled, not measured): average revenue per merchant is ${usd(U
 
   {
     id: "competition",
-    number: "08",
+    number: "09",
     title: "Competitive Landscape",
     get blocks() { return [
       { type: 'text', text: `Shopify is the largest ecommerce ecosystem but was built for retailers, not makers. It has no native ingredient management, batch costing, or CRM. Its app ecosystem adds cost and integration friction at every step.` },
@@ -135,7 +154,7 @@ Unit economics (modelled, not measured): average revenue per merchant is ${usd(U
 
   {
     id: "competitive-weaknesses",
-    number: "08b",
+    number: "09b",
     title: "Competitive Weaknesses & Mitigation",
     get blocks() { return [
       { type: 'text', text: `Every early-stage SaaS product carries structural disadvantages. The following is an honest assessment of ${COMPANY.name}'s current weaknesses and the specific strategy for overcoming each.` },
@@ -174,7 +193,7 @@ Unit economics (modelled, not measured): average revenue per merchant is ${usd(U
 
   {
     id: "swot",
-    number: "08c",
+    number: "09c",
     title: "SWOT Analysis",
     get blocks() { return [
       { type: 'text', text: `Strengths and Weaknesses are internal. Opportunities and Threats are external. This reflects ${COMPANY.name}'s position at MVP stage, a live product with its first paying merchants.` },
@@ -217,7 +236,7 @@ Unit economics (modelled, not measured): average revenue per merchant is ${usd(U
 
   {
     id: "marketing",
-    number: "09",
+    number: "10",
     title: "Marketing & Sales Strategy",
     get content() {
       return `Stage 1 targets ${n(ST1.payingUsers)} paying merchants through the current ${TRACTION.activeUsers} active users, live merchant sites as proof, and word of mouth. The goal is to learn fast, fix what breaks, and earn referrals. A merchant who replaces Shopify, Mailchimp, and a costing spreadsheet with one platform tells other merchants.
@@ -232,7 +251,7 @@ Stage 3 targets ${n(ST3.payingUsers)} paying merchants through paid acquisition 
 
   {
     id: "operations",
-    number: "10",
+    number: "11",
     title: "Operations",
     get blocks() { return [
       { type: 'label', text: 'Service Delivery' },
@@ -254,7 +273,7 @@ Stage 3 targets ${n(ST3.payingUsers)} paying merchants through paid acquisition 
 
   {
     id: "management",
-    number: "11",
+    number: "12",
     title: "Management & Ownership",
     get blocks() { return [
       { type: 'label', text: 'Founder' },
@@ -276,7 +295,7 @@ Stage 3 targets ${n(ST3.payingUsers)} paying merchants through paid acquisition 
 
   {
     id: "traction",
-    number: "12",
+    number: "13",
     title: "Traction",
     get content() {
       return `The product is live at MVP, and the first official user joined on September 2, 2026. ${TRACTION.activeUsers} users are actively using the platform and ${TRACTION.paidUsers} have converted to paid, for ${usd(TRACTION.mrr)} in monthly subscription revenue. ${TRACTION.paidUsers} of ${TRACTION.activeUsers} is an early signal, not a conversion rate. Transaction fees are on and tracked separately. No paid marketing has been used.
@@ -287,7 +306,7 @@ What is live: storefront, cart and checkout, connected shipping, scheduling, and
 
   {
     id: "roadmap",
-    number: "13",
+    number: "14",
     title: "Product Roadmap",
     content: `Live now: ${PLATFORM.themes} storefront themes and ${PLATFORM.adminThemes} admin themes, custom domains, multi-tenant architecture, dual authentication, REST API, merchant dashboard, storefront, cart and checkout, shipping, scheduling, Stripe Connect payments, Costing, Customers, Tasks, Email, and all content modules.
 
@@ -300,7 +319,7 @@ Later: AI Agent API enabling ChatGPT or Claude to search inventory and place ord
 
   {
     id: "ask",
-    number: "14",
+    number: "15",
     title: "Funding Requirements",
     get blocks() { return [
       { type: 'label', text: `The Raise, ${usd(FUNDING.currentGrant.amount)} in Grants + ${usd(FUNDING.seedRound.min)} from Investors` },

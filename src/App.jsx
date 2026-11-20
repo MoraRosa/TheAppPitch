@@ -10,7 +10,6 @@ import HomePage         from './pages/HomePage.jsx';
 import AboutPage        from './pages/AboutPage.jsx';
 import PitchLandingPage from './pages/PitchLandingPage.jsx';
 import PitchDeckPage    from './pages/PitchDeckPage.jsx';
-import ICPPage from './pages/ICPPage.jsx';
 import PlanPage         from './pages/PlanPage.jsx';
 import FinancialsPage   from './pages/FinancialsPage.jsx';
 import DownloadsPage    from './pages/DownloadsPage.jsx';
@@ -32,7 +31,6 @@ function AppShell() {
           <Route path="/pitch"        element={<PitchLandingPage />} />
           <Route path="/pitch/:deckId" element={<PitchDeckPage />} />
           <Route path="/plan"         element={<PlanPage />} />
-          <Route path="/icp"          element={<ICPPage />} />
           <Route path="/financials"   element={<FinancialsPage />} />
           <Route path="/downloads"    element={<DownloadsPage />} />
         </Routes>

@@ -101,6 +101,23 @@ function BlockSwot({ block, theme, isMobile }) {
   );
 }
 
+function BlockRows({ items, theme, isMobile }) {
+  const t = theme.colors;
+  return (
+    <div style={{ marginBottom: '24px', border: `1px solid ${t.border}`, borderRadius: '4px', overflow: 'hidden' }}>
+      {items.map((r, i) => (
+        <div key={r.title} style={{
+          display: isMobile ? 'block' : 'grid', gridTemplateColumns: '170px 1fr', gap: isMobile ? '0' : '28px', alignItems: 'start',
+          padding: isMobile ? '14px 16px' : '16px 20px', borderTop: i ? `1px solid ${t.border}` : 'none', background: i % 2 ? 'transparent' : t.bgAlt,
+        }}>
+          <p style={{ fontFamily: theme.fonts.display, fontSize: '15px', fontWeight: theme.type.headWeight, fontStyle: theme.type.headStyle, color: t.text, margin: isMobile ? '0 0 6px' : 0 }}>{r.title}</p>
+          <p style={{ fontFamily: theme.fonts.body, fontSize: '13px', color: t.textMuted, lineHeight: 1.7, margin: 0 }}>{r.text}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function BlockPlaceholder({ text, theme }) {
   const t = theme.colors;
   return (
@@ -119,6 +136,7 @@ function renderBlock(block, index, theme, isMobile) {
     case 'callout':     return <BlockCallout     key={index} text={block.text}   theme={theme} />;
     case 'bullets':     return <BlockBullets     key={index} items={block.items} theme={theme} />;
     case 'weakness':    return <BlockWeakness    key={index} block={block}       theme={theme} isMobile={isMobile} />;
+    case 'rows':        return <BlockRows        key={index} items={block.items} theme={theme} isMobile={isMobile} />;
     case 'swot':        return <BlockSwot        key={index} block={block}       theme={theme} isMobile={isMobile} />;
     case 'placeholder': return <BlockPlaceholder key={index} text={block.text}   theme={theme} />;
     default:            return null;
