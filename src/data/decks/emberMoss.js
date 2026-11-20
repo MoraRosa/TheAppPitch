@@ -100,4 +100,8 @@ export const STOREFRONT_THEME_SWATCHES = [
   { id: 'b', label: 'Workshop',     style: 'brutalist', bg: '#141414', accent: '#E8B923', text: '#F2F2F2', font: "'Space Mono', monospace" },
   { id: 'c', label: 'Bubblegum',    style: 'bubbly',    bg: '#FFE9F4', accent: '#FF3E9E', text: '#5A1240', font: "'Quicksand', sans-serif" },
   { id: 'd', label: 'Directorate',  style: 'minimal',   bg: '#EFF1F4', accent: '#2B3A55', text: '#1A222E', font: "'Inter', sans-serif" },
+  // Pitch-only looks: made to show how far a layout can go. The real catalogue grows as merchants ask for themes.
+  { id: 'e', label: 'Soft Matter',  style: 'clay',      bg: '#E9E4F7', accent: '#7C5CFA', text: '#3A2E66', font: "'Nunito', sans-serif" },
+  { id: 'f', label: 'Carousel',     style: 'carousel',  bg: '#0E0F13', accent: '#FF7A59', text: '#F4F1EC', font: "'Sora', sans-serif", dwell: 5600 },
+  { id: 'g', label: 'Aurora',       style: 'aurora',    bg: '#0B1026', accent: '#7DF9E0', text: '#EAF2FF', font: "'Sora', sans-serif" },
 ];

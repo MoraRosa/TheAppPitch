@@ -1640,6 +1640,14 @@ function MockupThemeSwitch({ theme, size, paceMs = 18000 }) {
   const [mt, setMt] = useState(STOREFRONT_THEME_SWATCHES[0]);
   const products = EMBER_MOSS_PRODUCTS.slice(0, 3);
   const slideEntered = useSlideEntered();
+  // the storefront looks use their own typefaces; load them once
+  useEffect(() => {
+    if (typeof document === 'undefined' || document.getElementById('storefront-look-fonts')) return;
+    const l = document.createElement('link');
+    l.id = 'storefront-look-fonts'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&family=Quicksand:wght@500;700&family=Inter:wght@400;600&family=Nunito:wght@600;800&family=Sora:wght@400;600;700&display=swap';
+    document.head.appendChild(l);
+  }, []);
 
   // Motion-graphics beat: a visible cursor picks each theme swatch in turn and
   // the storefront repaints itself — with a slow scroll down each new look so
@@ -1664,12 +1672,12 @@ function MockupThemeSwitch({ theme, size, paceMs = 18000 }) {
     const back = Math.max(800, 1000 * k);
     // time to spend on each theme so the whole cycle fills ~88% of the slide
     const dwell = Math.max(1800, (paceMs * 0.88 - steps * (moveMs + 360) - 900 * k) / (swatches.length));
-    const lookAround = async () => {
+    const lookAround = async (minDwell = 0) => {
       const t0 = performance.now();
       await glide(frameRef.current, 'bottom', look, isLive);   // see the whole page in this theme
       await glide(frameRef.current, 0, back, isLive);
       // previews that fit the frame don't scroll at all, so wait out whatever is left of this theme's time
-      await sleep(Math.max(300, dwell - (performance.now() - t0)));
+      await sleep(Math.max(300, Math.max(dwell, minDwell) - (performance.now() - t0)));
     };
     const stop = () => cancelAuto();
     frame?.addEventListener('wheel', stop, { passive: true });
@@ -1686,7 +1694,7 @@ function MockupThemeSwitch({ theme, size, paceMs = 18000 }) {
         });
         if (!ok) return;
         await sleep(400 * k);
-        await lookAround();
+        await lookAround(swatches[i].dwell || 0);
         if (!isLive()) return;
       }
       cursorRef.current?.hide();
@@ -1705,6 +1713,9 @@ function MockupThemeSwitch({ theme, size, paceMs = 18000 }) {
     brutalist: BrutalistPreview,
     bubbly: BubblyPreview,
     minimal: MinimalPreview,
+    clay: ClayPreview,
+    carousel: CarouselPreview,
+    aurora: AuroraPreview,
   }[mt.style];
 
   return (
@@ -1867,6 +1878,117 @@ function MinimalPreview({ mt, size, products }) {
     </div>
   );
 }
+
+
+// ── Soft Matter (clay) — puffy, tactile, everything feels moulded ─────────────
+function ClayPreview({ mt, size, products }) {
+  const puff = (r, lift = 1) => ({
+    borderRadius: `${r * size}px`,
+    boxShadow: `${6 * size * lift}px ${7 * size * lift}px ${14 * size * lift}px rgba(124,92,250,0.28), -${5 * size * lift}px -${5 * size * lift}px ${12 * size * lift}px rgba(255,255,255,0.95), inset ${2 * size}px ${2 * size}px ${5 * size}px rgba(255,255,255,0.7), inset -${2 * size}px -${3 * size}px ${6 * size}px rgba(124,92,250,0.12)`,
+  });
+  return (
+    <div style={{ background: mt.bg, minHeight: '100%', padding: `${14 * size}px ${16 * size}px ${18 * size}px` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: `${14 * size}px` }}>
+        <span style={{ ...puff(14, 0.7), background: mt.bg, padding: `${6 * size}px ${13 * size}px`, fontFamily: mt.font, fontWeight: 800, fontSize: `${9.5 * size}px`, color: mt.text }}>{EMBER_MOSS_BRAND.name}</span>
+        <div style={{ display: 'flex', gap: `${8 * size}px` }}>
+          {['Shop', 'Cart'].map(l => <span key={l} style={{ ...puff(12, 0.6), background: mt.bg, padding: `${5 * size}px ${11 * size}px`, fontFamily: mt.font, fontWeight: 600, fontSize: `${7.5 * size}px`, color: mt.text }}>{l}</span>)}
+        </div>
+      </div>
+      <div style={{ ...puff(26), background: mt.bg, textAlign: 'center', padding: `${20 * size}px ${16 * size}px`, marginBottom: `${16 * size}px` }}>
+        <div style={{ fontFamily: mt.font, fontWeight: 800, fontSize: `${16 * size}px`, color: mt.text, marginBottom: `${10 * size}px` }}>{EMBER_MOSS_BRAND.tagline}</div>
+        <span style={{ display: 'inline-block', background: mt.accent, color: '#fff', fontFamily: mt.font, fontWeight: 800, fontSize: `${8 * size}px`, padding: `${6 * size}px ${16 * size}px`, borderRadius: `${20 * size}px`, boxShadow: `${3 * size}px ${4 * size}px ${8 * size}px rgba(124,92,250,0.45), inset -${2 * size}px -${2 * size}px ${4 * size}px rgba(0,0,0,0.15), inset ${2 * size}px ${2 * size}px ${4 * size}px rgba(255,255,255,0.35)` }}>Shop the batch</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${14 * size}px`, marginBottom: `${16 * size}px` }}>
+        {products.map(p => (
+          <div key={p.name} style={{ ...puff(22), background: mt.bg, padding: `${8 * size}px`, textAlign: 'center' }}>
+            <ProductImg src={p.img} alt={p.name} size={size} radius={16} />
+            <div style={{ fontFamily: mt.font, fontWeight: 800, fontSize: `${7 * size}px`, color: mt.text, marginTop: `${6 * size}px` }}>{p.name}</div>
+            <div style={{ fontFamily: mt.font, fontWeight: 800, fontSize: `${7.5 * size}px`, color: mt.accent }}>{p.price}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ ...puff(18, 0.8), background: mt.bg, textAlign: 'center', padding: `${12 * size}px ${14 * size}px`, fontFamily: mt.font, fontWeight: 600, fontSize: `${8 * size}px`, color: mt.text }}>{EMBER_MOSS_BRAND.manifesto}</div>
+    </div>
+  );
+}
+
+// ── Carousel — no cards at all: products float on a stage and glide past ──────
+function CarouselPreview({ mt, size }) {
+  const items = EMBER_MOSS_PRODUCTS.slice(0, 5);
+  const [focus, setFocus] = useState(0);
+  // glides through a few products once, then rests (no endless loop)
+  useEffect(() => {
+    const ids = [1500, 2900, 4300].map((ms, i) => setTimeout(() => setFocus(i + 1), ms));
+    return () => ids.forEach(clearTimeout);
+  }, []);
+  const cur = items[focus];
+  return (
+    <div style={{ background: `radial-gradient(ellipse at 50% 55%, ${mt.accent}38 0%, ${mt.bg} 62%)`, minHeight: '100%', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${14 * size}px ${18 * size}px` }}>
+        <span style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${10 * size}px`, color: mt.text, letterSpacing: '0.04em' }}>{EMBER_MOSS_BRAND.name}</span>
+        <span style={{ fontFamily: mt.font, fontSize: `${7.5 * size}px`, color: mt.text, opacity: 0.65 }}>Cart (0)</span>
+      </div>
+      <div style={{ textAlign: 'center', fontFamily: mt.font, fontWeight: 600, fontSize: `${12 * size}px`, color: mt.text, padding: `${2 * size}px ${16 * size}px ${6 * size}px` }}>{EMBER_MOSS_BRAND.tagline}</div>
+      <div style={{ position: 'relative', height: `${150 * size}px`, perspective: `${600 * size}px`, perspectiveOrigin: '50% 40%' }}>
+        {items.map((p, i) => {
+          const off = i - focus, a = Math.abs(off);
+          return (
+            <div key={p.name} style={{
+              position: 'absolute', left: '50%', top: `${8 * size}px`, width: `${76 * size}px`, marginLeft: `${-38 * size}px`,
+              transform: `translateX(${off * 66 * size}px) translateZ(${-a * 70 * size}px) rotateY(${off * -34}deg) scale(${1 - a * 0.08})`,
+              opacity: Math.max(0, 1 - a * 0.3), zIndex: 10 - a,
+              transition: 'transform 0.9s cubic-bezier(0.22,1,0.36,1), opacity 0.9s ease',
+              filter: `drop-shadow(0 ${10 * size}px ${12 * size}px rgba(0,0,0,0.45))`,
+            }}>
+              <ProductImg src={p.img} alt={p.name} size={size} radius={4} />
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ textAlign: 'center', marginTop: `${2 * size}px` }}>
+        <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${10 * size}px`, color: mt.text }}>{cur.name}</div>
+        <div style={{ fontFamily: mt.font, fontSize: `${9 * size}px`, color: mt.accent, marginTop: `${3 * size}px` }}>{cur.price}</div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: `${5 * size}px`, marginTop: `${10 * size}px` }}>
+          {items.map((p, i) => <span key={p.name} style={{ width: `${i === focus ? 14 * size : 5 * size}px`, height: `${5 * size}px`, borderRadius: '10px', background: i === focus ? mt.accent : `${mt.text}33`, transition: 'width 0.5s ease, background 0.5s ease' }} />)}
+        </div>
+      </div>
+      <div style={{ flex: 1, minHeight: `${20 * size}px` }} />
+      <div style={{ textAlign: 'center', fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.text, opacity: 0.55, padding: `${10 * size}px ${16 * size}px ${14 * size}px`, letterSpacing: '0.04em' }}>{EMBER_MOSS_BRAND.manifesto}</div>
+    </div>
+  );
+}
+
+// ── Aurora — glow and frosted glass ───────────────────────────────────────────
+function AuroraPreview({ mt, size, products }) {
+  const glass = { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' };
+  return (
+    <div style={{ background: mt.bg, minHeight: '100%', position: 'relative', overflow: 'hidden', padding: `${14 * size}px ${16 * size}px ${18 * size}px` }}>
+      <div style={{ position: 'absolute', top: `${-30 * size}px`, left: `${-20 * size}px`, width: `${150 * size}px`, height: `${150 * size}px`, borderRadius: '50%', background: '#7DF9E0', opacity: 0.35, filter: `blur(${42 * size}px)` }} />
+      <div style={{ position: 'absolute', top: `${40 * size}px`, right: `${-30 * size}px`, width: `${160 * size}px`, height: `${160 * size}px`, borderRadius: '50%', background: '#8B5CF6', opacity: 0.45, filter: `blur(${46 * size}px)` }} />
+      <div style={{ position: 'absolute', bottom: `${-40 * size}px`, left: '30%', width: `${150 * size}px`, height: `${130 * size}px`, borderRadius: '50%', background: '#F472B6', opacity: 0.3, filter: `blur(${44 * size}px)` }} />
+      <div style={{ position: 'relative' }}>
+        <div style={{ ...glass, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: `${20 * size}px`, padding: `${7 * size}px ${14 * size}px`, marginBottom: `${16 * size}px` }}>
+          <span style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${9 * size}px`, color: mt.text }}>{EMBER_MOSS_BRAND.name}</span>
+          <span style={{ fontFamily: mt.font, fontSize: `${7.5 * size}px`, color: mt.text, opacity: 0.7 }}>Shop · Cart</span>
+        </div>
+        <div style={{ textAlign: 'center', marginBottom: `${16 * size}px` }}>
+          <div style={{ fontFamily: mt.font, fontWeight: 700, fontSize: `${17 * size}px`, lineHeight: 1.15, background: 'linear-gradient(90deg, #7DF9E0, #C4B5FD, #F9A8D4)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>{EMBER_MOSS_BRAND.tagline}</div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: `${12 * size}px`, marginBottom: `${16 * size}px` }}>
+          {products.map(p => (
+            <div key={p.name} style={{ ...glass, borderRadius: `${16 * size}px`, padding: `${7 * size}px` }}>
+              <ProductImg src={p.img} alt={p.name} size={size} radius={11} />
+              <div style={{ fontFamily: mt.font, fontWeight: 600, fontSize: `${6.5 * size}px`, color: mt.text, marginTop: `${6 * size}px` }}>{p.name}</div>
+              <div style={{ fontFamily: mt.font, fontSize: `${7 * size}px`, color: mt.accent }}>{p.price}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ ...glass, borderRadius: `${14 * size}px`, textAlign: 'center', padding: `${10 * size}px ${14 * size}px`, fontFamily: mt.font, fontSize: `${7.5 * size}px`, color: mt.text, opacity: 0.9 }}>{EMBER_MOSS_BRAND.manifesto}</div>
+      </div>
+    </div>
+  );
+}
+
 
 
 
