@@ -83,7 +83,8 @@ function drawPlane(ctx, pal) {
   ctx.fillStyle = css(mix(pal.ac, pal.tx, 0.2)); ctx.beginPath(); ctx.ellipse(40, -3, 12, 6, 0, 0, Math.PI * 2); ctx.fill();
 }
 
-export function drawIntroFrame(ctx, theme, T, make = makeBrowserCanvas) {
+// `plane` is Pippa's own render (public/pippa/pippa-plane.webp) once loaded; until then the simple drawn plane stands in.
+export function drawIntroFrame(ctx, theme, T, make = makeBrowserCanvas, plane = null) {
   const pal = palette(theme);
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, LW * Q, LH * Q);
   const sh = shadowLayer(pal, make);
@@ -119,7 +120,10 @@ export function drawIntroFrame(ctx, theme, T, make = makeBrowserCanvas) {
     // shadow on the stage: same x, on the stage plane in front of the mountain, softer and smaller when she is high
     const gp = Pt(CXm - 1.2, NY - 0.4, BASE), alt = clamp01((gp[1] - py) / 260);
     ctx.save(); ctx.globalAlpha = f; ctx.fillStyle = 'rgba(0,0,0,0.17)'; ctx.beginPath(); ctx.ellipse(px + 18, gp[1], 62 - alt * 18, 10 - alt * 3, 0.04, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    ctx.save(); ctx.translate(px, py); ctx.rotate(ang); ctx.scale(1.0, 1.0); drawPlane(ctx, pal); ctx.restore();
+    ctx.save(); ctx.translate(px, py);
+    if (plane && plane.width) { const w = 168, h = w * plane.height / plane.width; ctx.rotate(ang * 0.45); ctx.drawImage(plane, -w / 2, -h / 2, w, h); }
+    else { ctx.rotate(ang); drawPlane(ctx, pal); }
+    ctx.restore();
   }
 }
 
@@ -130,14 +134,17 @@ export function MountainIntro3D({ theme, size = 1 }) {
   useEffect(() => {
     const cv = canvasRef.current; if (!cv) return undefined;
     const ctx = cv.getContext('2d');
-    const frame = (T) => drawIntroFrame(ctx, theme, T);
+    let lastT = 0, alive = true, plane = null;
+    const frame = (T) => { lastT = T; drawIntroFrame(ctx, theme, T, undefined, plane); };
+    const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL) || './';
+    const im = new Image(); im.onload = () => { plane = im; if (alive) frame(lastT); }; im.src = `${base}pippa/pippa-plane.webp`;
     const reduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!entered) { frame(0); return undefined; }
-    if (reduce) { frame(INTRO_T_END + 1); return undefined; }
+    if (!entered) { frame(0); return () => { alive = false; }; }
+    if (reduce) { frame(INTRO_T_END + 1); return () => { alive = false; }; }
     let raf, start = null;
     const tick = (ts) => { if (start === null) start = ts; const T = (ts - start) / 1000; frame(Math.min(T, INTRO_T_END + 1)); if (T < INTRO_T_END + 0.2) raf = requestAnimationFrame(tick); };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => { alive = false; cancelAnimationFrame(raf); };
   }, [entered, theme]);
   return (
     <div style={{ width: '100%', maxWidth: `${540 * size}px`, margin: '0 auto' }}>

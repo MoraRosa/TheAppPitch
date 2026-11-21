@@ -3,7 +3,7 @@
 // To rename the app, update COMPANY.name in config.js, it updates everywhere.
 
 import { COMPANY, FOUNDER_INFO, TRACTION, PRICING, MARKET, STAGES, FUNDING, UNIT_ECON, PLATFORM } from './config.js';
-import { WORDING } from './facts.js';
+import { WORDING, TRIAL } from './facts.js';
 
 const usd = n => `$${Math.round(n).toLocaleString()}`;
 const [ST1, ST2, ST3] = STAGES;
@@ -268,6 +268,22 @@ Stage 3 targets ${n(ST3.payingUsers)} paying merchants through paid acquisition 
       { type: 'text', text: `Professional liability (errors and omissions) insurance at launch. Cyber liability insurance at the 100-merchant milestone. Both standard requirements for SaaS businesses handling merchant payment data.` },
       { type: 'label', text: 'Technology Infrastructure' },
       { type: 'text', text: `Built on Supabase (PostgreSQL database, authentication, storage), Fly.io (application servers), Cloudflare, and Stripe Connect (payment processing). The codebase is maintained in a private GitHub repository with automated deployment pipelines.` },
+      { type: 'label', text: 'Suppliers and Dependencies' },
+      { type: 'rows', items: [
+        { title: 'Stripe Connect', text: 'Payment processing and merchant payouts.' },
+        { title: 'Supabase',       text: 'Database, authentication and file storage.' },
+        { title: 'Fly.io',         text: 'Application servers.' },
+        { title: 'Cloudflare',     text: 'Domains and caching.' },
+        { title: 'Anthropic',      text: 'AI models used to help build and maintain the software.' },
+      ] },
+      { type: 'label', text: 'Customer Service and Refund Policy' },
+      { type: 'bullets', items: [
+        'The Free plan never expires. Storage is capped, so owners can explore the features and set up a landing page before paying.',
+        `The ${TRIAL.plans.join(' and ')} plans start with a ${TRIAL.days}-day trial.`,
+        'Merchants can cancel at any time. The plan stays active until the end of the period already paid for, and no further charge is made.',
+        'Subscription payments are not refunded in the usual course. Refunds are made where there is a clear reason, such as a duplicate charge.',
+        'Merchants own their data and can export it.',
+      ] },
     ]; },
   },
 
