@@ -8,50 +8,12 @@ import { useSlideEntered } from '../../../context/SlideTransitionContext.jsx';
 import { MarketField3D } from './MarketField3D.jsx';
 import { ModelBlocks3D } from './ModelBlocks3D.jsx';
 import { TractionWall3D } from './TractionWall3D.jsx';
+import { MountainIntro3D } from './MountainIntro3D.jsx';
 import { COMPETITOR_COST_STACK, MERCHANT_GROWTH, FUNDING_BREAKDOWN_SMALL } from '../../../data/financials.js';
 import { COMPANY, COMPETITORS, TRACTION, MARKET, PRICING, FUNDING, FOUNDER_INFO } from '../../../data/config.js';
 import { LIVE_SITES, PRODUCT, MARKET_FACTS, TARGET_INDUSTRIES_TOTAL, STAGE_TARGETS } from '../../../data/facts.js';
 import { CountUp } from '../motion.jsx';
 
-// ── Hook: animated big numbers ────────────────────────────────────────────────
-function VisualHook({ theme, size }) {
-  const t = theme.colors;
-  const items = [
-    { val: '10', label: 'tools replaced' },
-    { val: '$850', label: 'saved / month' },
-    { val: '1', label: 'platform' },
-  ];
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-      {items.map((item, i) => (
-        <div key={i} style={{
-          padding: `${12 * size}px ${16 * size}px`,
-          border: `1px solid ${t.border}`,
-          borderLeft: `3px solid ${t.accent}`,
-          borderRadius: theme.space.radius || '2px',
-          display: 'flex', alignItems: 'baseline', gap: '12px',
-          animation: `fadeSlideIn 0.4s ease ${i * 0.1}s both`,
-        }}>
-          <span style={{
-            fontFamily: theme.fonts.display,
-            fontStyle: theme.type.displayStyle,
-            fontWeight: theme.type.displayWeight,
-            fontSize: `${32 * size}px`,
-            color: t.accent, lineHeight: 1,
-          }}>{item.val}</span>
-          <span style={{
-            fontFamily: theme.fonts.mono,
-            fontSize: `${9 * size}px`,
-            color: t.textMuted,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-          }}>{item.label}</span>
-        </div>
-      ))}
-      <style>{`@keyframes fadeSlideIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:translateX(0); } }`}</style>
-    </div>
-  );
-}
 
 // ── Problem: cost stack bars ──────────────────────────────────────────────────
 function VisualProblem({ theme, size }) {
@@ -303,7 +265,7 @@ function VisualTeam({ theme, size }) {
 }
 
 export const INVESTOR_VISUALS = {
-  hook: VisualHook,
+  hook: MountainIntro3D,
   problem: VisualProblem,
   solution: VisualSolution,
   differentiator: VisualDifferentiator,

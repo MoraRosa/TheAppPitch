@@ -5,7 +5,7 @@ import { COMPANY } from './config.js';
 import { LIVE_PROJECTS } from './facts.js';
 
 export const FOUNDER = {
-  name: "Hikmah Adepoju",               // ← REPLACE
+  name: "Hikmah A.",               // ← REPLACE
   title: "Founder & Developer",
   location: "Canada",
   bio: `A full-stack developer with 5 years of experience building production software. ${COMPANY.name} was built entirely solo, from database architecture to deployment because the tools small business owners actually need did not exist in one place, so the decision was to build them.`,

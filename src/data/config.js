@@ -21,7 +21,7 @@ export const COMPANY = {
 
 // ── Founder ───────────────────────────────────────────────────────────────────
 export const FOUNDER_INFO = {
-  name:     'Hikmah Adepoju',
+  name:     'Hikmah A.',
   title:    'Founder & Full-Stack Developer',
   location: 'Calgary, Alberta, Canada',
   github:   'https://github.com/MoraRosa',
