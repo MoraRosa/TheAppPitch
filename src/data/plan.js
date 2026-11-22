@@ -3,7 +3,7 @@
 // To rename the app, update COMPANY.name in config.js, it updates everywhere.
 
 import { COMPANY, FOUNDER_INFO, TRACTION, PRICING, MARKET, STAGES, FUNDING, UNIT_ECON, PLATFORM } from './config.js';
-import { WORDING, TRIAL } from './facts.js';
+import { WORDING, TRIAL, COMPETITOR_WATCH } from './facts.js';
 
 const usd = n => `$${Math.round(n).toLocaleString()}`;
 const [ST1, ST2, ST3] = STAGES;
@@ -149,6 +149,8 @@ Unit economics (modelled, not measured): average revenue per merchant is ${usd(U
       { type: 'text', text: `Shopify is the largest ecommerce ecosystem but was built for retailers, not makers. It has no native ingredient management, batch costing, or CRM. Its app ecosystem adds cost and integration friction at every step.` },
       { type: 'text', text: `Squarespace is design-first and business-second. No ecommerce depth, no back-office tools, and booking requires third-party integration. Kajabi serves digital products and courses at $150–400/month, overkill for most small merchants with no physical ecommerce or production costing. HoneyBook and Dubsado serve service business CRM and invoicing but have no storefront or ecommerce capability.` },
       { type: 'text', text: `${COMPANY.name}'s advantages are integrated operations that work on day one, built-in production costing (Shopify has none natively), radically isolated theming, and AI-native architecture designed for external access from day one.` },
+      { type: 'label', text: 'Competitor Watch' },
+      { type: 'competitors', items: COMPETITOR_WATCH },
     ]; },
   },
 

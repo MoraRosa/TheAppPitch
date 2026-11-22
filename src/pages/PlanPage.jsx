@@ -118,6 +118,33 @@ function BlockRows({ items, theme, isMobile }) {
   );
 }
 
+function BlockCompetitors({ items, theme, isMobile }) {
+  const t = theme.colors;
+  const head = { fontFamily: theme.fonts.mono, fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textFaint };
+  const cell = { fontFamily: theme.fonts.body, fontSize: '13px', color: t.textMuted, lineHeight: 1.65, margin: 0 };
+  const cols = '150px 1fr 1fr 1fr';
+  const Label = ({ children }) => <p style={{ ...head, margin: '0 0 4px' }}>{children}</p>;
+  return (
+    <div style={{ marginBottom: '24px', border: `1px solid ${t.border}`, borderRadius: '4px', overflow: 'hidden' }}>
+      {!isMobile && (
+        <div style={{ display: 'grid', gridTemplateColumns: cols, gap: '24px', padding: '10px 20px', background: t.bgAlt, borderBottom: `1px solid ${t.border}` }}>
+          <span style={head}>Competitor</span><span style={head}>What they do</span><span style={head}>How they differ from Peak</span><span style={head}>Where they are ahead</span>
+        </div>
+      )}
+      {items.map((c, i) => (
+        <div key={c.name} style={{ display: isMobile ? 'block' : 'grid', gridTemplateColumns: cols, gap: isMobile ? 0 : '24px', alignItems: 'start', padding: isMobile ? '14px 16px' : '16px 20px', borderTop: i ? `1px solid ${t.border}` : 'none' }}>
+          <p style={{ fontFamily: theme.fonts.display, fontSize: '15px', fontWeight: theme.type.headWeight, fontStyle: theme.type.headStyle, margin: isMobile ? '0 0 10px' : 0 }}>
+            {c.url ? <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: t.accent, textDecoration: 'none', borderBottom: `1px solid ${t.accent}55` }}>{c.name} ↗</a> : <span style={{ color: t.text }}>{c.name}</span>}
+          </p>
+          <div style={{ marginBottom: isMobile ? '10px' : 0 }}>{isMobile && <Label>What they do</Label>}<p style={cell}>{c.does}</p></div>
+          <div style={{ marginBottom: isMobile ? '10px' : 0 }}>{isMobile && <Label>How they differ from Peak</Label>}<p style={cell}>{c.differs}</p></div>
+          <div>{isMobile && <Label>Where they are ahead</Label>}<p style={cell}>{c.ahead}</p></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function BlockPlaceholder({ text, theme }) {
   const t = theme.colors;
   return (
@@ -137,6 +164,7 @@ function renderBlock(block, index, theme, isMobile) {
     case 'bullets':     return <BlockBullets     key={index} items={block.items} theme={theme} />;
     case 'weakness':    return <BlockWeakness    key={index} block={block}       theme={theme} isMobile={isMobile} />;
     case 'rows':        return <BlockRows        key={index} items={block.items} theme={theme} isMobile={isMobile} />;
+    case 'competitors': return <BlockCompetitors key={index} items={block.items} theme={theme} isMobile={isMobile} />;
     case 'swot':        return <BlockSwot        key={index} block={block}       theme={theme} isMobile={isMobile} />;
     case 'placeholder': return <BlockPlaceholder key={index} text={block.text}   theme={theme} />;
     default:            return null;

@@ -235,3 +235,16 @@ export const OPEN_QUESTIONS = [
   'Roadmap items still ahead: GST/HST tax engine, 5th storefront theme (Soft Matter), AI agent API, US expansion.',
   'API endpoint and table counts (23+, 21+): re-count from the code, or drop them (the audience is non-technical).',
 ];
+
+// ── Competitor watch ─────────────────────────────────────────────────────────────────
+// Companies we track. Add a row here and it shows in the business plan (competitive landscape).
+// Keep each cell short and checked against the company's own site; say "none shown on their site" rather than "none".
+export const COMPETITOR_WATCH = [
+  {
+    name: 'Khaime',
+    url: 'https://khaime.com',
+    does: 'Online store and payments for selling anywhere, with an AI agent that answers customers on WhatsApp, Instagram and Messenger.',
+    differs: 'Built for selling across borders and chat apps. No production costing, bookkeeping, scheduling or team tools are shown on their site. Peak is a connected back office for non-technical owners.',
+    ahead: 'An AI sales assistant on chat apps, 120+ currencies, a mobile app, and payment links and invoices.',
+  },
+];
